@@ -6,6 +6,7 @@
 services:
   phpmyadmin:
     image: phpmyadmin:latest
+    container_name: helpmi_phpmyadmin
     environment:
       PMA_HOST: mariadb
       PMA_USER: helpmi

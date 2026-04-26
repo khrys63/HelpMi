@@ -3,6 +3,7 @@ version: '3.8'
 services:
   mariadb:
     image: mariadb:11
+    container_name: helpmi_mariadb
     environment:
       MYSQL_DATABASE: helpmi
       MYSQL_USER: helpmi
@@ -20,6 +21,7 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:24.0
+    container_name: helpmi_keycloak
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -31,6 +33,7 @@ services:
 
   backend:
     build: ./backend
+    container_name: helpmi_backend
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/helpmi
@@ -55,6 +58,7 @@ services:
         VITE_KEYCLOAK_URL: http://localhost:8180
         VITE_KEYCLOAK_REALM: helpmi
         VITE_KEYCLOAK_CLIENT_ID: helpmi-frontend
+    container_name: helpmi_frontend
     ports:
       - "3000:80"
     depends_on:
