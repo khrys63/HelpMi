@@ -631,6 +631,68 @@ class TicketServiceTest {
                 .isInstanceOf(ForbiddenException.class);
     }
 
+    // ── H1 — isolation par organisation ──────────────────────────────────────
+
+    @Test
+    void getTickets_callsRequireProjectAccess() {
+        when(ticketRepository.findByProjectIdWithFilters(
+                eq(project.getId()),
+                eq(List.of()), eq(0), eq(List.of()), eq(0), eq(List.of()), eq(0),
+                isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        service.getTickets(project.getId(), null, null, null, null, Pageable.unpaged());
+
+        verify(projectService).requireProjectAccess(project.getId());
+    }
+
+    @Test
+    void getTickets_projectAccessDenied_throws() {
+        doThrow(new ForbiddenException("Accès refusé")).when(projectService).requireProjectAccess(project.getId());
+
+        assertThatThrownBy(() -> service.getTickets(project.getId(), null, null, null, null, Pageable.unpaged()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void createTicket_callsRequireProjectAccess() {
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(projectService.findActive(project.getId())).thenReturn(project);
+        when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-1");
+        when(ticketRepository.save(any())).thenReturn(ticket);
+
+        service.createTicket(project.getId(), new CreateTicketRequest("T", null, null, null, null, null));
+
+        verify(projectService).requireProjectAccess(project.getId());
+    }
+
+    @Test
+    void createTicket_projectAccessDenied_throws() {
+        doThrow(new ForbiddenException("Accès refusé")).when(projectService).requireProjectAccess(project.getId());
+
+        assertThatThrownBy(() -> service.createTicket(project.getId(),
+                new CreateTicketRequest("T", null, null, null, null, null)))
+                .isInstanceOf(ForbiddenException.class);
+        verify(projectService, never()).findActive(any());
+    }
+
+    @Test
+    void getTicket_callsRequireProjectAccess() {
+        stubGetTicket();
+
+        service.getTicket(project.getId(), ticket.getId());
+
+        verify(projectService).requireProjectAccess(project.getId());
+    }
+
+    @Test
+    void getTicket_projectAccessDenied_throws() {
+        doThrow(new ForbiddenException("Accès refusé")).when(projectService).requireProjectAccess(project.getId());
+
+        assertThatThrownBy(() -> service.getTicket(project.getId(), ticket.getId()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
     // ── F3 — parseFilter limite à 20 valeurs ─────────────────────────────────
 
     @Test

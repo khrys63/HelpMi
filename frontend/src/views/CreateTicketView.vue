@@ -31,7 +31,7 @@
           </div>
         </div>
 
-        <div>
+        <div v-if="canAssign">
           <label class="block text-sm font-medium text-gray-700 mb-1">Assigné à</label>
           <select v-model="form.assigneeId" class="w-full border rounded-lg px-3 py-2 text-sm">
             <option value="">Non assigné</option>
@@ -73,12 +73,15 @@ import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ticketsApi, usersApi } from '../services/api.js'
 import { useConfigStore } from '../stores/config.js'
+import { useAuthStore } from '../stores/auth.js'
 
 const route = useRoute()
 const router = useRouter()
 const projectId = route.params.projectId
 const config = useConfigStore()
+const auth = useAuthStore()
 
+const canAssign = computed(() => auth.user?.role === 'ADMIN' || auth.user?.role === 'AGENT')
 const users = ref([])
 const saving = ref(false)
 const error = ref('')
@@ -87,8 +90,10 @@ const titleInput = ref(null)
 
 onMounted(async () => {
   nextTick(() => titleInput.value?.focus())
-  const { data } = await usersApi.list()
-  users.value = data
+  if (canAssign.value) {
+    const { data } = await usersApi.list()
+    users.value = data
+  }
   const firstType = config.types.find(t => t.active)
   const firstPriority = config.priorities.find(p => p.active)
   if (firstType) form.value.type = firstType.code

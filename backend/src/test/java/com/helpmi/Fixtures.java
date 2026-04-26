@@ -3,11 +3,21 @@ package com.helpmi;
 import com.helpmi.domain.*;
 import com.helpmi.domain.enums.UserRole;
 
+
 import java.util.UUID;
 
 public final class Fixtures {
 
     private Fixtures() {}
+
+    public static Organization organization() {
+        return Organization.builder()
+                .id(UUID.randomUUID())
+                .name("Test Organisation")
+                .active(true)
+                .build();
+    }
+
 
     public static User adminUser() {
         return User.builder()

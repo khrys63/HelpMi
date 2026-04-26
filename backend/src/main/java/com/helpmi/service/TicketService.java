@@ -58,6 +58,7 @@ public class TicketService {
     @Transactional(readOnly = true)
     public Page<TicketResponse> getTickets(UUID projectId, String status,
             String priority, String type, UUID assigneeId, Pageable pageable) {
+        projectService.requireProjectAccess(projectId);
         List<String> statuses   = parseFilter(status);
         List<String> priorities = parseFilter(priority);
         List<String> types      = parseFilter(type);
@@ -118,6 +119,7 @@ public class TicketService {
     }
 
     public TicketResponse createTicket(UUID projectId, CreateTicketRequest req) {
+        projectService.requireProjectAccess(projectId);
         User currentUser = currentUserService.getCurrentUser();
         var project = projectService.findActive(projectId);
         User assignee = req.assigneeId() != null
@@ -286,6 +288,7 @@ public class TicketService {
     }
 
     private Ticket findTicket(UUID projectId, UUID ticketId) {
+        projectService.requireProjectAccess(projectId);
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new NotFoundException("Ticket introuvable"));
         if (!ticket.getProject().getId().equals(projectId)) {

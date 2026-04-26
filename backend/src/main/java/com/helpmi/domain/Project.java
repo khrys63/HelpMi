@@ -5,6 +5,8 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -39,6 +41,12 @@ public class Project {
     @Column(nullable = false)
     @Builder.Default
     private boolean active = true;
+
+    @ManyToMany(mappedBy = "projects", fetch = FetchType.LAZY)
+    @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<Organization> organizations = new HashSet<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp

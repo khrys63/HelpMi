@@ -2,6 +2,7 @@ package com.helpmi.security;
 
 import com.helpmi.domain.User;
 import com.helpmi.domain.enums.UserRole;
+import com.helpmi.exception.ForbiddenException;
 import com.helpmi.exception.NotFoundException;
 import com.helpmi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +27,18 @@ public class CurrentUserService {
         if (auth instanceof JwtAuthenticationToken jwtAuth) {
             Jwt jwt = jwtAuth.getToken();
             String keycloakId = jwt.getSubject();
-            return userRepository.findByKeycloakId(keycloakId)
+            User user = userRepository.findByKeycloakId(keycloakId)
                     .orElseGet(() -> createUserFromJwt(jwt));
+            if (!user.isActive()) throw new ForbiddenException("Compte désactivé");
+            return user;
         }
 
         // dev mode: principal is the email string set by DevAuthFilter
         String email = auth.getName();
-        return userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Dev user not found: " + email));
+        if (!user.isActive()) throw new ForbiddenException("Compte désactivé");
+        return user;
     }
 
     private User createUserFromJwt(Jwt jwt) {

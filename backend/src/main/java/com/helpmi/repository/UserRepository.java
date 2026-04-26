@@ -11,4 +11,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
     Optional<User> findByKeycloakId(String keycloakId);
     List<User> findByActiveTrueOrderByFirstNameAscLastNameAsc();
+    List<User> findAllByOrderByFirstNameAscLastNameAsc();
+    List<User> findByOrganizationId(UUID organizationId);
+    long countByOrganizationId(UUID organizationId);
 }

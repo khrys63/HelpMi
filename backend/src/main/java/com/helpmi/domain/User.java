@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+
 @Entity
 @Table(name = "users")
 @Data
@@ -42,6 +43,10 @@ public class User {
     @Column(nullable = false)
     @Builder.Default
     private boolean active = true;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp

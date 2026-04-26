@@ -4,6 +4,10 @@
       <router-link to="/projects" class="text-blue-600 font-bold text-lg tracking-tight">HelpMi</router-link>
       <div class="flex items-center gap-4">
         <router-link to="/projects" class="text-sm text-gray-600 hover:text-blue-600">Projets</router-link>
+        <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/users"
+          class="text-sm text-gray-600 hover:text-blue-600">Utilisateurs</router-link>
+        <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/organizations"
+          class="text-sm text-gray-600 hover:text-blue-600">Organisations</router-link>
         <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/config"
           class="text-sm text-gray-600 hover:text-blue-600">Configuration</router-link>
         <div v-if="auth.user" class="flex items-center gap-2 text-sm text-gray-700">

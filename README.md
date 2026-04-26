@@ -7,6 +7,7 @@ Outil de ticketing interne inspiré de Jira. Gestion de projets, tickets, commen
 ## Fonctionnalités
 
 - **Projets** : création, liste, désactivation
+- **Organisations** : les utilisateurs non-admin sont rattachés à une organisation qui détermine les projets visibles ; un utilisateur sans organisation voit un écran d'attente jusqu'à ce qu'un admin l'affecte
 - **Tickets** : création, édition, changement de statut (machine à états), priorité, type, date d'échéance, assigné, clients, labels
 - **Tickets récurrents** : types ANNUEL, MENSUEL, TRIMESTRIEL — à la fermeture, un ticket identique est recréé automatiquement avec la date d'échéance décalée
 - **Cloner / Déplacer** : duplication d'un ticket ou déplacement vers un autre projet avec nouvelle référence
@@ -15,7 +16,7 @@ Outil de ticketing interne inspiré de Jira. Gestion de projets, tickets, commen
 - **Pièces jointes** : upload et téléchargement de fichiers
 - **Labels** : création à la volée ou depuis l'admin
 - **Clients** : rattachement de clients à un ticket
-- **Administration** : gestion des valeurs de configuration (statuts, priorités, types, types de liens), clients, labels
+- **Administration** : gestion des valeurs de configuration (statuts, priorités, types, types de liens), clients, labels, organisations
 - **Notifications toast** : retours visuels après les actions clés
 
 ---
@@ -51,7 +52,7 @@ Outil de ticketing interne inspiré de Jira. Gestion de projets, tickets, commen
 │       ├── application-dev.yml     # Config mode développement local
 │       ├── application-prod.yml    # Config production (variables d'env)
 │       └── db/
-│           ├── migration/          # Migrations Flyway (V1 → V7)
+│           ├── migration/          # Migrations Flyway (V1 → V8)
 │           └── dev-seed/           # Données de test (profil dev uniquement)
 │
 ├── frontend/                       # SPA Vue 3
@@ -97,7 +98,15 @@ cd backend
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-Le profil `dev` désactive l'authentification Keycloak et injecte automatiquement un utilisateur ADMIN. Les données de test sont insérées via Flyway au premier démarrage.
+Le profil `dev` désactive l'authentification Keycloak et injecte automatiquement un utilisateur. Les données de test sont insérées via Flyway au premier démarrage.
+
+**Changer d'utilisateur de test** : modifier `app.dev.user-email` dans `backend/src/main/resources/application-dev.yml` puis redémarrer le backend.
+
+| Email | Rôle |
+|---|---|
+| `admin@helpmi.local` | ADMIN (défaut) |
+| `agent@helpmi.local` | AGENT |
+| `client@helpmi.local` | CLIENT |
 
 **3. Démarrer le frontend**
 
@@ -145,6 +154,7 @@ Les migrations sont gérées par Flyway et s'appliquent automatiquement au déma
 | `V5__due_date.sql` | Date d'échéance sur les tickets |
 | `V6__recurring_types.sql` | Types récurrents (ANNUEL, MENSUEL, TRIMESTRIEL) |
 | `V7__personal_tokens.sql` | Tokens d'accès personnels (PAT) |
+| `V8__organizations.sql` | Organisations : table `organizations`, FK sur `users`, table de jointure `organization_projects` |
 
 Les fichiers dans `db/dev-seed/` ne sont chargés qu'avec le profil `dev`.
 

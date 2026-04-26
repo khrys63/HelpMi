@@ -1,6 +1,7 @@
 package com.helpmi.service;
 
 import com.helpmi.domain.Project;
+import com.helpmi.domain.User;
 import com.helpmi.domain.enums.UserRole;
 import com.helpmi.dto.request.CreateProjectRequest;
 import com.helpmi.dto.request.UpdateProjectRequest;
@@ -28,13 +29,21 @@ public class ProjectService {
 
     @Transactional(readOnly = true)
     public List<ProjectResponse> getAllProjects() {
-        return projectRepository.findByActiveTrueOrderByCreatedAtDesc()
+        User user = currentUserService.getCurrentUser();
+        if (user.getRole() == UserRole.ADMIN) {
+            return projectRepository.findByActiveTrueOrderByCreatedAtDesc()
+                    .stream().map(this::toResponse).toList();
+        }
+        if (user.getOrganization() == null) return List.of();
+        return projectRepository.findActiveByOrganizationId(user.getOrganization().getId())
                 .stream().map(this::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public ProjectResponse getProject(UUID id) {
-        return toResponse(findActive(id));
+        Project project = findActive(id);
+        requireProjectAccess(project);
+        return toResponse(project);
     }
 
     public ProjectResponse createProject(CreateProjectRequest req) {
@@ -84,6 +93,19 @@ public class ProjectService {
     private void requireAdmin() {
         if (currentUserService.getCurrentUser().getRole() != UserRole.ADMIN) {
             throw new ForbiddenException("Réservé aux administrateurs");
+        }
+    }
+
+    public void requireProjectAccess(UUID projectId) {
+        requireProjectAccess(findActive(projectId));
+    }
+
+    private void requireProjectAccess(Project project) {
+        User user = currentUserService.getCurrentUser();
+        if (user.getRole() == UserRole.ADMIN) return;
+        if (user.getOrganization() == null ||
+                !projectRepository.isProjectInOrganization(project.getId(), user.getOrganization().getId())) {
+            throw new ForbiddenException("Accès refusé à ce projet");
         }
     }
 

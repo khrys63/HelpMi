@@ -80,6 +80,26 @@ export const clientsAdminApi = {
   remove: id => api.delete(`/admin/clients/${id}`)
 }
 
+// Users admin
+export const adminUsersApi = {
+  list: () => api.get('/admin/users'),
+  update: (id, data) => api.patch(`/admin/users/${id}`, data),
+  assignOrganization: (id, data) => api.put(`/admin/users/${id}/organization`, data)
+}
+
+// Organisations (admin)
+export const organizationsApi = {
+  list: () => api.get('/admin/organizations'),
+  get: id => api.get(`/admin/organizations/${id}`),
+  create: data => api.post('/admin/organizations', data),
+  update: (id, data) => api.put(`/admin/organizations/${id}`, data),
+  remove: id => api.delete(`/admin/organizations/${id}`),
+  addProject: (orgId, projectId) => api.post(`/admin/organizations/${orgId}/projects/${projectId}`),
+  removeProject: (orgId, projectId) => api.delete(`/admin/organizations/${orgId}/projects/${projectId}`),
+  assignUser: (orgId, userId) => api.put(`/admin/organizations/${orgId}/users/${userId}`),
+  removeUser: (orgId, userId) => api.delete(`/admin/organizations/${orgId}/users/${userId}`)
+}
+
 // Labels
 export const labelsApi = {
   list: () => api.get('/admin/labels'),

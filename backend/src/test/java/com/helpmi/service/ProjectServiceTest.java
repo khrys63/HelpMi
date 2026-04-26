@@ -1,5 +1,6 @@
 package com.helpmi.service;
 
+import com.helpmi.domain.Organization;
 import com.helpmi.domain.Project;
 import com.helpmi.domain.User;
 import com.helpmi.dto.request.CreateProjectRequest;
@@ -21,8 +22,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.helpmi.Fixtures.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -38,7 +38,8 @@ class ProjectServiceTest {
     // --- getAllProjects ---
 
     @Test
-    void getAllProjects_returnsMappedList() {
+    void getAllProjects_admin_returnsAll() {
+        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
         Project p = project();
         when(projectRepository.findByActiveTrueOrderByCreatedAtDesc()).thenReturn(List.of(p));
 
@@ -46,6 +47,78 @@ class ProjectServiceTest {
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).name()).isEqualTo("Test Project");
+    }
+
+    @Test
+    void getAllProjects_nonAdminWithOrg_returnsOrgProjects() {
+        User agent = agentUser();
+        Organization org = organization();
+        agent.setOrganization(org);
+        when(currentUserService.getCurrentUser()).thenReturn(agent);
+        Project p = project();
+        when(projectRepository.findActiveByOrganizationId(org.getId())).thenReturn(List.of(p));
+
+        List<ProjectResponse> result = service.getAllProjects();
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getAllProjects_nonAdminWithoutOrg_returnsEmpty() {
+        when(currentUserService.getCurrentUser()).thenReturn(clientUser());
+
+        List<ProjectResponse> result = service.getAllProjects();
+
+        assertThat(result).isEmpty();
+        verifyNoInteractions(projectRepository);
+    }
+
+    // --- getProject ---
+
+    @Test
+    void getProject_admin_canAccessAnyProject() {
+        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
+        Project p = project();
+        when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
+
+        assertThatCode(() -> service.getProject(p.getId())).doesNotThrowAnyException();
+    }
+
+    @Test
+    void getProject_nonAdminWithAccess_succeeds() {
+        User agent = agentUser();
+        Organization org = organization();
+        agent.setOrganization(org);
+        when(currentUserService.getCurrentUser()).thenReturn(agent);
+        Project p = project();
+        when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
+        when(projectRepository.isProjectInOrganization(p.getId(), org.getId())).thenReturn(true);
+
+        assertThatCode(() -> service.getProject(p.getId())).doesNotThrowAnyException();
+    }
+
+    @Test
+    void getProject_nonAdminWithoutAccess_throws() {
+        User client = clientUser();
+        Organization org = organization();
+        client.setOrganization(org);
+        when(currentUserService.getCurrentUser()).thenReturn(client);
+        Project p = project();
+        when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
+        when(projectRepository.isProjectInOrganization(p.getId(), org.getId())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.getProject(p.getId()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void getProject_nonAdminNoOrg_throws() {
+        when(currentUserService.getCurrentUser()).thenReturn(clientUser());
+        Project p = project();
+        when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
+
+        assertThatThrownBy(() -> service.getProject(p.getId()))
+                .isInstanceOf(ForbiddenException.class);
     }
 
     // --- createProject ---
