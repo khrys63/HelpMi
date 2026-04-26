@@ -19,7 +19,7 @@
           <span class="font-semibold text-gray-900 truncate">{{ p.name }}</span>
         </div>
         <p class="text-sm text-gray-500 line-clamp-2 mb-3">{{ p.description || 'Pas de description' }}</p>
-        <p class="text-xs text-gray-400">{{ p.ticketSequence }} ticket(s) créé(s)</p>
+        <p class="text-xs text-gray-400">{{ p.ticketCount }} ticket(s)</p>
       </router-link>
     </div>
 

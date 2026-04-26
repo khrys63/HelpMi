@@ -28,6 +28,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             @Param("assigneeId") UUID assigneeId,
             Pageable pageable);
 
+    long countByProjectId(UUID projectId);
     long countByStatus(String status);
     long countByPriority(String priority);
     long countByType(String type);

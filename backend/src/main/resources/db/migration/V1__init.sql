@@ -1,5 +1,5 @@
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT (UUID()),
     keycloak_id VARCHAR(255),
     email VARCHAR(255) NOT NULL UNIQUE,
     first_name VARCHAR(255) NOT NULL DEFAULT '',
@@ -9,12 +9,12 @@ CREATE TABLE users (
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX idx_users_keycloak_id ON users(keycloak_id) WHERE keycloak_id IS NOT NULL;
+CREATE UNIQUE INDEX idx_users_keycloak_id ON users(keycloak_id);
 
 CREATE TABLE projects (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT (UUID()),
     name VARCHAR(255) NOT NULL,
-    key VARCHAR(10) NOT NULL UNIQUE,
+    `key` VARCHAR(10) NOT NULL UNIQUE,
     description TEXT,
     ticket_sequence INTEGER NOT NULL DEFAULT 0,
     created_by UUID REFERENCES users(id),
@@ -23,7 +23,7 @@ CREATE TABLE projects (
 );
 
 CREATE TABLE tickets (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT (UUID()),
     reference VARCHAR(50) NOT NULL UNIQUE,
     title VARCHAR(500) NOT NULL,
     description TEXT,
@@ -43,7 +43,7 @@ CREATE INDEX idx_tickets_status ON tickets(project_id, status);
 CREATE INDEX idx_tickets_assignee ON tickets(assignee_id);
 
 CREATE TABLE comments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT (UUID()),
     ticket_id UUID NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
     author_id UUID REFERENCES users(id),
     body TEXT NOT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE comments (
 );
 
 CREATE TABLE attachments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT (UUID()),
     ticket_id UUID NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
     file_name VARCHAR(500) NOT NULL,
     stored_name VARCHAR(500) NOT NULL UNIQUE,

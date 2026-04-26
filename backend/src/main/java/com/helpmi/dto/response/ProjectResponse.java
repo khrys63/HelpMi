@@ -9,5 +9,6 @@ public record ProjectResponse(
         String key,
         String description,
         int ticketSequence,
+        long ticketCount,
         LocalDateTime createdAt
 ) {}

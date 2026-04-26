@@ -25,7 +25,7 @@ Outil de ticketing interne inspiré de Jira. Gestion de projets, tickets, commen
 | Couche | Technologie |
 |---|---|
 | Backend | Java 21, Spring Boot 3.3, Spring Security (OAuth2 JWT) |
-| Persistance | PostgreSQL 16, Hibernate/JPA, Flyway |
+| Persistance | MariaDB 11, Hibernate/JPA, Flyway |
 | Frontend | Vue 3 (Composition API), Pinia, Vue Router 4, Tailwind CSS, Axios |
 | Auth | Keycloak 24 (ou mode dev sans auth) |
 | Build | Maven, Vite |
@@ -65,7 +65,7 @@ Outil de ticketing interne inspiré de Jira. Gestion de projets, tickets, commen
 ├── keycloak/
 │   └── realm-export.json           # Import du realm Keycloak
 │
-└── docker-compose.yml              # Postgres + Keycloak + Backend + Frontend
+└── docker-compose.yml              # MariaDB + Keycloak + Backend + Frontend
 ```
 
 ---
@@ -76,10 +76,10 @@ Outil de ticketing interne inspiré de Jira. Gestion de projets, tickets, commen
 
 Prérequis : Java 21+, Node 20+, Docker
 
-**1. Démarrer Postgres**
+**1. Démarrer MariaDB**
 
 ```bash
-docker-compose up -d postgres
+docker-compose up -d mariadb
 ```
 
 **2. Démarrer le backend**
@@ -138,26 +138,27 @@ Les fichiers dans `db/dev-seed/` ne sont chargés qu'avec le profil `dev`.
 
 ## Variables à personnaliser
 
-Plusieurs valeurs de configuration sont actuellement **commitées en dur** dans les fichiers de configuration. Elles doivent être adaptées à votre environnement avant tout déploiement.
+Plusieurs valeurs de configuration sont **commitées en dur** dans les fichiers de configuration. Elles doivent être adaptées à votre environnement avant tout déploiement.
 
 ### Base de données — `application-dev.yml`
 
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/helpmi
+    url: jdbc:mariadb://localhost:3306/helpmi
     username: helpmi
-    password: helpmi_pass        # ← à changer en production
+    password: helpmi_pass        # ← à changer
 ```
 
 ### Base de données — `docker-compose.yml`
 
 ```yaml
-postgres:
+mariadb:
   environment:
-    POSTGRES_DB: helpmi
-    POSTGRES_USER: helpmi
-    POSTGRES_PASSWORD: helpmi_pass   # ← à changer
+    MYSQL_DATABASE: helpmi
+    MYSQL_USER: helpmi
+    MYSQL_PASSWORD: helpmi_pass      # ← à changer
+    MYSQL_ROOT_PASSWORD: root_pass   # ← à changer
 ```
 
 ### Backend production — variables d'environnement Docker Compose
@@ -167,7 +168,7 @@ Le profil `prod` ne lit pas de valeurs en dur : tout est passé par variables d'
 ```yaml
 backend:
   environment:
-    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/helpmi
+    SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/helpmi
     SPRING_DATASOURCE_USERNAME: helpmi
     SPRING_DATASOURCE_PASSWORD: helpmi_pass       # ← à changer
     APP_KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/helpmi
@@ -186,17 +187,6 @@ Le fichier contient des comptes de démonstration avec des mots de passe par dé
 
 Ces comptes ne sont utilisés qu'en mode Keycloak (production). En mode `dev`, l'authentification est simulée sans mot de passe.
 
-### Frontend — `frontend/Dockerfile` et `.env.*`
-
-Les fichiers `.env.development` et `.env.production` contiennent encore l'ancien nom de realm Keycloak (`jiralike`) — à mettre à jour si vous n'utilisez pas Docker Compose pour le build (qui surcharge ces valeurs via `ARG`) :
-
-```
-VITE_KEYCLOAK_REALM=helpmi
-VITE_KEYCLOAK_CLIENT_ID=helpmi-frontend
-```
-
-Le `Dockerfile` frontend contient aussi les valeurs par défaut des `ARG` Keycloak — à adapter si vous rebuildez en dehors de Docker Compose.
-
 ---
 
 ## Tests
@@ -206,4 +196,4 @@ cd backend
 mvn test
 ```
 
-Les tests utilisent Mockito (mode strict) et couvrent les services principaux : `TicketService`, `ProjectService`, `CommentService`, `ClientService`, `LabelService`, `UserService`, `TicketLinkService`, `AdminConfigService`.
+Les tests sont des tests unitaires Mockito (sans base de données) et couvrent les services principaux : `TicketService`, `ProjectService`, `CommentService`, `ClientService`, `LabelService`, `UserService`, `TicketLinkService`, `AdminConfigService`.

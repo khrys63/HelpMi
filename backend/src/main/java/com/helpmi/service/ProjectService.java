@@ -8,6 +8,7 @@ import com.helpmi.dto.response.ProjectResponse;
 import com.helpmi.exception.ForbiddenException;
 import com.helpmi.exception.NotFoundException;
 import com.helpmi.repository.ProjectRepository;
+import com.helpmi.repository.TicketRepository;
 import com.helpmi.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
+    private final TicketRepository ticketRepository;
     private final CurrentUserService currentUserService;
 
     @Transactional(readOnly = true)
@@ -86,6 +88,7 @@ public class ProjectService {
     }
 
     private ProjectResponse toResponse(Project p) {
-        return new ProjectResponse(p.getId(), p.getName(), p.getKey(), p.getDescription(), p.getTicketSequence(), p.getCreatedAt());
+        long ticketCount = ticketRepository.countByProjectId(p.getId());
+        return new ProjectResponse(p.getId(), p.getName(), p.getKey(), p.getDescription(), p.getTicketSequence(), ticketCount, p.getCreatedAt());
     }
 }

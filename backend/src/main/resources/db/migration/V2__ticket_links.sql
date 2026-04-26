@@ -1,5 +1,5 @@
 CREATE TABLE ticket_links (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT (UUID()),
     source_ticket_id UUID NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
     target_ticket_id UUID NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
     link_type VARCHAR(20) NOT NULL,

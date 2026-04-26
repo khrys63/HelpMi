@@ -1,16 +1,16 @@
 CREATE TABLE clients (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT (UUID()),
     name VARCHAR(200) NOT NULL,
     contact_email VARCHAR(255),
     active BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
 CREATE TABLE labels (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT (UUID()),
     name VARCHAR(100) NOT NULL,
     color VARCHAR(50),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
     CONSTRAINT labels_name_unique UNIQUE (name)
 );
 
