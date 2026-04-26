@@ -77,7 +77,11 @@ class TicketServiceTest {
     @Test
     void getTickets_returnsMappedPage() {
         when(ticketRepository.findByProjectIdWithFilters(
-                eq(project.getId()), isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+                eq(project.getId()),
+                eq(List.of()), eq(0),
+                eq(List.of()), eq(0),
+                eq(List.of()), eq(0),
+                isNull(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(ticket)));
 
         var result = service.getTickets(project.getId(), null, null, null, null, Pageable.unpaged());

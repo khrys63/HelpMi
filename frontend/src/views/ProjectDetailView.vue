@@ -23,21 +23,83 @@
 
       <!-- Filtres -->
       <div class="flex flex-wrap gap-3 mb-5">
-        <select v-model="filters.status" @change="fetchTickets"
-          class="border rounded-lg px-3 py-1.5 text-sm text-gray-700">
-          <option value="">Tous les statuts</option>
-          <option v-for="s in config.statuses" :key="s.code" :value="s.code">{{ s.label }}</option>
-        </select>
-        <select v-model="filters.priority" @change="fetchTickets"
-          class="border rounded-lg px-3 py-1.5 text-sm text-gray-700">
-          <option value="">Toutes priorités</option>
-          <option v-for="p in config.priorities" :key="p.code" :value="p.code">{{ p.label }}</option>
-        </select>
-        <select v-model="filters.type" @change="fetchTickets"
-          class="border rounded-lg px-3 py-1.5 text-sm text-gray-700">
-          <option value="">Tous types</option>
-          <option v-for="t in config.types" :key="t.code" :value="t.code">{{ t.label }}</option>
-        </select>
+        <!-- Statuts -->
+        <div class="relative">
+          <button @click="openFilter = openFilter === 'status' ? null : 'status'"
+            :class="['border rounded-lg px-3 py-1.5 text-sm flex items-center gap-1.5 select-none',
+              selectedStatuses.length < config.statuses.length
+                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                : 'border-gray-200 text-gray-700']">
+            Statuts
+            <span v-if="selectedStatuses.length < config.statuses.length"
+              class="bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-medium">
+              {{ selectedStatuses.length }}
+            </span>
+            <span class="text-gray-400 text-xs">▾</span>
+          </button>
+          <div v-if="openFilter === 'status'" class="fixed inset-0 z-10" @click="openFilter = null"></div>
+          <div v-if="openFilter === 'status'"
+            class="absolute top-full mt-1 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-lg p-2 min-w-40">
+            <label v-for="s in config.statuses" :key="s.code"
+              class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer text-sm text-gray-700">
+              <input type="checkbox" :value="s.code" v-model="selectedStatuses"
+                @change="page = 0; fetchTickets()" class="rounded">
+              {{ s.label }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Priorités -->
+        <div class="relative">
+          <button @click="openFilter = openFilter === 'priority' ? null : 'priority'"
+            :class="['border rounded-lg px-3 py-1.5 text-sm flex items-center gap-1.5 select-none',
+              selectedPriorities.length < config.priorities.length
+                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                : 'border-gray-200 text-gray-700']">
+            Priorités
+            <span v-if="selectedPriorities.length < config.priorities.length"
+              class="bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-medium">
+              {{ selectedPriorities.length }}
+            </span>
+            <span class="text-gray-400 text-xs">▾</span>
+          </button>
+          <div v-if="openFilter === 'priority'" class="fixed inset-0 z-10" @click="openFilter = null"></div>
+          <div v-if="openFilter === 'priority'"
+            class="absolute top-full mt-1 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-lg p-2 min-w-40">
+            <label v-for="p in config.priorities" :key="p.code"
+              class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer text-sm text-gray-700">
+              <input type="checkbox" :value="p.code" v-model="selectedPriorities"
+                @change="page = 0; fetchTickets()" class="rounded">
+              {{ p.label }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Types -->
+        <div class="relative">
+          <button @click="openFilter = openFilter === 'type' ? null : 'type'"
+            :class="['border rounded-lg px-3 py-1.5 text-sm flex items-center gap-1.5 select-none',
+              selectedTypes.length < config.types.length
+                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                : 'border-gray-200 text-gray-700']">
+            Types
+            <span v-if="selectedTypes.length < config.types.length"
+              class="bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-medium">
+              {{ selectedTypes.length }}
+            </span>
+            <span class="text-gray-400 text-xs">▾</span>
+          </button>
+          <div v-if="openFilter === 'type'" class="fixed inset-0 z-10" @click="openFilter = null"></div>
+          <div v-if="openFilter === 'type'"
+            class="absolute top-full mt-1 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-lg p-2 min-w-40">
+            <label v-for="t in config.types" :key="t.code"
+              class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer text-sm text-gray-700">
+              <input type="checkbox" :value="t.code" v-model="selectedTypes"
+                @change="page = 0; fetchTickets()" class="rounded">
+              {{ t.label }}
+            </label>
+          </div>
+        </div>
       </div>
 
       <!-- Liste tickets -->
@@ -88,9 +150,18 @@ const tickets = ref([])
 const loading = ref(true)
 const page = ref(0)
 const totalPages = ref(1)
-const filters = ref({ status: '', priority: '', type: '' })
+const openFilter = ref(null)
+
+const EXCLUDED_BY_DEFAULT = ['CANCELLED', 'CLOSED']
+const selectedStatuses   = ref([])
+const selectedPriorities = ref([])
+const selectedTypes      = ref([])
 
 onMounted(async () => {
+  selectedStatuses.value   = config.statuses.filter(s => !EXCLUDED_BY_DEFAULT.includes(s.code)).map(s => s.code)
+  selectedPriorities.value = config.priorities.map(p => p.code)
+  selectedTypes.value      = config.types.map(t => t.code)
+
   const [{ data: proj }] = await Promise.all([projectsApi.get(projectId)])
   project.value = proj
   await fetchTickets()
@@ -99,9 +170,12 @@ onMounted(async () => {
 
 async function fetchTickets() {
   const params = { page: page.value, size: 20 }
-  if (filters.value.status) params.status = filters.value.status
-  if (filters.value.priority) params.priority = filters.value.priority
-  if (filters.value.type) params.type = filters.value.type
+  if (selectedStatuses.value.length < config.statuses.length)
+    params.status = selectedStatuses.value.join(',')
+  if (selectedPriorities.value.length < config.priorities.length)
+    params.priority = selectedPriorities.value.join(',')
+  if (selectedTypes.value.length < config.types.length)
+    params.type = selectedTypes.value.join(',')
   const { data } = await ticketsApi.list(projectId, params)
   tickets.value = data.content
   totalPages.value = data.totalPages

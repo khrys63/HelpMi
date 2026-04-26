@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -57,8 +58,21 @@ public class TicketService {
     @Transactional(readOnly = true)
     public Page<TicketResponse> getTickets(UUID projectId, String status,
             String priority, String type, UUID assigneeId, Pageable pageable) {
-        return ticketRepository.findByProjectIdWithFilters(projectId, status, priority, type, assigneeId, pageable)
+        List<String> statuses   = parseFilter(status);
+        List<String> priorities = parseFilter(priority);
+        List<String> types      = parseFilter(type);
+        return ticketRepository.findByProjectIdWithFilters(
+                projectId,
+                statuses,   statuses.size(),
+                priorities, priorities.size(),
+                types,      types.size(),
+                assigneeId, pageable)
                 .map(this::toResponse);
+    }
+
+    private List<String> parseFilter(String param) {
+        if (param == null || param.isBlank()) return List.of();
+        return Arrays.asList(param.split(","));
     }
 
     @Transactional(readOnly = true)
