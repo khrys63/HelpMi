@@ -75,17 +75,20 @@ Outil de ticketing interne inspiré de Jira. Gestion de projets, tickets, commen
 
 ### Mode développement (sans Docker pour le backend/frontend)
 
-Prérequis : Java 21+, Node 20+, Docker
+**Prérequis** : Java 21+, Node 20+, Docker
 
-**1. Démarrer MariaDB (+ phpMyAdmin optionnel)**
+**1. Démarrer MariaDB + phpMyAdmin**
 
 ```bash
-# MariaDB uniquement
-docker compose up -d mariadb
-
-# MariaDB + phpMyAdmin sur http://localhost:8081
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb phpmyadmin
 ```
+
+| Service | URL |
+|---|---|
+| MariaDB | `localhost:3306` |
+| phpMyAdmin | http://localhost:8081 |
+
+> Pour MariaDB seul (sans phpMyAdmin) : `docker compose up -d mariadb`
 
 **2. Démarrer le backend**
 
@@ -98,9 +101,12 @@ Le profil `dev` désactive l'authentification Keycloak et injecte automatiquemen
 
 **3. Démarrer le frontend**
 
+> **Important — première utilisation :** `node_modules` n'est pas inclus dans le dépôt.
+> Il faut impérativement exécuter `npm install` avant le premier `npm run dev`.
+
 ```bash
 cd frontend
-npm install
+npm install   # à faire une seule fois (ou après chaque mise à jour de package.json)
 npm run dev
 ```
 
