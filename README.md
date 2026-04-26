@@ -220,17 +220,20 @@ Le rapport HTML de couverture est généré dans `backend/target/site/jacoco/ind
 
 ### Couverture actuelle
 
-169 tests unitaires Mockito (sans base de données ni contexte Spring).
+210 tests unitaires Mockito (sans base de données ni contexte Spring).
 
 | Service / Composant | Couverture lignes |
 |---|---|
-| `LabelService`, `ClientService`, `CommentService`, `UserService` | 100 % |
-| `TicketLinkService`, `PersonalTokenFilter` | 100 % |
-| `RateLimiterService`, `StartupSafetyCheck` | 100 % |
-| `PersonalTokenService`, `AttachmentService` | 95 % |
-| `AdminConfigService`, `ProjectService` | 96–97 % |
+| `LabelService`, `ClientService`, `CommentService` | 100 % |
+| `UserService`, `RateLimiterService` | 100 % |
+| `PersonalTokenFilter`, `StartupSafetyCheck` | 100 % |
+| `ProjectService` | 100 % |
+| `TicketLinkService` | 100 % |
+| `OrganizationService` | 97 % |
 | `TicketService` | 97 % |
+| `AdminConfigService`, `PersonalTokenService` | 95–96 % |
+| `AttachmentService` | 95 % |
 | `GlobalExceptionHandler` | 89 % |
-| Couverture globale | **~74 % lignes, ~68 % branches** |
+| Couverture globale | **~77 % lignes, ~74 % branches** |
 
 Les controllers ne sont pas couverts (pas de tests d'intégration `@SpringBootTest`).
