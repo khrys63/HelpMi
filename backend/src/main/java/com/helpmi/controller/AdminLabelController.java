@@ -35,6 +35,7 @@ public class AdminLabelController {
 
     @PostMapping("/find-or-create")
     public LabelResponse findOrCreate(@RequestBody Map<String, String> body) {
+        requireAdmin();
         return labelService.findOrCreate(body.getOrDefault("name", ""));
     }
 

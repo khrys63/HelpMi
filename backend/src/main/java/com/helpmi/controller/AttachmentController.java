@@ -32,8 +32,11 @@ public class AttachmentController {
         Resource resource = attachmentService.download(attachmentId);
         var entity = attachmentService.getAttachmentEntity(attachmentId);
         String contentType = entity.getContentType() != null ? entity.getContentType() : "application/octet-stream";
+        String safeFilename = entity.getFileName()
+                .replaceAll("[\"\\\\]", "_")
+                .replaceAll("[\\r\\n]", "");
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + entity.getFileName() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + safeFilename + "\"")
                 .contentType(MediaType.parseMediaType(contentType))
                 .body(resource);
     }

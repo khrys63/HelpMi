@@ -44,19 +44,19 @@ Outil de ticketing interne inspiré de Jira. Gestion de projets, tickets, commen
 │   │   ├── domain/                 # Entités JPA
 │   │   ├── dto/                    # Request / Response DTOs
 │   │   ├── repository/             # Spring Data JPA
-│   │   ├── security/               # DevAuthFilter, CurrentUserService
-│   │   └── config/                 # SecurityConfig, StorageConfig
+│   │   ├── security/               # PersonalTokenFilter, DevAuthFilter, CurrentUserService
+│   │   └── config/                 # SecurityConfig, StorageConfig, StartupSafetyCheck
 │   └── src/main/resources/
 │       ├── application.yml         # Config commune
 │       ├── application-dev.yml     # Config mode développement local
 │       ├── application-prod.yml    # Config production (variables d'env)
 │       └── db/
-│           ├── migration/          # Migrations Flyway (V1 → V6)
+│           ├── migration/          # Migrations Flyway (V1 → V7)
 │           └── dev-seed/           # Données de test (profil dev uniquement)
 │
 ├── frontend/                       # SPA Vue 3
 │   └── src/
-│       ├── views/                  # Pages (Projets, Ticket, Admin, …)
+│       ├── views/                  # Pages (Projets, Ticket, Admin, Profil, …)
 │       ├── components/             # Composants réutilisables
 │       ├── stores/                 # Pinia (auth, config, toast)
 │       ├── services/api.js         # Client Axios centralisé
@@ -65,7 +65,8 @@ Outil de ticketing interne inspiré de Jira. Gestion de projets, tickets, commen
 ├── keycloak/
 │   └── realm-export.json           # Import du realm Keycloak
 │
-└── docker-compose.yml              # MariaDB + Keycloak + Backend + Frontend
+├── docker-compose.yml              # MariaDB + Keycloak + Backend + Frontend (prod)
+└── docker-compose.dev.yml          # Surcharge dev : phpMyAdmin (port 8081)
 ```
 
 ---
@@ -76,10 +77,14 @@ Outil de ticketing interne inspiré de Jira. Gestion de projets, tickets, commen
 
 Prérequis : Java 21+, Node 20+, Docker
 
-**1. Démarrer MariaDB**
+**1. Démarrer MariaDB (+ phpMyAdmin optionnel)**
 
 ```bash
+# MariaDB uniquement
 docker compose up -d mariadb
+
+# MariaDB + phpMyAdmin sur http://localhost:8081
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb phpmyadmin
 ```
 
 **2. Démarrer le backend**
@@ -117,6 +122,8 @@ docker compose up --build
 
 Le realm Keycloak `helpmi` est importé automatiquement au premier démarrage.
 
+> **phpMyAdmin** n'est **pas** inclus dans le compose de production. Pour l'activer en développement uniquement, utilisez la commande de surcharge ci-dessus.
+
 ---
 
 ## Migrations de base de données
@@ -131,6 +138,7 @@ Les migrations sont gérées par Flyway et s'appliquent automatiquement au déma
 | `V4__clients_labels.sql` | Clients et labels |
 | `V5__due_date.sql` | Date d'échéance sur les tickets |
 | `V6__recurring_types.sql` | Types récurrents (ANNUEL, MENSUEL, TRIMESTRIEL) |
+| `V7__personal_tokens.sql` | Tokens d'accès personnels (PAT) |
 
 Les fichiers dans `db/dev-seed/` ne sont chargés qu'avec le profil `dev`.
 
@@ -173,7 +181,10 @@ backend:
     SPRING_DATASOURCE_PASSWORD: helpmi_pass       # ← à changer
     APP_KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/helpmi
     APP_STORAGE_PATH: /app/uploads
+    APP_CORS_ALLOWED_ORIGINS: https://helpmi.example.com  # ← URL réelle du frontend
 ```
+
+> `APP_CORS_ALLOWED_ORIGINS` est **obligatoire** en production. Le backend refuse de démarrer si elle est absente.
 
 ### Keycloak — `keycloak/realm-export.json`
 
@@ -191,9 +202,29 @@ Ces comptes ne sont utilisés qu'en mode Keycloak (production). En mode `dev`, l
 
 ## Tests
 
+### Lancer les tests
+
 ```bash
 cd backend
-mvn test
+mvn test          # tests uniquement
+mvn verify        # tests + rapport de couverture JaCoCo
 ```
 
-Les tests sont des tests unitaires Mockito (sans base de données) et couvrent les services principaux : `TicketService`, `ProjectService`, `CommentService`, `ClientService`, `LabelService`, `UserService`, `TicketLinkService`, `AdminConfigService`.
+Le rapport HTML de couverture est généré dans `backend/target/site/jacoco/index.html`.
+
+### Couverture actuelle
+
+169 tests unitaires Mockito (sans base de données ni contexte Spring).
+
+| Service / Composant | Couverture lignes |
+|---|---|
+| `LabelService`, `ClientService`, `CommentService`, `UserService` | 100 % |
+| `TicketLinkService`, `PersonalTokenFilter` | 100 % |
+| `RateLimiterService`, `StartupSafetyCheck` | 100 % |
+| `PersonalTokenService`, `AttachmentService` | 95 % |
+| `AdminConfigService`, `ProjectService` | 96–97 % |
+| `TicketService` | 97 % |
+| `GlobalExceptionHandler` | 89 % |
+| Couverture globale | **~74 % lignes, ~68 % branches** |
+
+Les controllers ne sont pas couverts (pas de tests d'intégration `@SpringBootTest`).

@@ -12,7 +12,7 @@
       <div class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
-          <input v-model="form.title" placeholder="Décrivez le problème en une phrase…"
+          <input ref="titleInput" v-model="form.title" placeholder="Décrivez le problème en une phrase…"
             class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
         </div>
 
@@ -69,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ticketsApi, usersApi } from '../services/api.js'
 import { useConfigStore } from '../stores/config.js'
@@ -83,8 +83,10 @@ const users = ref([])
 const saving = ref(false)
 const error = ref('')
 const form = ref({ title: '', description: '', type: '', priority: '', assigneeId: '', dueDate: '' })
+const titleInput = ref(null)
 
 onMounted(async () => {
+  nextTick(() => titleInput.value?.focus())
   const { data } = await usersApi.list()
   users.value = data
   const firstType = config.types.find(t => t.active)

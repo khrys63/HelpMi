@@ -67,7 +67,7 @@ public class TicketController {
 
     @PatchMapping("/{ticketId}/due-date")
     public TicketResponse setDueDate(@PathVariable UUID projectId, @PathVariable UUID ticketId,
-            @RequestBody DueDateRequest req) {
+            @Valid @RequestBody DueDateRequest req) {
         return ticketService.setDueDate(projectId, ticketId, req.dueDate());
     }
 
@@ -85,7 +85,7 @@ public class TicketController {
 
     @PostMapping("/{ticketId}/move")
     public TicketResponse move(@PathVariable UUID projectId, @PathVariable UUID ticketId,
-            @RequestBody MoveTicketRequest req) {
+            @Valid @RequestBody MoveTicketRequest req) {
         return ticketService.moveTicket(projectId, ticketId, req.targetProjectId());
     }
 

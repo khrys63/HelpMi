@@ -70,9 +70,14 @@ public class TicketService {
                 .map(this::toResponse);
     }
 
+    private static final int MAX_FILTER_VALUES = 20;
+
     private List<String> parseFilter(String param) {
         if (param == null || param.isBlank()) return List.of();
-        return Arrays.asList(param.split(","));
+        String[] parts = param.split(",");
+        if (parts.length > MAX_FILTER_VALUES)
+            throw new IllegalArgumentException("Trop de valeurs de filtre (max " + MAX_FILTER_VALUES + ")");
+        return Arrays.asList(parts);
     }
 
     @Transactional(readOnly = true)
@@ -195,6 +200,8 @@ public class TicketService {
 
     public TicketResponse cloneTicket(UUID projectId, UUID ticketId) {
         Ticket source = findTicket(projectId, ticketId);
+        User currentUser = currentUserService.getCurrentUser();
+        requireCanModify(currentUser, source);
         String reference = projectService.generateTicketReference(projectId);
         Ticket clone = Ticket.builder()
                 .reference(reference)
@@ -204,7 +211,7 @@ public class TicketService {
                 .type(source.getType())
                 .dueDate(source.getDueDate())
                 .project(source.getProject())
-                .reporter(currentUserService.getCurrentUser())
+                .reporter(currentUser)
                 .assignee(source.getAssignee())
                 .build();
         clone.getClients().addAll(source.getClients());
@@ -217,6 +224,7 @@ public class TicketService {
             throw new IllegalArgumentException("Le ticket est déjà dans ce projet");
         }
         Ticket ticket = findTicket(projectId, ticketId);
+        requireCanModify(currentUserService.getCurrentUser(), ticket);
         var targetProject = projectService.findActive(targetProjectId);
         String newReference = projectService.generateTicketReference(targetProjectId);
         ticket.setProject(targetProject);
@@ -226,6 +234,7 @@ public class TicketService {
 
     public TicketResponse setDueDate(UUID projectId, UUID ticketId, LocalDate dueDate) {
         Ticket ticket = findTicket(projectId, ticketId);
+        requireCanModify(currentUserService.getCurrentUser(), ticket);
         ticket.setDueDate(dueDate);
         return toResponse(ticketRepository.save(ticket));
     }
@@ -239,6 +248,7 @@ public class TicketService {
 
     public List<ClientResponse> setClients(UUID projectId, UUID ticketId, List<UUID> clientIds) {
         Ticket ticket = findTicket(projectId, ticketId);
+        requireCanModify(currentUserService.getCurrentUser(), ticket);
         var newClients = clientIds == null || clientIds.isEmpty()
                 ? new HashSet<com.helpmi.domain.Client>()
                 : new HashSet<>(clientRepository.findAllById(clientIds));
@@ -253,6 +263,7 @@ public class TicketService {
 
     public List<LabelResponse> setLabels(UUID projectId, UUID ticketId, List<UUID> labelIds) {
         Ticket ticket = findTicket(projectId, ticketId);
+        requireCanModify(currentUserService.getCurrentUser(), ticket);
         var newLabels = labelIds == null || labelIds.isEmpty()
                 ? new HashSet<com.helpmi.domain.Label>()
                 : new HashSet<>(labelRepository.findAllById(labelIds));

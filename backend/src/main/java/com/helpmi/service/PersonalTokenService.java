@@ -33,6 +33,7 @@ public class PersonalTokenService {
 
     private final PersonalTokenRepository personalTokenRepository;
     private final CurrentUserService currentUserService;
+    private final RateLimiterService rateLimiterService;
 
     @Transactional(readOnly = true)
     public List<PersonalTokenResponse> listTokens() {
@@ -43,6 +44,7 @@ public class PersonalTokenService {
 
     public PersonalTokenCreated createToken(CreatePersonalTokenRequest req) {
         User user = currentUserService.getCurrentUser();
+        rateLimiterService.checkTokenCreation(user.getId());
         String plain = generateToken();
         PersonalToken token = PersonalToken.builder()
                 .user(user)

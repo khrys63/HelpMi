@@ -1,0 +1,17 @@
+# Dev-only overrides — lancez avec :
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# NE PAS déployer en production.
+
+services:
+  phpmyadmin:
+    image: phpmyadmin:latest
+    environment:
+      PMA_HOST: mariadb
+      PMA_USER: helpmi
+      PMA_PASSWORD: helpmi_pass
+    ports:
+      - "8081:80"
+    depends_on:
+      mariadb:
+        condition: service_healthy

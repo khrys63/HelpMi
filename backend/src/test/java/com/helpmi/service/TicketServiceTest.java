@@ -32,6 +32,7 @@ import java.util.UUID;
 
 import static com.helpmi.Fixtures.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -266,6 +267,7 @@ class TicketServiceTest {
     @Test
     void moveTicket_updatesProjectAndReference() {
         Project target = project();
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(projectService.findActive(target.getId())).thenReturn(target);
         when(projectService.generateTicketReference(target.getId())).thenReturn("TARGET-1");
@@ -504,6 +506,7 @@ class TicketServiceTest {
         Client c1 = client("Acme");
         Client c2 = client("Beta");
         ticket.getClients().add(c1);
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(clientRepository.findAllById(List.of(c2.getId()))).thenReturn(List.of(c2));
 
@@ -518,6 +521,7 @@ class TicketServiceTest {
     void setClients_emptyList_clearsClients() {
         Client c = client("Acme");
         ticket.getClients().add(c);
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
 
         List<ClientResponse> result = service.setClients(project.getId(), ticket.getId(), List.of());
@@ -530,6 +534,7 @@ class TicketServiceTest {
     void setClients_nullList_clearsClients() {
         Client c = client("Acme");
         ticket.getClients().add(c);
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
 
         List<ClientResponse> result = service.setClients(project.getId(), ticket.getId(), null);
@@ -544,6 +549,7 @@ class TicketServiceTest {
         Label l1 = label("urgent");
         Label l2 = label("bug");
         ticket.getLabels().add(l1);
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(labelRepository.findAllById(List.of(l2.getId()))).thenReturn(List.of(l2));
 
@@ -557,11 +563,93 @@ class TicketServiceTest {
     @Test
     void setLabels_emptyList_clearsLabels() {
         ticket.getLabels().add(label("urgent"));
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
 
         List<LabelResponse> result = service.setLabels(project.getId(), ticket.getId(), List.of());
 
         assertThat(result).isEmpty();
         assertThat(ticket.getLabels()).isEmpty();
+    }
+
+    // ── H1 — autorisation manquante (nouveaux tests de sécurité) ─────────────
+
+    @Test
+    void moveTicket_unauthorizedClient_throwsForbidden() {
+        when(currentUserService.getCurrentUser()).thenReturn(clientUser());
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(() -> service.moveTicket(project.getId(), ticket.getId(), UUID.randomUUID()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void setDueDate_authorizedReporter_updatesDueDate() {
+        LocalDate newDate = LocalDate.of(2025, 12, 31);
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(any())).thenReturn(ticket);
+
+        service.setDueDate(project.getId(), ticket.getId(), newDate);
+
+        assertThat(ticket.getDueDate()).isEqualTo(newDate);
+    }
+
+    @Test
+    void setDueDate_unauthorizedClient_throwsForbidden() {
+        when(currentUserService.getCurrentUser()).thenReturn(clientUser());
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(() -> service.setDueDate(project.getId(), ticket.getId(), LocalDate.now()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void setClients_unauthorizedClient_throwsForbidden() {
+        when(currentUserService.getCurrentUser()).thenReturn(clientUser());
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(() -> service.setClients(project.getId(), ticket.getId(), List.of()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void setLabels_unauthorizedClient_throwsForbidden() {
+        when(currentUserService.getCurrentUser()).thenReturn(clientUser());
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(() -> service.setLabels(project.getId(), ticket.getId(), List.of()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void cloneTicket_unauthorizedClient_throwsForbidden() {
+        when(currentUserService.getCurrentUser()).thenReturn(clientUser());
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(() -> service.cloneTicket(project.getId(), ticket.getId()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    // ── F3 — parseFilter limite à 20 valeurs ─────────────────────────────────
+
+    @Test
+    void getTickets_tooManyFilterValues_throwsIllegalArgument() {
+        String tooMany = String.join(",", java.util.Collections.nCopies(21, "OPEN"));
+
+        assertThatThrownBy(() -> service.getTickets(project.getId(), tooMany, null, null, null, Pageable.unpaged()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("max 20");
+    }
+
+    @Test
+    void getTickets_exactlyMaxFilterValues_doesNotThrow() {
+        String maxValues = String.join(",", java.util.Collections.nCopies(20, "OPEN"));
+        when(ticketRepository.findByProjectIdWithFilters(
+                any(), any(), eq(20), any(), eq(0), any(), eq(0), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        assertThatCode(() -> service.getTickets(project.getId(), maxValues, null, null, null, Pageable.unpaged()))
+                .doesNotThrowAnyException();
     }
 }

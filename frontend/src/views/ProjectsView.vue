@@ -28,7 +28,7 @@
       <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
         <h2 class="text-lg font-bold mb-4">Nouveau projet</h2>
         <div class="space-y-3">
-          <input v-model="form.name" placeholder="Nom du projet" class="w-full border rounded-lg px-3 py-2 text-sm" />
+          <input ref="nameInput" v-model="form.name" placeholder="Nom du projet" class="w-full border rounded-lg px-3 py-2 text-sm" />
           <input v-model="form.key" placeholder="Clé (ex: PROJ)" maxlength="10"
             class="w-full border rounded-lg px-3 py-2 text-sm uppercase" />
           <textarea v-model="form.description" placeholder="Description (optionnelle)" rows="3"
@@ -48,7 +48,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, watch, nextTick, computed } from 'vue'
 import { projectsApi } from '../services/api.js'
 import { useAuthStore } from '../stores/auth.js'
 
@@ -61,6 +61,11 @@ const error = ref('')
 const form = ref({ name: '', key: '', description: '' })
 
 const isAdmin = computed(() => auth.user?.role === 'ADMIN')
+const nameInput = ref(null)
+
+watch(showCreate, (val) => {
+  if (val) nextTick(() => nameInput.value?.focus())
+})
 
 onMounted(async () => {
   const { data } = await projectsApi.list()

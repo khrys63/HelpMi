@@ -37,9 +37,12 @@ public class CurrentUserService {
     }
 
     private User createUserFromJwt(Jwt jwt) {
+        String email = jwt.getClaimAsString("email");
+        if (email == null || email.isBlank())
+            throw new IllegalStateException("JWT sans claim 'email' valide : connexion refusée");
         User user = User.builder()
                 .keycloakId(jwt.getSubject())
-                .email(jwt.getClaimAsString("email"))
+                .email(email)
                 .firstName(nvl(jwt.getClaimAsString("given_name")))
                 .lastName(nvl(jwt.getClaimAsString("family_name")))
                 .role(extractRole(jwt))
