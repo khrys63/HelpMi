@@ -178,6 +178,6 @@ async function fetchTickets() {
     params.type = selectedTypes.value.join(',')
   const { data } = await ticketsApi.list(projectId, params)
   tickets.value = data.content
-  totalPages.value = data.totalPages
+  totalPages.value = data.page?.totalPages ?? data.totalPages ?? 1
 }
 </script>

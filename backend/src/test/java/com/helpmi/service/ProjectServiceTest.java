@@ -8,6 +8,7 @@ import com.helpmi.dto.response.ProjectResponse;
 import com.helpmi.exception.ForbiddenException;
 import com.helpmi.exception.NotFoundException;
 import com.helpmi.repository.ProjectRepository;
+import com.helpmi.repository.TicketRepository;
 import com.helpmi.security.CurrentUserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.*;
 class ProjectServiceTest {
 
     @Mock ProjectRepository projectRepository;
+    @Mock TicketRepository ticketRepository;
     @Mock CurrentUserService currentUserService;
 
     @InjectMocks ProjectService service;

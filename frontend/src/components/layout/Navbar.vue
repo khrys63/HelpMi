@@ -7,9 +7,11 @@
         <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/config"
           class="text-sm text-gray-600 hover:text-blue-600">Configuration</router-link>
         <div v-if="auth.user" class="flex items-center gap-2 text-sm text-gray-700">
-          <span class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-medium text-xs">
+          <router-link to="/profile"
+            class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-medium text-xs hover:bg-blue-700 transition-colors"
+            :title="`${auth.user.firstName} ${auth.user.lastName} — Profil & tokens API`">
             {{ initials }}
-          </span>
+          </router-link>
           <span>{{ auth.user.firstName }} {{ auth.user.lastName }}</span>
           <span class="text-xs text-gray-400 uppercase">{{ auth.user.role }}</span>
           <button v-if="!isDevMode" @click="auth.logout()"

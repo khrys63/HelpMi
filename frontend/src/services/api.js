@@ -65,6 +65,13 @@ export const usersApi = {
   me: () => api.get('/users/me')
 }
 
+// Personal tokens
+export const personalTokensApi = {
+  list: () => api.get('/users/me/tokens'),
+  create: data => api.post('/users/me/tokens', data),
+  remove: id => api.delete(`/users/me/tokens/${id}`)
+}
+
 // Clients admin
 export const clientsAdminApi = {
   list: () => api.get('/admin/clients'),

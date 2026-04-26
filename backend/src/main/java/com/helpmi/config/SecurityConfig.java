@@ -1,6 +1,8 @@
 package com.helpmi.config;
 
 import com.helpmi.security.DevAuthFilter;
+import com.helpmi.security.PersonalTokenFilter;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +13,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -32,6 +37,9 @@ public class SecurityConfig {
     @Autowired(required = false)
     private DevAuthFilter devAuthFilter;
 
+    @Autowired(required = false)
+    private PersonalTokenFilter personalTokenFilter;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
@@ -44,10 +52,14 @@ public class SecurityConfig {
                 http.addFilterBefore(devAuthFilter, UsernamePasswordAuthenticationFilter.class);
             }
         } else {
+            if (personalTokenFilter != null) {
+                http.addFilterBefore(personalTokenFilter, BearerTokenAuthenticationFilter.class);
+            }
             http.authorizeHttpRequests(auth -> auth
                             .requestMatchers("/actuator/health").permitAll()
                             .anyRequest().authenticated())
                     .oauth2ResourceServer(oauth2 -> oauth2
+                            .bearerTokenResolver(new JwtOnlyBearerTokenResolver())
                             .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
         }
 
@@ -80,5 +92,18 @@ public class SecurityConfig {
                     .toList();
         });
         return converter;
+    }
+
+    // Passes the Bearer token to the OAuth2 filter only if it looks like a JWT (has 2 dots).
+    // PATs are handled upstream by PersonalTokenFilter.
+    private static class JwtOnlyBearerTokenResolver implements BearerTokenResolver {
+        private final DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
+
+        @Override
+        public String resolve(HttpServletRequest request) {
+            String token = delegate.resolve(request);
+            if (token == null) return null;
+            return token.chars().filter(c -> c == '.').count() == 2 ? token : null;
+        }
     }
 }
