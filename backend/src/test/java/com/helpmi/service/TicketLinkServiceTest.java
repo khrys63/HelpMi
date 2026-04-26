@@ -6,6 +6,7 @@ import com.helpmi.domain.User;
 import com.helpmi.dto.request.CreateTicketLinkRequest;
 import com.helpmi.dto.response.TicketLinkResponse;
 import com.helpmi.dto.response.TicketSummary;
+import com.helpmi.exception.ForbiddenException;
 import com.helpmi.exception.NotFoundException;
 import com.helpmi.repository.TicketLinkRepository;
 import com.helpmi.repository.TicketRepository;
@@ -117,16 +118,79 @@ class TicketLinkServiceTest {
     }
 
     @Test
-    void deleteLink_found_deletes() {
+    void deleteLink_agent_deletes() {
         User user = agentUser();
         Ticket source = ticket(project(), user);
         Ticket target = ticket(project(), user);
         TicketLink link = buildLink(source, target, "RELATES_TO");
         when(linkRepository.findById(link.getId())).thenReturn(Optional.of(link));
+        when(currentUserService.getCurrentUser()).thenReturn(user);
 
         service.deleteLink(link.getId());
 
         verify(linkRepository).delete(link);
+    }
+
+    @Test
+    void deleteLink_admin_deletes() {
+        User admin = adminUser();
+        User creator = clientUser();
+        Ticket source = ticket(project(), creator);
+        Ticket target = ticket(project(), creator);
+        TicketLink link = TicketLink.builder()
+                .id(UUID.randomUUID())
+                .sourceTicket(source)
+                .targetTicket(target)
+                .linkType("BLOCKS")
+                .createdBy(creator)
+                .build();
+        when(linkRepository.findById(link.getId())).thenReturn(Optional.of(link));
+        when(currentUserService.getCurrentUser()).thenReturn(admin);
+
+        service.deleteLink(link.getId());
+
+        verify(linkRepository).delete(link);
+    }
+
+    @Test
+    void deleteLink_creator_canDelete() {
+        User creator = clientUser();
+        Ticket source = ticket(project(), creator);
+        Ticket target = ticket(project(), creator);
+        TicketLink link = TicketLink.builder()
+                .id(UUID.randomUUID())
+                .sourceTicket(source)
+                .targetTicket(target)
+                .linkType("RELATES_TO")
+                .createdBy(creator)
+                .build();
+        when(linkRepository.findById(link.getId())).thenReturn(Optional.of(link));
+        when(currentUserService.getCurrentUser()).thenReturn(creator);
+
+        service.deleteLink(link.getId());
+
+        verify(linkRepository).delete(link);
+    }
+
+    @Test
+    void deleteLink_otherClient_throws() {
+        User creator = clientUser();
+        User other = clientUser();
+        Ticket source = ticket(project(), creator);
+        Ticket target = ticket(project(), creator);
+        TicketLink link = TicketLink.builder()
+                .id(UUID.randomUUID())
+                .sourceTicket(source)
+                .targetTicket(target)
+                .linkType("RELATES_TO")
+                .createdBy(creator)
+                .build();
+        when(linkRepository.findById(link.getId())).thenReturn(Optional.of(link));
+        when(currentUserService.getCurrentUser()).thenReturn(other);
+
+        assertThatThrownBy(() -> service.deleteLink(link.getId()))
+                .isInstanceOf(ForbiddenException.class);
+        verify(linkRepository, never()).delete(any());
     }
 
     // --- search ---

@@ -5,6 +5,8 @@ import com.helpmi.domain.TicketLink;
 import com.helpmi.dto.request.CreateTicketLinkRequest;
 import com.helpmi.dto.response.TicketLinkResponse;
 import com.helpmi.dto.response.TicketSummary;
+import com.helpmi.domain.enums.UserRole;
+import com.helpmi.exception.ForbiddenException;
 import com.helpmi.exception.NotFoundException;
 import com.helpmi.repository.TicketLinkRepository;
 import com.helpmi.repository.TicketRepository;
@@ -52,6 +54,12 @@ public class TicketLinkService {
     public void deleteLink(UUID linkId) {
         TicketLink link = linkRepository.findById(linkId)
                 .orElseThrow(() -> new NotFoundException("Lien introuvable"));
+        var user = currentUserService.getCurrentUser();
+        boolean isAdminOrAgent = user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.AGENT;
+        boolean isCreator = link.getCreatedBy() != null && link.getCreatedBy().getId().equals(user.getId());
+        if (!isAdminOrAgent && !isCreator) {
+            throw new ForbiddenException("Vous n'êtes pas autorisé à supprimer ce lien");
+        }
         linkRepository.delete(link);
     }
 

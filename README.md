@@ -162,57 +162,45 @@ Les fichiers dans `db/dev-seed/` ne sont chargés qu'avec le profil `dev`.
 
 ## Variables à personnaliser
 
-Plusieurs valeurs de configuration sont **commitées en dur** dans les fichiers de configuration. Elles doivent être adaptées à votre environnement avant tout déploiement.
+### Fichier `.env` (Docker Compose)
 
-### Base de données — `application-dev.yml`
+Les mots de passe et credentials sont externalisés dans un fichier `.env` à la racine du projet, **non commité** (déjà dans `.gitignore`).
+
+```bash
+cp .env.example .env
+# puis éditer .env avec vos valeurs
+```
+
+| Variable | Rôle |
+|---|---|
+| `DB_USER` | Utilisateur MariaDB |
+| `DB_PASSWORD` | Mot de passe MariaDB |
+| `DB_ROOT_PASSWORD` | Mot de passe root MariaDB |
+| `KEYCLOAK_ADMIN` | Login admin Keycloak |
+| `KEYCLOAK_ADMIN_PASSWORD` | Mot de passe admin Keycloak |
+| `APP_CORS_ALLOWED_ORIGINS` | URL publique du frontend (obligatoire en prod) |
+
+> `APP_CORS_ALLOWED_ORIGINS` est **obligatoire** en production. Le backend refuse de démarrer si elle est absente.
+
+### Backend local — `application-dev.yml`
+
+En mode développement (backend lancé hors Docker), les credentials MariaDB restent dans `backend/src/main/resources/application-dev.yml`. Ce fichier n'est pas chargé en production.
 
 ```yaml
 spring:
   datasource:
-    url: jdbc:mariadb://localhost:3306/helpmi
-    username: helpmi
-    password: helpmi_pass        # ← à changer
+    password: helpmi_pass   # ← à synchroniser avec DB_PASSWORD dans .env
 ```
-
-### Base de données — `docker-compose.yml`
-
-```yaml
-mariadb:
-  environment:
-    MYSQL_DATABASE: helpmi
-    MYSQL_USER: helpmi
-    MYSQL_PASSWORD: helpmi_pass      # ← à changer
-    MYSQL_ROOT_PASSWORD: root_pass   # ← à changer
-```
-
-### Backend production — variables d'environnement Docker Compose
-
-Le profil `prod` ne lit pas de valeurs en dur : tout est passé par variables d'environnement dans `docker-compose.yml`.
-
-```yaml
-backend:
-  environment:
-    SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/helpmi
-    SPRING_DATASOURCE_USERNAME: helpmi
-    SPRING_DATASOURCE_PASSWORD: helpmi_pass       # ← à changer
-    APP_KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/helpmi
-    APP_STORAGE_PATH: /app/uploads
-    APP_CORS_ALLOWED_ORIGINS: https://helpmi.example.com  # ← URL réelle du frontend
-```
-
-> `APP_CORS_ALLOWED_ORIGINS` est **obligatoire** en production. Le backend refuse de démarrer si elle est absente.
 
 ### Keycloak — `keycloak/realm-export.json`
 
-Le fichier contient des comptes de démonstration avec des mots de passe par défaut :
+Le fichier contient des comptes de démonstration. Ces comptes ne sont utilisés qu'en mode Keycloak (production) ; en mode `dev`, l'authentification est simulée sans mot de passe.
 
-| Email | Rôle | Mot de passe par défaut |
-|---|---|---|
-| `admin@helpmi.local` | ADMIN | défini dans le realm export |
-| `agent@helpmi.local` | AGENT | défini dans le realm export |
-| `client@helpmi.local` | CLIENT | défini dans le realm export |
-
-Ces comptes ne sont utilisés qu'en mode Keycloak (production). En mode `dev`, l'authentification est simulée sans mot de passe.
+| Email | Rôle |
+|---|---|
+| `admin@helpmi.local` | ADMIN |
+| `agent@helpmi.local` | AGENT |
+| `client@helpmi.local` | CLIENT |
 
 ---
 

@@ -9,8 +9,8 @@ services:
     container_name: helpmi_phpmyadmin
     environment:
       PMA_HOST: mariadb
-      PMA_USER: helpmi
-      PMA_PASSWORD: helpmi_pass
+      PMA_USER: ${DB_USER}
+      PMA_PASSWORD: ${DB_PASSWORD}
     ports:
       - "8081:80"
     depends_on:
