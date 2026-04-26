@@ -1,6 +1,8 @@
 # HelpMi
 
-Outil de ticketing interne inspiré de Jira. Gestion de projets, tickets, commentaires, pièces jointes et utilisateurs, avec authentification via Keycloak (ou mode développement sans auth).
+Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces jointes et utilisateurs, avec authentification via Keycloak (ou mode développement sans auth).
+
+![HelpMi](/frontend/src/assets/HelpMi_256.png "HelpMi")
 
 ---
 

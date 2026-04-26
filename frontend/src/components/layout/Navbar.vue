@@ -1,7 +1,10 @@
 <template>
   <nav class="bg-white border-b border-gray-200 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
-      <router-link to="/projects" class="text-blue-600 font-bold text-lg tracking-tight">HelpMi</router-link>
+      <router-link to="/projects" class="flex items-center gap-2 text-blue-600 font-bold text-lg tracking-tight">
+        <img :src="logo" alt="HelpMi" />
+        HelpMi
+      </router-link>
       <div class="flex items-center gap-4">
         <router-link to="/projects" class="text-sm text-gray-600 hover:text-blue-600">Projets</router-link>
         <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/users"
@@ -29,6 +32,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useAuthStore } from '../../stores/auth.js'
+import logo from '../../assets/HelpMi_50.png'
 
 const auth = useAuthStore()
 const isDevMode = import.meta.env.VITE_DEV_MODE === 'true'
