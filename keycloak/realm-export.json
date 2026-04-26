@@ -1,0 +1,67 @@
+{
+  "realm": "helpmi",
+  "enabled": true,
+  "displayName": "JiraLike",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "roles": {
+    "realm": [
+      { "name": "ADMIN", "composite": false },
+      { "name": "AGENT", "composite": false },
+      { "name": "CLIENT", "composite": false }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "helpmi-frontend",
+      "name": "JiraLike Frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": ["+"],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@helpmi.local",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }],
+      "realmRoles": ["ADMIN"]
+    },
+    {
+      "username": "agent",
+      "email": "agent@helpmi.local",
+      "firstName": "Agent",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "agent123", "temporary": false }],
+      "realmRoles": ["AGENT"]
+    },
+    {
+      "username": "client",
+      "email": "client@helpmi.local",
+      "firstName": "Client",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "client123", "temporary": false }],
+      "realmRoles": ["CLIENT"]
+    }
+  ]
+}

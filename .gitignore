@@ -1,0 +1,42 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Claude Code
+.claude/
+
+# IDE - IntelliJ / VSCode
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# Java / Maven
+backend/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker volumes (données locales)
+postgres_data/
+uploads_data/
+
+# Keycloak import export temporaires
+keycloak/*.json.bak
