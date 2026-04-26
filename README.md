@@ -79,7 +79,7 @@ Prérequis : Java 21+, Node 20+, Docker
 **1. Démarrer MariaDB**
 
 ```bash
-docker-compose up -d mariadb
+docker compose up -d mariadb
 ```
 
 **2. Démarrer le backend**
@@ -106,7 +106,7 @@ L'application est disponible sur `http://localhost:5173`. Le proxy Vite redirige
 ### Mode production (Docker Compose complet)
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 | Service | URL |

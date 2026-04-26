@@ -18,6 +18,18 @@ services:
       timeout: 5s
       retries: 5
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    environment:
+      PMA_HOST: mariadb
+      PMA_USER: helpmi
+      PMA_PASSWORD: helpmi_pass
+    ports:
+      - "8081:80"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
   keycloak:
     image: quay.io/keycloak/keycloak:24.0
     environment:
