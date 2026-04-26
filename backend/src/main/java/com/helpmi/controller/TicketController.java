@@ -4,6 +4,7 @@ import com.helpmi.dto.request.ChangeStatusRequest;
 import com.helpmi.dto.request.CreateTicketRequest;
 import com.helpmi.dto.request.DueDateRequest;
 import com.helpmi.dto.request.MoveTicketRequest;
+import com.helpmi.dto.request.SetAssigneeRequest;
 import com.helpmi.dto.request.UpdateTicketRequest;
 import com.helpmi.dto.response.ChangeStatusResponse;
 import com.helpmi.dto.response.ClientResponse;
@@ -63,6 +64,12 @@ public class TicketController {
     public ChangeStatusResponse changeStatus(@PathVariable UUID projectId, @PathVariable UUID ticketId,
             @Valid @RequestBody ChangeStatusRequest req) {
         return ticketService.changeStatus(projectId, ticketId, req.status());
+    }
+
+    @PatchMapping("/{ticketId}/assignee")
+    public TicketResponse setAssignee(@PathVariable UUID projectId, @PathVariable UUID ticketId,
+            @RequestBody SetAssigneeRequest req) {
+        return ticketService.setAssignee(projectId, ticketId, req.assigneeId());
     }
 
     @PatchMapping("/{ticketId}/due-date")

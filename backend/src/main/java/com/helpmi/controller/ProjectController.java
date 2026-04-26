@@ -3,7 +3,9 @@ package com.helpmi.controller;
 import com.helpmi.dto.request.CreateProjectRequest;
 import com.helpmi.dto.request.UpdateProjectRequest;
 import com.helpmi.dto.response.ProjectResponse;
+import com.helpmi.dto.response.UserResponse;
 import com.helpmi.service.ProjectService;
+import com.helpmi.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,7 @@ import java.util.UUID;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final UserService userService;
 
     @GetMapping
     public List<ProjectResponse> getAll() {
@@ -44,5 +47,10 @@ public class ProjectController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {
         projectService.deleteProject(id);
+    }
+
+    @GetMapping("/{id}/assignable-users")
+    public List<UserResponse> getAssignableUsers(@PathVariable UUID id) {
+        return userService.getAssignableUsers(id);
     }
 }

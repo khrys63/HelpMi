@@ -122,9 +122,12 @@ public class TicketService {
         projectService.requireProjectAccess(projectId);
         User currentUser = currentUserService.getCurrentUser();
         var project = projectService.findActive(projectId);
-        User assignee = req.assigneeId() != null
-                ? userRepository.findById(req.assigneeId()).orElseThrow(() -> new NotFoundException("Assigné introuvable"))
-                : null;
+        User assignee = null;
+        if (req.assigneeId() != null) {
+            validateAssignee(req.assigneeId(), projectId);
+            assignee = userRepository.findById(req.assigneeId())
+                    .orElseThrow(() -> new NotFoundException("Assigné introuvable"));
+        }
         String reference = projectService.generateTicketReference(projectId);
         Ticket ticket = Ticket.builder()
                 .reference(reference)
@@ -148,6 +151,7 @@ public class TicketService {
         if (req.priority() != null) ticket.setPriority(req.priority());
         if (req.type() != null) ticket.setType(req.type());
         if (req.assigneeId() != null) {
+            validateAssignee(req.assigneeId(), projectId);
             ticket.setAssignee(userRepository.findById(req.assigneeId())
                     .orElseThrow(() -> new NotFoundException("Assigné introuvable")));
         }
@@ -276,6 +280,25 @@ public class TicketService {
                 .map(LabelResponse::from)
                 .sorted(Comparator.comparing(LabelResponse::name))
                 .toList();
+    }
+
+    public TicketResponse setAssignee(UUID projectId, UUID ticketId, UUID assigneeId) {
+        Ticket ticket = findTicket(projectId, ticketId);
+        requireCanModify(currentUserService.getCurrentUser(), ticket);
+        if (assigneeId == null) {
+            ticket.setAssignee(null);
+        } else {
+            validateAssignee(assigneeId, projectId);
+            ticket.setAssignee(userRepository.findById(assigneeId)
+                    .orElseThrow(() -> new NotFoundException("Assigné introuvable")));
+        }
+        return toResponse(ticketRepository.save(ticket));
+    }
+
+    private void validateAssignee(UUID assigneeId, UUID projectId) {
+        if (!userRepository.isAssignableToProject(assigneeId, projectId)) {
+            throw new IllegalArgumentException("Cet utilisateur n'est pas assignable à ce projet");
+        }
     }
 
     private void requireCanModify(User user, Ticket ticket) {

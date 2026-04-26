@@ -377,11 +377,12 @@ import { useToastStore } from '../stores/toast.js'
 import StatusBadge from '../components/tickets/StatusBadge.vue'
 
 const TRANSITIONS = {
-  OPEN:        [{ status: 'IN_PROGRESS', label: 'Démarrer' },   { status: 'CANCELLED', label: 'Annuler' }],
-  IN_PROGRESS: [{ status: 'RESOLVED',    label: 'Résoudre' },   { status: 'CANCELLED', label: 'Annuler' }],
-  RESOLVED:    [{ status: 'CLOSED',      label: 'Fermer' },     { status: 'OPEN', label: 'Réouvrir' }],
-  CLOSED:      [{ status: 'OPEN',        label: 'Réouvrir' }],
-  CANCELLED:   [{ status: 'OPEN',        label: 'Réouvrir' }],
+  OPEN:        [{ status: 'IN_PROGRESS', label: 'Démarrer' },  { status: 'STAND_BY', label: 'Mettre en pause' }, { status: 'CANCELLED', label: 'Annuler' }],
+  IN_PROGRESS: [{ status: 'RESOLVED',   label: 'Résoudre' },  { status: 'STAND_BY', label: 'Mettre en pause' }, { status: 'CANCELLED', label: 'Annuler' }],
+  STAND_BY:    [{ status: 'IN_PROGRESS', label: 'Reprendre' }, { status: 'OPEN', label: 'Réouvrir' },            { status: 'CANCELLED', label: 'Annuler' }],
+  RESOLVED:    [{ status: 'CLOSED',     label: 'Fermer' },    { status: 'OPEN',       label: 'Réouvrir' }],
+  CLOSED:      [{ status: 'OPEN',       label: 'Réouvrir' }],
+  CANCELLED:   [{ status: 'OPEN',       label: 'Réouvrir' }],
 }
 
 const STATUS_BUTTON_COLORS = {
@@ -390,6 +391,7 @@ const STATUS_BUTTON_COLORS = {
   green:  'bg-green-100 text-green-800 border-green-200 hover:bg-green-200',
   gray:   'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200',
   red:    'bg-red-100 text-red-700 border-red-200 hover:bg-red-200',
+  purple: 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200',
 }
 
 const route = useRoute()
@@ -456,7 +458,7 @@ const descriptionInput = ref(null)
 onMounted(async () => {
   const [{ data: t }, { data: u }] = await Promise.all([
     ticketsApi.get(projectId, ticketId),
-    usersApi.list()
+    usersApi.assignable(projectId)
   ])
   ticket.value = t
   users.value = u
@@ -521,7 +523,9 @@ async function applyTransition(newStatus) {
 }
 
 async function reassign() {
-  await ticketsApi.update(projectId, ticketId, { assigneeId: assigneeId.value || null })
+  const { data } = await ticketsApi.setAssignee(projectId, ticketId, assigneeId.value || null)
+  ticket.value.assignee = data.assignee
+  ticket.value.updatedAt = data.updatedAt
 }
 
 // --- Commentaires ---

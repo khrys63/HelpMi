@@ -114,7 +114,12 @@
             <TypeBadge :type="t.type" />
             <PriorityBadge :priority="t.priority" />
             <StatusBadge :status="t.status" />
-            <span v-if="t.assignee" class="text-xs text-gray-500">
+            <span v-if="t.assignee"
+              class="inline-flex items-center gap-1 text-xs text-gray-600 bg-gray-100 rounded-full px-2 py-0.5"
+              :title="`${t.assignee.firstName} ${t.assignee.lastName}`">
+              <span class="w-4 h-4 rounded-full bg-blue-500 text-white flex items-center justify-center font-medium text-[10px]">
+                {{ (t.assignee.firstName[0] + t.assignee.lastName[0]).toUpperCase() }}
+              </span>
               {{ t.assignee.firstName }} {{ t.assignee.lastName }}
             </span>
           </div>
@@ -152,7 +157,7 @@ const page = ref(0)
 const totalPages = ref(1)
 const openFilter = ref(null)
 
-const EXCLUDED_BY_DEFAULT = ['CANCELLED', 'CLOSED']
+const EXCLUDED_BY_DEFAULT = ['CANCELLED', 'CLOSED', 'RESOLVED']
 const selectedStatuses   = ref([])
 const selectedPriorities = ref([])
 const selectedTypes      = ref([])

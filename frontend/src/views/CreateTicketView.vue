@@ -91,7 +91,7 @@ const titleInput = ref(null)
 onMounted(async () => {
   nextTick(() => titleInput.value?.focus())
   if (canAssign.value) {
-    const { data } = await usersApi.list()
+    const { data } = await usersApi.assignable(projectId)
     users.value = data
   }
   const firstType = config.types.find(t => t.active)

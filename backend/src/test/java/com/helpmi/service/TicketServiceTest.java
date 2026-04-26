@@ -146,6 +146,7 @@ class TicketServiceTest {
         when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(projectService.findActive(project.getId())).thenReturn(project);
         when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-1");
+        when(userRepository.isAssignableToProject(assignee.getId(), project.getId())).thenReturn(true);
         when(userRepository.findById(assignee.getId())).thenReturn(Optional.of(assignee));
         when(ticketRepository.save(any())).thenReturn(ticket);
 
@@ -629,6 +630,45 @@ class TicketServiceTest {
 
         assertThatThrownBy(() -> service.cloneTicket(project.getId(), ticket.getId()))
                 .isInstanceOf(ForbiddenException.class);
+    }
+
+    // ── setAssignee ───────────────────────────────────────────────────────────
+
+    @Test
+    void setAssignee_validUser_setsAssignee() {
+        User assignee = clientUser();
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(userRepository.isAssignableToProject(assignee.getId(), project.getId())).thenReturn(true);
+        when(userRepository.findById(assignee.getId())).thenReturn(Optional.of(assignee));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.setAssignee(project.getId(), ticket.getId(), assignee.getId());
+
+        assertThat(ticket.getAssignee()).isEqualTo(assignee);
+    }
+
+    @Test
+    void setAssignee_nullId_clearsAssignee() {
+        ticket.setAssignee(agentUser());
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.setAssignee(project.getId(), ticket.getId(), null);
+
+        assertThat(ticket.getAssignee()).isNull();
+    }
+
+    @Test
+    void setAssignee_notAssignable_throws() {
+        User other = clientUser();
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(userRepository.isAssignableToProject(other.getId(), project.getId())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.setAssignee(project.getId(), ticket.getId(), other.getId()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     // ── H1 — isolation par organisation ──────────────────────────────────────

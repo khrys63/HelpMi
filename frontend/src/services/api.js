@@ -28,6 +28,8 @@ export const ticketsApi = {
   create: (projectId, data) => api.post(`/projects/${projectId}/tickets`, data),
   update: (projectId, ticketId, data) => api.put(`/projects/${projectId}/tickets/${ticketId}`, data),
   changeStatus: (projectId, ticketId, status) => api.patch(`/projects/${projectId}/tickets/${ticketId}/status`, { status }),
+  setAssignee: (projectId, ticketId, assigneeId) =>
+    api.patch(`/projects/${projectId}/tickets/${ticketId}/assignee`, { assigneeId: assigneeId || null }),
   move: (projectId, ticketId, targetProjectId) =>
     api.post(`/projects/${projectId}/tickets/${ticketId}/move`, { targetProjectId }),
   clone: (projectId, ticketId) => api.post(`/projects/${projectId}/tickets/${ticketId}/clone`),
@@ -62,7 +64,8 @@ export const attachmentsApi = {
 // Users
 export const usersApi = {
   list: () => api.get('/users'),
-  me: () => api.get('/users/me')
+  me: () => api.get('/users/me'),
+  assignable: projectId => api.get(`/projects/${projectId}/assignable-users`)
 }
 
 // Personal tokens

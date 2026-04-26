@@ -73,6 +73,11 @@ public class UserService {
         return UserResponse.from(userRepository.save(user));
     }
 
+    public List<UserResponse> getAssignableUsers(UUID projectId) {
+        return userRepository.findAssignableByProjectId(projectId)
+                .stream().map(UserResponse::from).toList();
+    }
+
     public UserResponse getCurrentUser() {
         return UserResponse.from(currentUserService.getCurrentUser());
     }
