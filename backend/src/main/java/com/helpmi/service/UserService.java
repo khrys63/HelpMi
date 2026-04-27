@@ -78,6 +78,7 @@ public class UserService {
                 .stream().map(UserResponse::from).toList();
     }
 
+    @Transactional
     public UserResponse getCurrentUser() {
         return UserResponse.from(currentUserService.getCurrentUser());
     }
