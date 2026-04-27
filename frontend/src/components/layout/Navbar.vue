@@ -21,7 +21,7 @@
           </router-link>
           <span>{{ auth.user.firstName }} {{ auth.user.lastName }}</span>
           <span class="text-xs text-gray-400 uppercase">{{ auth.user.role }}</span>
-          <button v-if="!isDevMode" @click="auth.logout()"
+          <button @click="auth.logout()"
             class="ml-2 text-xs text-gray-500 hover:text-red-600">Déconnexion</button>
         </div>
       </div>
@@ -35,7 +35,6 @@ import { useAuthStore } from '../../stores/auth.js'
 import logo from '../../assets/HelpMi_50.png'
 
 const auth = useAuthStore()
-const isDevMode = import.meta.env.VITE_DEV_MODE === 'true'
 const initials = computed(() => {
   if (!auth.user) return '?'
   return ((auth.user.firstName?.[0] || '') + (auth.user.lastName?.[0] || '')).toUpperCase()

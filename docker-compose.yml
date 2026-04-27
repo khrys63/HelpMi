@@ -20,7 +20,7 @@ services:
       retries: 5
 
   keycloak:
-    image: quay.io/keycloak/keycloak:24.0
+    image: quay.io/keycloak/keycloak:26.6
     container_name: helpmi_keycloak
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
@@ -56,7 +56,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/helpmi
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      APP_KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/helpmi
+      APP_KEYCLOAK_ISSUER_URI: ${APP_KEYCLOAK_ISSUER_URI:-http://keycloak:8080/realms/helpmi}
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS}
       APP_S3_ENDPOINT: http://minio:9000
       APP_S3_ACCESS_KEY: ${MINIO_ROOT_USER}
@@ -74,10 +74,9 @@ services:
       context: ./frontend
       args:
         VITE_API_URL: /api
-        VITE_DEV_MODE: "false"
-        VITE_KEYCLOAK_URL: http://localhost:8180
-        VITE_KEYCLOAK_REALM: helpmi
-        VITE_KEYCLOAK_CLIENT_ID: helpmi-frontend
+        VITE_KEYCLOAK_URL: ${VITE_KEYCLOAK_URL:-http://localhost:8180}
+        VITE_KEYCLOAK_REALM: ${VITE_KEYCLOAK_REALM:-helpmi}
+        VITE_KEYCLOAK_CLIENT_ID: ${VITE_KEYCLOAK_CLIENT_ID:-helpmi-frontend}
     container_name: helpmi_frontend
     ports:
       - "3000:80"

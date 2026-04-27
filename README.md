@@ -1,6 +1,6 @@
 # HelpMi
 
-Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces jointes et utilisateurs, avec authentification via Keycloak (ou mode développement sans auth).
+Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces jointes et utilisateurs, avec authentification via Keycloak.
 
 ![HelpMi](/frontend/src/assets/HelpMi_256.png "HelpMi")
 
@@ -30,7 +30,7 @@ Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces j
 | Backend | Java 21, Spring Boot 3.3, Spring Security (OAuth2 JWT) |
 | Persistance | MariaDB 11, Hibernate/JPA, Flyway |
 | Frontend | Vue 3 (Composition API), Pinia, Vue Router 4, Tailwind CSS, Axios |
-| Auth | Keycloak 24 (ou mode dev sans auth) |
+| Auth | Keycloak 26 |
 | Stockage fichiers | MinIO (S3-compatible) — interchangeable avec AWS S3, Scaleway, OVH… |
 | Build | Maven, Vite |
 | Conteneurs | Docker, Docker Compose |
@@ -48,9 +48,9 @@ Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces j
 │   │   ├── domain/                 # Entités JPA
 │   │   ├── dto/                    # Request / Response DTOs
 │   │   ├── repository/             # Spring Data JPA
-│   │   ├── security/               # PersonalTokenFilter, DevAuthFilter, CurrentUserService
+│   │   ├── security/               # PersonalTokenFilter, CurrentUserService
 │   │   ├── storage/                # StorageService (interface) + S3StorageService
-│   │   └── config/                 # SecurityConfig, StorageConfig (S3Client), StartupSafetyCheck
+│   │   └── config/                 # SecurityConfig, StorageConfig (S3Client)
 │   └── src/main/resources/
 │       ├── application.yml         # Config commune
 │       ├── application-dev.yml     # Config mode développement local
@@ -68,7 +68,7 @@ Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces j
 │       └── router/                 # Routes Vue Router
 │
 ├── keycloak/
-│   └── realm-export.json           # Import du realm Keycloak
+│   └── realm-export.json           # Import du realm Keycloak (3 comptes de test inclus)
 │
 ├── docker-compose.yml              # MariaDB + Keycloak + MinIO + Backend + Frontend
 └── docker-compose.dev.yml          # Surcharge dev : console MinIO (port 9001), phpMyAdmin (port 8081)
@@ -92,20 +92,29 @@ cp .env.example .env
 **2. Démarrer les services d'infrastructure**
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb minio phpmyadmin
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb keycloak minio phpmyadmin
 ```
 
 | Service | URL | Rôle |
 |---|---|---|
 | MariaDB | `localhost:3306` | Base de données |
+| Keycloak | `http://localhost:8180` | Authentification |
 | MinIO API | `http://localhost:9000` | Stockage des pièces jointes |
 | MinIO Console | `http://localhost:9001` | Interface d'administration MinIO |
 | phpMyAdmin | `http://localhost:8081` | Interface SQL |
 
 > Pour démarrer uniquement les services strictement nécessaires (sans phpMyAdmin) :
 > ```bash
-> docker compose up -d mariadb minio
+> docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb keycloak minio
 > ```
+
+Le realm Keycloak `helpmi` est importé automatiquement au premier démarrage. Trois comptes de test sont disponibles :
+
+| Utilisateur | Email | Mot de passe | Rôle |
+|---|---|---|---|
+| admin | `admin@helpmi.local` | `admin123` | ADMIN |
+| agent | `agent@helpmi.local` | `agent123` | AGENT |
+| client | `client@helpmi.local` | `client123` | CLIENT |
 
 **3. Démarrer le backend**
 
@@ -114,15 +123,9 @@ cd backend
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-Le profil `dev` désactive l'authentification Keycloak et injecte automatiquement un utilisateur. Les données de test sont insérées via Flyway au premier démarrage. Les credentials MinIO sont pré-configurés dans `application-dev.yml` pour correspondre aux valeurs par défaut du `.env`.
+Le profil `dev` configure la connexion à MariaDB locale et à Keycloak (port 8180). Les données de test (utilisateurs, projets, tickets) sont insérées via Flyway au premier démarrage.
 
-**Changer d'utilisateur de test** : modifier `app.dev.user-email` dans `backend/src/main/resources/application-dev.yml` puis redémarrer le backend.
-
-| Email | Rôle |
-|---|---|
-| `admin@helpmi.local` | ADMIN (défaut) |
-| `agent@helpmi.local` | AGENT |
-| `client@helpmi.local` | CLIENT |
+À la première connexion d'un compte Keycloak, le backend retrouve l'utilisateur pré-seedé par email et met à jour son `keycloakId` — aucune duplication n'est créée.
 
 **4. Démarrer le frontend**
 
@@ -135,7 +138,7 @@ npm install   # à faire une seule fois (ou après chaque mise à jour de packag
 npm run dev
 ```
 
-L'application est disponible sur `http://localhost:5173`. Le proxy Vite redirige `/api` vers `http://localhost:8080`.
+L'application est disponible sur `http://localhost:5173`. Le proxy Vite redirige `/api` vers `http://localhost:8080`. La page de connexion Keycloak s'affiche automatiquement.
 
 ---
 
@@ -197,13 +200,38 @@ cp .env.example .env
 | `DB_USER` | Utilisateur MariaDB |
 | `DB_PASSWORD` | Mot de passe MariaDB |
 | `DB_ROOT_PASSWORD` | Mot de passe root MariaDB |
-| `KEYCLOAK_ADMIN` | Login admin Keycloak |
-| `KEYCLOAK_ADMIN_PASSWORD` | Mot de passe admin Keycloak |
+| `KEYCLOAK_ADMIN` | Login admin Keycloak intégré |
+| `KEYCLOAK_ADMIN_PASSWORD` | Mot de passe admin Keycloak intégré |
+| `APP_KEYCLOAK_ISSUER_URI` | Issuer JWT Keycloak (backend) |
+| `VITE_KEYCLOAK_URL` | URL Keycloak (frontend) |
+| `VITE_KEYCLOAK_REALM` | Nom du realm |
+| `VITE_KEYCLOAK_CLIENT_ID` | Client ID OIDC |
 | `APP_CORS_ALLOWED_ORIGINS` | URL publique du frontend (obligatoire en prod) |
 | `MINIO_ROOT_USER` | Login administrateur MinIO |
 | `MINIO_ROOT_PASSWORD` | Mot de passe administrateur MinIO |
 
 > `APP_CORS_ALLOWED_ORIGINS` est **obligatoire** en production. Le backend refuse de démarrer si elle est absente.
+
+### Keycloak externe (production)
+
+Par défaut le compose démarre un Keycloak intégré. Pour utiliser un Keycloak tiers (Auth0, votre propre instance…), définir dans `.env` :
+
+| Variable | Défaut (KC intégré) | Description |
+|---|---|---|
+| `APP_KEYCLOAK_ISSUER_URI` | `http://keycloak:8080/realms/helpmi` | Issuer JWT — lu par le backend pour valider les tokens |
+| `VITE_KEYCLOAK_URL` | `http://localhost:8180` | URL de base Keycloak — utilisée par le frontend au build |
+| `VITE_KEYCLOAK_REALM` | `helpmi` | Nom du realm |
+| `VITE_KEYCLOAK_CLIENT_ID` | `helpmi-frontend` | Client ID OIDC public |
+
+Puis supprimer le service `keycloak` du compose (et les variables `KEYCLOAK_ADMIN*` devenues inutiles) :
+
+```yaml
+# docker-compose.yml — commenter ou supprimer :
+# keycloak:
+#   image: ...
+```
+
+> Le realm doit exposer les rôles `ADMIN`, `AGENT`, `CLIENT` dans le claim JWT `realm_access.roles`.
 
 ### Stockage sur un S3 externe (production)
 
@@ -248,13 +276,15 @@ app:
 
 ### Keycloak — `keycloak/realm-export.json`
 
-Le fichier contient des comptes de démonstration. Ces comptes ne sont utilisés qu'en mode Keycloak (production) ; en mode `dev`, l'authentification est simulée sans mot de passe.
+Le fichier contient trois comptes de démonstration importés automatiquement au premier démarrage de Keycloak :
 
-| Email | Rôle |
-|---|---|
-| `admin@helpmi.local` | ADMIN |
-| `agent@helpmi.local` | AGENT |
-| `client@helpmi.local` | CLIENT |
+| Email | Mot de passe | Rôle |
+|---|---|---|
+| `admin@helpmi.local` | `admin123` | ADMIN |
+| `agent@helpmi.local` | `agent123` | AGENT |
+| `client@helpmi.local` | `client123` | CLIENT |
+
+Ces comptes correspondent aux utilisateurs pré-seedés en base (profil `dev`). À la première connexion, le backend les retrouve par email et met à jour leur `keycloakId`.
 
 ---
 
@@ -272,12 +302,12 @@ Le rapport HTML de couverture est généré dans `backend/target/site/jacoco/ind
 
 ### Couverture actuelle
 
-217 tests unitaires Mockito (sans base de données ni contexte Spring).
+212 tests unitaires Mockito (sans base de données ni contexte Spring).
 
 | Service / Composant | Couverture lignes | Couverture branches |
 |---|---|---|
 | `LabelService`, `ClientService`, `CommentService` | 100 % | 100 % |
-| `RateLimiterService`, `PersonalTokenFilter`, `StartupSafetyCheck` | 100 % | 100 % |
+| `RateLimiterService`, `PersonalTokenFilter` | 100 % | 100 % |
 | `TicketLinkService` | 100 % | 91 % |
 | `OrganizationService` | 97 % | 88 % |
 | `ProjectService`, `AdminConfigService` | 96 % | 82–89 % |

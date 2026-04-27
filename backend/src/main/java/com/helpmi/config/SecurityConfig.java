@@ -1,6 +1,5 @@
 package com.helpmi.config;
 
-import com.helpmi.security.DevAuthFilter;
 import com.helpmi.security.PersonalTokenFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,6 @@ import org.springframework.security.oauth2.server.resource.web.BearerTokenResolv
 import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -31,14 +29,8 @@ import java.util.Map;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${app.security.disabled:false}")
-    private boolean securityDisabled;
-
     @Value("${app.cors.allowed-origins:http://localhost:5173}")
     private String allowedOrigins;
-
-    @Autowired(required = false)
-    private DevAuthFilter devAuthFilter;
 
     @Autowired(required = false)
     private PersonalTokenFilter personalTokenFilter;
@@ -49,22 +41,15 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(Customizer.withDefaults());
 
-        if (securityDisabled) {
-            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-            if (devAuthFilter != null) {
-                http.addFilterBefore(devAuthFilter, UsernamePasswordAuthenticationFilter.class);
-            }
-        } else {
-            if (personalTokenFilter != null) {
-                http.addFilterBefore(personalTokenFilter, BearerTokenAuthenticationFilter.class);
-            }
-            http.authorizeHttpRequests(auth -> auth
-                            .requestMatchers("/actuator/health").permitAll()
-                            .anyRequest().authenticated())
-                    .oauth2ResourceServer(oauth2 -> oauth2
-                            .bearerTokenResolver(new JwtOnlyBearerTokenResolver())
-                            .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
+        if (personalTokenFilter != null) {
+            http.addFilterBefore(personalTokenFilter, BearerTokenAuthenticationFilter.class);
         }
+        http.authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/health").permitAll()
+                        .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .bearerTokenResolver(new JwtOnlyBearerTokenResolver())
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
     }

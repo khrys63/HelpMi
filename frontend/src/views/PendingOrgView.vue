@@ -16,7 +16,7 @@
         <strong>{{ auth.user?.firstName }} {{ auth.user?.lastName }}</strong>
         ({{ auth.user?.email }})
       </p>
-      <button v-if="!isDevMode" @click="auth.logout()"
+      <button @click="auth.logout()"
         class="mt-6 text-sm text-gray-500 hover:text-red-600 underline">
         Se déconnecter
       </button>
@@ -28,5 +28,4 @@
 import { useAuthStore } from '../stores/auth.js'
 
 const auth = useAuthStore()
-const isDevMode = import.meta.env.VITE_DEV_MODE === 'true'
 </script>

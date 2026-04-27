@@ -2,25 +2,12 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import Keycloak from 'keycloak-js'
 
-const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true'
-
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const token = ref(null)
   const keycloak = ref(null)
 
   async function init() {
-    if (DEV_MODE) {
-      // In dev mode fetch the current user from the backend (DevAuthFilter sets it)
-      try {
-        const res = await fetch('/api/users/me')
-        user.value = await res.json()
-      } catch {
-        user.value = { firstName: 'Admin', lastName: 'Dev', email: 'admin@helpmi.local', role: 'ADMIN' }
-      }
-      return
-    }
-
     const kc = new Keycloak({
       url: import.meta.env.VITE_KEYCLOAK_URL,
       realm: import.meta.env.VITE_KEYCLOAK_REALM,
