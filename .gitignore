@@ -40,7 +40,3 @@ uploads_data/
 
 # Keycloak import export temporaires
 keycloak/*.json.bak
-
-# Uploads files
-backend/uploads/
-
