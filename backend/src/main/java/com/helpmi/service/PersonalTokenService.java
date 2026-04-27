@@ -45,6 +45,9 @@ public class PersonalTokenService {
     public PersonalTokenCreated createToken(CreatePersonalTokenRequest req) {
         User user = currentUserService.getCurrentUser();
         rateLimiterService.checkTokenCreation(user.getId());
+        if (req.expiresAt() != null && req.expiresAt().isAfter(LocalDateTime.now().plusYears(1))) {
+            throw new IllegalArgumentException("La durée de validité ne peut pas dépasser 1 an");
+        }
         String plain = generateToken();
         PersonalToken token = PersonalToken.builder()
                 .user(user)

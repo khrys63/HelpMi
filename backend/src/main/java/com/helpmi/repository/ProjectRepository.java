@@ -18,6 +18,9 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
     @Query("SELECT p FROM Project p JOIN p.organizations o WHERE o.id = :orgId AND p.active = true ORDER BY p.createdAt DESC")
     List<Project> findActiveByOrganizationId(@Param("orgId") UUID orgId);
 
+    @Query("SELECT p.id FROM Project p JOIN p.organizations o WHERE o.id = :orgId AND p.active = true")
+    List<UUID> findIdsByOrganizationId(@Param("orgId") UUID orgId);
+
     @Query("SELECT COUNT(p) > 0 FROM Project p JOIN p.organizations o WHERE p.id = :projectId AND o.id = :orgId")
     boolean isProjectInOrganization(@Param("projectId") UUID projectId, @Param("orgId") UUID orgId);
 

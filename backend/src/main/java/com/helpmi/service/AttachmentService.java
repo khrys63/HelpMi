@@ -1,6 +1,5 @@
 package com.helpmi.service;
 
-import com.helpmi.config.StorageConfig;
 import com.helpmi.domain.Attachment;
 import com.helpmi.domain.Ticket;
 import com.helpmi.domain.User;
@@ -12,17 +11,15 @@ import com.helpmi.exception.NotFoundException;
 import com.helpmi.repository.AttachmentRepository;
 import com.helpmi.repository.TicketRepository;
 import com.helpmi.security.CurrentUserService;
+import com.helpmi.storage.StorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.UUID;
 
 @Service
@@ -33,21 +30,21 @@ public class AttachmentService {
     private final AttachmentRepository attachmentRepository;
     private final TicketRepository ticketRepository;
     private final CurrentUserService currentUserService;
-    private final StorageConfig storageConfig;
+    private final StorageService storageService;
 
     public AttachmentResponse upload(UUID ticketId, MultipartFile file) throws IOException {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new NotFoundException("Ticket introuvable"));
 
-        String extension = "";
         String originalName = file.getOriginalFilename();
+        String extension = "";
         if (originalName != null && originalName.contains(".")) {
             extension = originalName.substring(originalName.lastIndexOf("."));
         }
         String storedName = UUID.randomUUID() + extension;
-        Path dest = storageConfig.getStoragePath().resolve(storedName);
-        Files.createDirectories(dest.getParent());
-        file.transferTo(dest);
+        String contentType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+
+        storageService.store(storedName, file.getInputStream(), file.getSize(), contentType);
 
         Attachment attachment = Attachment.builder()
                 .ticket(ticket)
@@ -62,13 +59,10 @@ public class AttachmentService {
     }
 
     @Transactional(readOnly = true)
-    public Resource download(UUID attachmentId) throws MalformedURLException {
+    public Resource download(UUID attachmentId) throws IOException {
         Attachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new NotFoundException("Pièce jointe introuvable"));
-        Path path = storageConfig.getStoragePath().resolve(attachment.getStoredName());
-        Resource resource = new UrlResource(path.toUri());
-        if (!resource.exists()) throw new NotFoundException("Fichier introuvable sur le disque");
-        return resource;
+        return new InputStreamResource(storageService.retrieve(attachment.getStoredName()));
     }
 
     @Transactional(readOnly = true)
@@ -84,8 +78,7 @@ public class AttachmentService {
         if (!attachment.getUploadedBy().getId().equals(currentUser.getId()) && currentUser.getRole() != UserRole.ADMIN) {
             throw new ForbiddenException("Vous ne pouvez supprimer que vos propres pièces jointes");
         }
-        Path path = storageConfig.getStoragePath().resolve(attachment.getStoredName());
-        Files.deleteIfExists(path);
+        storageService.delete(attachment.getStoredName());
         attachmentRepository.delete(attachment);
     }
 

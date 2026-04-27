@@ -41,6 +41,18 @@ public final class Fixtures {
                 .build();
     }
 
+    public static User agentUserWithOrg(Organization org) {
+        return User.builder()
+                .id(UUID.randomUUID())
+                .email("agent@test.com")
+                .firstName("Agent")
+                .lastName("User")
+                .role(UserRole.AGENT)
+                .active(true)
+                .organization(org)
+                .build();
+    }
+
     public static User clientUser() {
         return User.builder()
                 .id(UUID.randomUUID())

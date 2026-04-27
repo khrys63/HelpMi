@@ -1,6 +1,10 @@
 spring:
   application:
     name: helpmi-backend
+  data:
+    web:
+      pageable:
+        max-page-size: 100
   jpa:
     hibernate:
       ddl-auto: validate
@@ -27,7 +31,12 @@ management:
 
 app:
   storage:
-    path: ${APP_STORAGE_PATH:./uploads}
+    s3:
+      endpoint:   ${APP_S3_ENDPOINT:http://localhost:9000}
+      region:     ${APP_S3_REGION:us-east-1}
+      bucket:     ${APP_S3_BUCKET:helpmi}
+      access-key: ${APP_S3_ACCESS_KEY:minioadmin}
+      secret-key: ${APP_S3_SECRET_KEY:minioadmin}
   security:
     disabled: false
   cors:

@@ -1,6 +1,5 @@
 package com.helpmi.service;
 
-import com.helpmi.config.StorageConfig;
 import com.helpmi.domain.Attachment;
 import com.helpmi.domain.Ticket;
 import com.helpmi.domain.User;
@@ -10,45 +9,35 @@ import com.helpmi.exception.NotFoundException;
 import com.helpmi.repository.AttachmentRepository;
 import com.helpmi.repository.TicketRepository;
 import com.helpmi.security.CurrentUserService;
-import org.junit.jupiter.api.BeforeEach;
+import com.helpmi.storage.StorageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
 
 import static com.helpmi.Fixtures.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class AttachmentServiceTest {
 
-    @TempDir Path tempDir;
-
     @Mock AttachmentRepository attachmentRepository;
     @Mock TicketRepository ticketRepository;
     @Mock CurrentUserService currentUserService;
-    @Mock StorageConfig storageConfig;
+    @Mock StorageService storageService;
 
     @InjectMocks AttachmentService service;
-
-    @BeforeEach
-    void setupStorage() {
-        lenient().when(storageConfig.getStoragePath()).thenReturn(tempDir);
-    }
 
     // ── upload ────────────────────────────────────────────────────────────────
 
@@ -73,7 +62,6 @@ class AttachmentServiceTest {
         when(currentUserService.getCurrentUser()).thenReturn(uploader);
         when(attachmentRepository.save(any())).thenAnswer(inv -> {
             Attachment a = inv.getArgument(0);
-            // Simulate JPA setting an ID
             return Attachment.builder()
                     .id(UUID.randomUUID())
                     .ticket(a.getTicket())
@@ -91,6 +79,7 @@ class AttachmentServiceTest {
         assertThat(response.contentType()).isEqualTo("application/pdf");
         assertThat(response.size()).isEqualTo(3L);
         assertThat(response.downloadUrl()).startsWith("/api/attachments/");
+        verify(storageService).store(any(), any(), eq(3L), eq("application/pdf"));
     }
 
     @Test
@@ -103,22 +92,15 @@ class AttachmentServiceTest {
         when(currentUserService.getCurrentUser()).thenReturn(uploader);
         when(attachmentRepository.save(any())).thenAnswer(inv -> {
             Attachment a = inv.getArgument(0);
-            return Attachment.builder()
-                    .id(UUID.randomUUID())
-                    .ticket(a.getTicket())
-                    .fileName(a.getFileName())
-                    .storedName(a.getStoredName())
-                    .contentType(a.getContentType())
-                    .size(a.getSize())
-                    .uploadedBy(a.getUploadedBy())
-                    .build();
+            return Attachment.builder().id(UUID.randomUUID())
+                    .ticket(a.getTicket()).fileName(a.getFileName())
+                    .storedName(a.getStoredName()).contentType(a.getContentType())
+                    .size(a.getSize()).uploadedBy(a.getUploadedBy()).build();
         });
 
         service.upload(ticket.getId(), file);
 
-        // Verify a file with .png extension was written to the temp directory
-        boolean pngWritten = Files.list(tempDir).anyMatch(p -> p.toString().endsWith(".png"));
-        assertThat(pngWritten).isTrue();
+        verify(storageService).store(argThat(key -> key.endsWith(".png")), any(), anyLong(), any());
     }
 
     @Test
@@ -154,24 +136,26 @@ class AttachmentServiceTest {
     }
 
     @Test
-    void download_fileNotOnDisk_throwsNotFoundException() throws Exception {
+    void download_fileNotInStorage_throwsNotFoundException() throws Exception {
         Attachment attachment = attachmentFor(adminUser(), "ghost.pdf");
         when(attachmentRepository.findById(attachment.getId())).thenReturn(Optional.of(attachment));
+        when(storageService.retrieve(attachment.getStoredName())).thenThrow(new NotFoundException("Fichier introuvable"));
 
         assertThatThrownBy(() -> service.download(attachment.getId()))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("disque");
+                .isInstanceOf(NotFoundException.class);
     }
 
     @Test
     void download_existingFile_returnsResource() throws Exception {
         Attachment attachment = attachmentFor(adminUser(), "existing.txt");
-        Files.writeString(tempDir.resolve("existing.txt"), "hello");
         when(attachmentRepository.findById(attachment.getId())).thenReturn(Optional.of(attachment));
+        when(storageService.retrieve(attachment.getStoredName()))
+                .thenReturn(new ByteArrayInputStream("hello".getBytes()));
 
         var resource = service.download(attachment.getId());
 
-        assertThat(resource.exists()).isTrue();
+        assertThat(resource).isNotNull();
+        assertThat(resource.getInputStream()).isNotNull();
     }
 
     // ── delete ────────────────────────────────────────────────────────────────
@@ -202,12 +186,12 @@ class AttachmentServiceTest {
         User owner = agentUser();
         User admin = adminUser();
         Attachment attachment = attachmentFor(owner, "todelete.pdf");
-        Files.writeString(tempDir.resolve("todelete.pdf"), "data");
         when(attachmentRepository.findById(attachment.getId())).thenReturn(Optional.of(attachment));
         when(currentUserService.getCurrentUser()).thenReturn(admin);
 
         service.delete(attachment.getId());
 
+        verify(storageService).delete(attachment.getStoredName());
         verify(attachmentRepository).delete(attachment);
     }
 
@@ -215,21 +199,19 @@ class AttachmentServiceTest {
     void delete_ownAttachment_deletesSuccessfully() throws IOException {
         User owner = agentUser();
         Attachment attachment = attachmentFor(owner, "mine.pdf");
-        Files.writeString(tempDir.resolve("mine.pdf"), "data");
         when(attachmentRepository.findById(attachment.getId())).thenReturn(Optional.of(attachment));
         when(currentUserService.getCurrentUser()).thenReturn(owner);
 
         service.delete(attachment.getId());
 
+        verify(storageService).delete(attachment.getStoredName());
         verify(attachmentRepository).delete(attachment);
-        assertThat(Files.exists(tempDir.resolve("mine.pdf"))).isFalse();
     }
 
     @Test
     void delete_fileAlreadyMissing_stillDeletesRecord() throws IOException {
         User owner = agentUser();
         Attachment attachment = attachmentFor(owner, "already_gone.pdf");
-        // file does NOT exist on disk — deleteIfExists should not throw
         when(attachmentRepository.findById(attachment.getId())).thenReturn(Optional.of(attachment));
         when(currentUserService.getCurrentUser()).thenReturn(owner);
 

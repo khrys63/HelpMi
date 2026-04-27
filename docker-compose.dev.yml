@@ -4,6 +4,11 @@
 # NE PAS déployer en production.
 
 services:
+  minio:
+    command: server /data --console-address ":9001"
+    ports:
+      - "9001:9001"
+
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: helpmi_phpmyadmin

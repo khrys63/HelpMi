@@ -31,6 +31,23 @@ services:
     ports:
       - "8180:8080"
 
+  minio:
+    image: minio/minio:latest
+    container_name: helpmi_minio
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build: ./backend
     container_name: helpmi_backend
@@ -40,14 +57,16 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       APP_KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/helpmi
-      APP_STORAGE_PATH: /app/uploads
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS}
-    volumes:
-      - uploads_data:/app/uploads
+      APP_S3_ENDPOINT: http://minio:9000
+      APP_S3_ACCESS_KEY: ${MINIO_ROOT_USER}
+      APP_S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
     ports:
       - "8080:8080"
     depends_on:
       mariadb:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   frontend:
@@ -67,4 +86,4 @@ services:
 
 volumes:
   mariadb_data:
-  uploads_data:
+  minio_data:

@@ -40,4 +40,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
 
     @Query("SELECT t FROM Ticket t WHERE UPPER(t.reference) LIKE :q OR UPPER(t.title) LIKE :q ORDER BY t.reference")
     List<Ticket> searchByQuery(@Param("q") String q, Pageable pageable);
+
+    @Query("SELECT t FROM Ticket t WHERE (UPPER(t.reference) LIKE :q OR UPPER(t.title) LIKE :q) AND t.project.id IN :projectIds ORDER BY t.reference")
+    List<Ticket> searchByQueryInProjects(@Param("q") String q, @Param("projectIds") List<UUID> projectIds, Pageable pageable);
 }

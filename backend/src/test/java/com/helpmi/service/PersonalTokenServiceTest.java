@@ -97,6 +97,17 @@ class PersonalTokenServiceTest {
     }
 
     @Test
+    void createToken_expiresAtBeyondOneYear_throws() {
+        User user = adminUser();
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+
+        LocalDateTime tooFar = LocalDateTime.now().plusYears(2);
+        assertThatThrownBy(() -> service.createToken(new CreatePersonalTokenRequest("Token", tooFar)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("1 an");
+    }
+
+    @Test
     void createToken_twoCallsGenerateDifferentTokens() {
         User user = adminUser();
         when(currentUserService.getCurrentUser()).thenReturn(user);

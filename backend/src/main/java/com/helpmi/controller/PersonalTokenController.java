@@ -1,6 +1,7 @@
 package com.helpmi.controller;
 
 import com.helpmi.dto.request.CreatePersonalTokenRequest;
+import jakarta.validation.Valid;
 import com.helpmi.dto.response.PersonalTokenCreated;
 import com.helpmi.dto.response.PersonalTokenResponse;
 import com.helpmi.service.PersonalTokenService;
@@ -25,7 +26,7 @@ public class PersonalTokenController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PersonalTokenCreated create(@RequestBody CreatePersonalTokenRequest req) {
+    public PersonalTokenCreated create(@Valid @RequestBody CreatePersonalTokenRequest req) {
         return personalTokenService.createToken(req);
     }
 

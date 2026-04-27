@@ -13,9 +13,9 @@ Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces j
 - **Tickets** : création, édition, changement de statut (machine à états), priorité, type, date d'échéance, assigné, clients, labels
 - **Tickets récurrents** : types ANNUEL, MENSUEL, TRIMESTRIEL — à la fermeture, un ticket identique est recréé automatiquement avec la date d'échéance décalée
 - **Cloner / Déplacer** : duplication d'un ticket ou déplacement vers un autre projet avec nouvelle référence
-- **Liens entre tickets** : BLOCKS, IS_BLOCKED_BY, RELATES_TO, DUPLICATES, etc.
+- **Liens entre tickets** : BLOCKS, IS_BLOCKED_BY, RELATES_TO, DUPLICATES, etc. — libellés direct et inverse configurables
 - **Commentaires** : ajout, édition, suppression
-- **Pièces jointes** : upload et téléchargement de fichiers
+- **Pièces jointes** : upload et téléchargement via stockage objet S3/MinIO
 - **Labels** : création à la volée ou depuis l'admin
 - **Clients** : rattachement de clients à un ticket
 - **Administration** : gestion des valeurs de configuration (statuts, priorités, types, types de liens), clients, labels, organisations
@@ -31,6 +31,7 @@ Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces j
 | Persistance | MariaDB 11, Hibernate/JPA, Flyway |
 | Frontend | Vue 3 (Composition API), Pinia, Vue Router 4, Tailwind CSS, Axios |
 | Auth | Keycloak 24 (ou mode dev sans auth) |
+| Stockage fichiers | MinIO (S3-compatible) — interchangeable avec AWS S3, Scaleway, OVH… |
 | Build | Maven, Vite |
 | Conteneurs | Docker, Docker Compose |
 
@@ -48,13 +49,14 @@ Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces j
 │   │   ├── dto/                    # Request / Response DTOs
 │   │   ├── repository/             # Spring Data JPA
 │   │   ├── security/               # PersonalTokenFilter, DevAuthFilter, CurrentUserService
-│   │   └── config/                 # SecurityConfig, StorageConfig, StartupSafetyCheck
+│   │   ├── storage/                # StorageService (interface) + S3StorageService
+│   │   └── config/                 # SecurityConfig, StorageConfig (S3Client), StartupSafetyCheck
 │   └── src/main/resources/
 │       ├── application.yml         # Config commune
 │       ├── application-dev.yml     # Config mode développement local
 │       ├── application-prod.yml    # Config production (variables d'env)
 │       └── db/
-│           ├── migration/          # Migrations Flyway (V1 → V8)
+│           ├── migration/          # Migrations Flyway (V1 → V10)
 │           └── dev-seed/           # Données de test (profil dev uniquement)
 │
 ├── frontend/                       # SPA Vue 3
@@ -68,8 +70,8 @@ Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces j
 ├── keycloak/
 │   └── realm-export.json           # Import du realm Keycloak
 │
-├── docker-compose.yml              # MariaDB + Keycloak + Backend + Frontend (prod)
-└── docker-compose.dev.yml          # Surcharge dev : phpMyAdmin (port 8081)
+├── docker-compose.yml              # MariaDB + Keycloak + MinIO + Backend + Frontend
+└── docker-compose.dev.yml          # Surcharge dev : console MinIO (port 9001), phpMyAdmin (port 8081)
 ```
 
 ---
@@ -80,27 +82,39 @@ Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces j
 
 **Prérequis** : Java 21+, Node 20+, Docker
 
-**1. Démarrer MariaDB + phpMyAdmin**
+**1. Créer le fichier `.env`**
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb phpmyadmin
+cp .env.example .env
+# puis ajuster les valeurs si nécessaire
 ```
 
-| Service | URL |
-|---|---|
-| MariaDB | `localhost:3306` |
-| phpMyAdmin | http://localhost:8081 |
+**2. Démarrer les services d'infrastructure**
 
-> Pour MariaDB seul (sans phpMyAdmin) : `docker compose up -d mariadb`
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb minio phpmyadmin
+```
 
-**2. Démarrer le backend**
+| Service | URL | Rôle |
+|---|---|---|
+| MariaDB | `localhost:3306` | Base de données |
+| MinIO API | `http://localhost:9000` | Stockage des pièces jointes |
+| MinIO Console | `http://localhost:9001` | Interface d'administration MinIO |
+| phpMyAdmin | `http://localhost:8081` | Interface SQL |
+
+> Pour démarrer uniquement les services strictement nécessaires (sans phpMyAdmin) :
+> ```bash
+> docker compose up -d mariadb minio
+> ```
+
+**3. Démarrer le backend**
 
 ```bash
 cd backend
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-Le profil `dev` désactive l'authentification Keycloak et injecte automatiquement un utilisateur. Les données de test sont insérées via Flyway au premier démarrage.
+Le profil `dev` désactive l'authentification Keycloak et injecte automatiquement un utilisateur. Les données de test sont insérées via Flyway au premier démarrage. Les credentials MinIO sont pré-configurés dans `application-dev.yml` pour correspondre aux valeurs par défaut du `.env`.
 
 **Changer d'utilisateur de test** : modifier `app.dev.user-email` dans `backend/src/main/resources/application-dev.yml` puis redémarrer le backend.
 
@@ -110,7 +124,7 @@ Le profil `dev` désactive l'authentification Keycloak et injecte automatiquemen
 | `agent@helpmi.local` | AGENT |
 | `client@helpmi.local` | CLIENT |
 
-**3. Démarrer le frontend**
+**4. Démarrer le frontend**
 
 > **Important — première utilisation :** `node_modules` n'est pas inclus dans le dépôt.
 > Il faut impérativement exécuter `npm install` avant le premier `npm run dev`.
@@ -128,6 +142,8 @@ L'application est disponible sur `http://localhost:5173`. Le proxy Vite redirige
 ### Mode production (Docker Compose complet)
 
 ```bash
+cp .env.example .env
+# éditer .env avec les vraies valeurs
 docker compose up --build
 ```
 
@@ -136,10 +152,11 @@ docker compose up --build
 | Frontend | http://localhost:3000 |
 | Backend API | http://localhost:8080 |
 | Keycloak | http://localhost:8180 |
+| MinIO API | http://localhost:9000 |
 
-Le realm Keycloak `helpmi` est importé automatiquement au premier démarrage.
+Le realm Keycloak `helpmi` est importé automatiquement au premier démarrage. MinIO crée automatiquement le bucket `helpmi` au premier démarrage du backend.
 
-> **phpMyAdmin** n'est **pas** inclus dans le compose de production. Pour l'activer en développement uniquement, utilisez la commande de surcharge ci-dessus.
+> **Console MinIO** et **phpMyAdmin** ne sont **pas** inclus dans le compose de production. Pour les activer, utilisez la commande de surcharge dev ci-dessus.
 
 ---
 
@@ -157,6 +174,8 @@ Les migrations sont gérées par Flyway et s'appliquent automatiquement au déma
 | `V6__recurring_types.sql` | Types récurrents (ANNUEL, MENSUEL, TRIMESTRIEL) |
 | `V7__personal_tokens.sql` | Tokens d'accès personnels (PAT) |
 | `V8__organizations.sql` | Organisations : table `organizations`, FK sur `users`, table de jointure `organization_projects` |
+| `V9__stand_by_status.sql` | Statut STAND_BY (entre EN_COURS et RÉSOLU) |
+| `V10__link_type_inverse_label.sql` | Colonne `inverse_label` sur les types de liens |
 
 Les fichiers dans `db/dev-seed/` ne sont chargés qu'avec le profil `dev`.
 
@@ -181,17 +200,50 @@ cp .env.example .env
 | `KEYCLOAK_ADMIN` | Login admin Keycloak |
 | `KEYCLOAK_ADMIN_PASSWORD` | Mot de passe admin Keycloak |
 | `APP_CORS_ALLOWED_ORIGINS` | URL publique du frontend (obligatoire en prod) |
+| `MINIO_ROOT_USER` | Login administrateur MinIO |
+| `MINIO_ROOT_PASSWORD` | Mot de passe administrateur MinIO |
 
 > `APP_CORS_ALLOWED_ORIGINS` est **obligatoire** en production. Le backend refuse de démarrer si elle est absente.
 
+### Stockage sur un S3 externe (production)
+
+Par défaut le compose utilise le container MinIO intégré. Pour pointer vers un S3 externe (AWS, Scaleway, OVH…), passer les variables suivantes au service `backend` :
+
+| Variable d'environnement | Défaut | Description |
+|---|---|---|
+| `APP_S3_ENDPOINT` | `http://minio:9000` | URL du endpoint S3 |
+| `APP_S3_REGION` | `us-east-1` | Région S3 |
+| `APP_S3_BUCKET` | `helpmi` | Nom du bucket |
+| `APP_S3_ACCESS_KEY` | *(MINIO_ROOT_USER)* | Access key |
+| `APP_S3_SECRET_KEY` | *(MINIO_ROOT_PASSWORD)* | Secret key |
+
+Exemple pour AWS S3 :
+
+```yaml
+# dans docker-compose.yml, section environment du service backend :
+APP_S3_ENDPOINT: https://s3.amazonaws.com
+APP_S3_REGION: eu-west-3
+APP_S3_BUCKET: mon-bucket-helpmi
+APP_S3_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
+APP_S3_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+```
+
+> Avec un vrai AWS S3, supprimer le service `minio` du compose et le volume `minio_data`.
+
 ### Backend local — `application-dev.yml`
 
-En mode développement (backend lancé hors Docker), les credentials MariaDB restent dans `backend/src/main/resources/application-dev.yml`. Ce fichier n'est pas chargé en production.
+En mode développement (backend lancé hors Docker), les credentials de la base de données et de MinIO sont dans `backend/src/main/resources/application-dev.yml`. Les valeurs S3 doivent correspondre à celles de votre `.env` :
 
 ```yaml
 spring:
   datasource:
-    password: helpmi_pass   # ← à synchroniser avec DB_PASSWORD dans .env
+    password: helpmi_pass   # ← doit correspondre à DB_PASSWORD dans .env
+
+app:
+  storage:
+    s3:
+      access-key: helpmi          # ← doit correspondre à MINIO_ROOT_USER dans .env
+      secret-key: helpmi_minio_pass  # ← doit correspondre à MINIO_ROOT_PASSWORD dans .env
 ```
 
 ### Keycloak — `keycloak/realm-export.json`
@@ -220,20 +272,19 @@ Le rapport HTML de couverture est généré dans `backend/target/site/jacoco/ind
 
 ### Couverture actuelle
 
-210 tests unitaires Mockito (sans base de données ni contexte Spring).
+217 tests unitaires Mockito (sans base de données ni contexte Spring).
 
-| Service / Composant | Couverture lignes |
-|---|---|
-| `LabelService`, `ClientService`, `CommentService` | 100 % |
-| `UserService`, `RateLimiterService` | 100 % |
-| `PersonalTokenFilter`, `StartupSafetyCheck` | 100 % |
-| `ProjectService` | 100 % |
-| `TicketLinkService` | 100 % |
-| `OrganizationService` | 97 % |
-| `TicketService` | 97 % |
-| `AdminConfigService`, `PersonalTokenService` | 95–96 % |
-| `AttachmentService` | 95 % |
-| `GlobalExceptionHandler` | 89 % |
-| Couverture globale | **~77 % lignes, ~74 % branches** |
+| Service / Composant | Couverture lignes | Couverture branches |
+|---|---|---|
+| `LabelService`, `ClientService`, `CommentService` | 100 % | 100 % |
+| `RateLimiterService`, `PersonalTokenFilter`, `StartupSafetyCheck` | 100 % | 100 % |
+| `TicketLinkService` | 100 % | 91 % |
+| `OrganizationService` | 97 % | 88 % |
+| `ProjectService`, `AdminConfigService` | 96 % | 82–89 % |
+| `TicketService` | 96 % | 84 % |
+| `PersonalTokenService` | 95 % | 100 % |
+| `UserService`, `AttachmentService` | 94 % | 75–100 % |
+| `GlobalExceptionHandler` | 89 % | n/a |
+| Couverture globale | **74,8 % lignes** | **75,3 % branches** |
 
 Les controllers ne sont pas couverts (pas de tests d'intégration `@SpringBootTest`).

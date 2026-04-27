@@ -1,5 +1,6 @@
 package com.helpmi.service;
 
+import com.helpmi.domain.Organization;
 import com.helpmi.domain.Ticket;
 import com.helpmi.domain.TicketLink;
 import com.helpmi.domain.User;
@@ -8,6 +9,7 @@ import com.helpmi.dto.response.TicketLinkResponse;
 import com.helpmi.dto.response.TicketSummary;
 import com.helpmi.exception.ForbiddenException;
 import com.helpmi.exception.NotFoundException;
+import com.helpmi.repository.ProjectRepository;
 import com.helpmi.repository.TicketLinkRepository;
 import com.helpmi.repository.TicketRepository;
 import com.helpmi.security.CurrentUserService;
@@ -25,6 +27,7 @@ import static com.helpmi.Fixtures.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,6 +35,7 @@ class TicketLinkServiceTest {
 
     @Mock TicketLinkRepository linkRepository;
     @Mock TicketRepository ticketRepository;
+    @Mock ProjectRepository projectRepository;
     @Mock CurrentUserService currentUserService;
 
     @InjectMocks TicketLinkService service;
@@ -211,16 +215,58 @@ class TicketLinkServiceTest {
     }
 
     @Test
-    void search_validQuery_excludesCurrentTicket() {
-        User user = agentUser();
-        Ticket t1 = ticket(project(), user);
-        Ticket t2 = ticket(project(), user);
+    void search_admin_seesAllTickets_excludesCurrentTicket() {
+        User admin = adminUser();
+        Ticket t1 = ticket(project(), admin);
+        Ticket t2 = ticket(project(), admin);
         UUID excludeId = t1.getId();
+        when(currentUserService.getCurrentUser()).thenReturn(admin);
         when(ticketRepository.searchByQuery(any(), any())).thenReturn(List.of(t1, t2));
 
         List<TicketSummary> result = service.search("TEST", excludeId);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).id()).isEqualTo(t2.getId());
+        verifyNoInteractions(projectRepository);
+    }
+
+    @Test
+    void search_nonAdminWithOrg_filtersByProjectIds() {
+        Organization org = organization();
+        User agent = agentUserWithOrg(org);
+        Ticket t1 = ticket(project(), agent);
+        List<UUID> projectIds = List.of(t1.getProject().getId());
+        when(currentUserService.getCurrentUser()).thenReturn(agent);
+        when(projectRepository.findIdsByOrganizationId(org.getId())).thenReturn(projectIds);
+        when(ticketRepository.searchByQueryInProjects(any(), eq(projectIds), any())).thenReturn(List.of(t1));
+
+        List<TicketSummary> result = service.search("TEST", UUID.randomUUID());
+
+        assertThat(result).hasSize(1);
+        verify(ticketRepository, never()).searchByQuery(any(), any());
+    }
+
+    @Test
+    void search_nonAdminWithoutOrg_returnsEmpty() {
+        User agent = agentUser();
+        when(currentUserService.getCurrentUser()).thenReturn(agent);
+
+        List<TicketSummary> result = service.search("TEST", UUID.randomUUID());
+
+        assertThat(result).isEmpty();
+        verifyNoInteractions(ticketRepository, projectRepository);
+    }
+
+    @Test
+    void search_nonAdminWithEmptyOrgProjects_returnsEmpty() {
+        Organization org = organization();
+        User agent = agentUserWithOrg(org);
+        when(currentUserService.getCurrentUser()).thenReturn(agent);
+        when(projectRepository.findIdsByOrganizationId(org.getId())).thenReturn(List.of());
+
+        List<TicketSummary> result = service.search("TEST", UUID.randomUUID());
+
+        assertThat(result).isEmpty();
+        verifyNoInteractions(ticketRepository);
     }
 }
