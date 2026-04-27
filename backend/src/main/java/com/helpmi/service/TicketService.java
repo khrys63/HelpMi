@@ -247,7 +247,7 @@ public class TicketService {
 
     public void deleteTicket(UUID projectId, UUID ticketId) {
         if (currentUserService.getCurrentUser().getRole() != UserRole.ADMIN) {
-            throw new ForbiddenException("Seuls les admins peuvent supprimer des tickets");
+            throw new ForbiddenException("Seuls les administrateurs peuvent supprimer des tickets");
         }
         ticketRepository.delete(findTicket(projectId, ticketId));
     }
@@ -302,10 +302,11 @@ public class TicketService {
     }
 
     private void requireCanModify(User user, Ticket ticket) {
-        boolean isAdminOrAgent = user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.AGENT;
+        if (user.getRole() == UserRole.ADMIN) return;
+        boolean isGestionnaire = projectService.isGestionnaire(user.getId(), ticket.getProject().getId());
         boolean isReporter = ticket.getReporter() != null && ticket.getReporter().getId().equals(user.getId());
         boolean isAssignee = ticket.getAssignee() != null && ticket.getAssignee().getId().equals(user.getId());
-        if (!isAdminOrAgent && !isReporter && !isAssignee) {
+        if (!isGestionnaire && !isReporter && !isAssignee) {
             throw new ForbiddenException("Vous n'êtes pas autorisé à modifier ce ticket");
         }
     }

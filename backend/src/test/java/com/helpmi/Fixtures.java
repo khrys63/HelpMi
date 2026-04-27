@@ -36,7 +36,7 @@ public final class Fixtures {
                 .email("agent@test.com")
                 .firstName("Agent")
                 .lastName("User")
-                .role(UserRole.AGENT)
+                .role(UserRole.USER)
                 .active(true)
                 .build();
     }
@@ -47,7 +47,7 @@ public final class Fixtures {
                 .email("agent@test.com")
                 .firstName("Agent")
                 .lastName("User")
-                .role(UserRole.AGENT)
+                .role(UserRole.USER)
                 .active(true)
                 .organization(org)
                 .build();
@@ -59,7 +59,7 @@ public final class Fixtures {
                 .email("client@test.com")
                 .firstName("Client")
                 .lastName("User")
-                .role(UserRole.CLIENT)
+                .role(UserRole.USER)
                 .active(true)
                 .build();
     }

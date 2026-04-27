@@ -95,6 +95,10 @@ public class OrganizationService {
         if (user.getRole() == UserRole.ADMIN) {
             throw new IllegalArgumentException("Les administrateurs n'ont pas d'organisation");
         }
+        UUID currentOrgId = user.getOrganization() != null ? user.getOrganization().getId() : null;
+        if (!orgId.equals(currentOrgId)) {
+            user.getUserProjects().clear();
+        }
         user.setOrganization(org);
         userRepository.save(user);
         return toResponse(org);
@@ -109,6 +113,7 @@ public class OrganizationService {
             throw new IllegalArgumentException("Cet utilisateur n'appartient pas à cette organisation");
         }
         user.setOrganization(null);
+        user.getUserProjects().clear();
         userRepository.save(user);
         return toResponse(org);
     }

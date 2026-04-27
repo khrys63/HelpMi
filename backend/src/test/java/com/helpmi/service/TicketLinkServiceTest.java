@@ -4,6 +4,7 @@ import com.helpmi.domain.Organization;
 import com.helpmi.domain.Ticket;
 import com.helpmi.domain.TicketLink;
 import com.helpmi.domain.User;
+import com.helpmi.domain.UserProject;
 import com.helpmi.dto.request.CreateTicketLinkRequest;
 import com.helpmi.dto.response.TicketLinkResponse;
 import com.helpmi.dto.response.TicketSummary;
@@ -12,6 +13,7 @@ import com.helpmi.exception.NotFoundException;
 import com.helpmi.repository.ProjectRepository;
 import com.helpmi.repository.TicketLinkRepository;
 import com.helpmi.repository.TicketRepository;
+import com.helpmi.repository.UserProjectRepository;
 import com.helpmi.security.CurrentUserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +38,7 @@ class TicketLinkServiceTest {
     @Mock TicketLinkRepository linkRepository;
     @Mock TicketRepository ticketRepository;
     @Mock ProjectRepository projectRepository;
+    @Mock UserProjectRepository userProjectRepository;
     @Mock CurrentUserService currentUserService;
 
     @InjectMocks TicketLinkService service;
@@ -122,13 +125,17 @@ class TicketLinkServiceTest {
     }
 
     @Test
-    void deleteLink_agent_deletes() {
+    void deleteLink_gestionnaire_deletes() {
         User user = agentUser();
         Ticket source = ticket(project(), user);
         Ticket target = ticket(project(), user);
         TicketLink link = buildLink(source, target, "RELATES_TO");
+        UserProject up = UserProject.builder()
+                .id(UUID.randomUUID()).user(user).project(source.getProject()).role("GESTIONNAIRE").build();
         when(linkRepository.findById(link.getId())).thenReturn(Optional.of(link));
         when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(userProjectRepository.findByUserIdAndProjectId(user.getId(), source.getProject().getId()))
+                .thenReturn(Optional.of(up));
 
         service.deleteLink(link.getId());
 
@@ -170,6 +177,8 @@ class TicketLinkServiceTest {
                 .build();
         when(linkRepository.findById(link.getId())).thenReturn(Optional.of(link));
         when(currentUserService.getCurrentUser()).thenReturn(creator);
+        when(userProjectRepository.findByUserIdAndProjectId(creator.getId(), source.getProject().getId()))
+                .thenReturn(Optional.empty());
 
         service.deleteLink(link.getId());
 
@@ -191,6 +200,8 @@ class TicketLinkServiceTest {
                 .build();
         when(linkRepository.findById(link.getId())).thenReturn(Optional.of(link));
         when(currentUserService.getCurrentUser()).thenReturn(other);
+        when(userProjectRepository.findByUserIdAndProjectId(other.getId(), source.getProject().getId()))
+                .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.deleteLink(link.getId()))
                 .isInstanceOf(ForbiddenException.class);
@@ -237,7 +248,7 @@ class TicketLinkServiceTest {
         Ticket t1 = ticket(project(), agent);
         List<UUID> projectIds = List.of(t1.getProject().getId());
         when(currentUserService.getCurrentUser()).thenReturn(agent);
-        when(projectRepository.findIdsByOrganizationId(org.getId())).thenReturn(projectIds);
+        when(projectRepository.findIdsByUserId(agent.getId())).thenReturn(projectIds);
         when(ticketRepository.searchByQueryInProjects(any(), eq(projectIds), any())).thenReturn(List.of(t1));
 
         List<TicketSummary> result = service.search("TEST", UUID.randomUUID());
@@ -258,11 +269,11 @@ class TicketLinkServiceTest {
     }
 
     @Test
-    void search_nonAdminWithEmptyOrgProjects_returnsEmpty() {
+    void search_nonAdminWithEmptyProjectIds_returnsEmpty() {
         Organization org = organization();
         User agent = agentUserWithOrg(org);
         when(currentUserService.getCurrentUser()).thenReturn(agent);
-        when(projectRepository.findIdsByOrganizationId(org.getId())).thenReturn(List.of());
+        when(projectRepository.findIdsByUserId(agent.getId())).thenReturn(List.of());
 
         List<TicketSummary> result = service.search("TEST", UUID.randomUUID());
 

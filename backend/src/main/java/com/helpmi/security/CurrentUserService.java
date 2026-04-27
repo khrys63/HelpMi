@@ -41,7 +41,6 @@ public class CurrentUserService {
         if (email == null || email.isBlank())
             throw new IllegalStateException("JWT sans claim 'email' valide : connexion refusée");
 
-        // Migrate seeded users whose keycloakId was a placeholder
         return userRepository.findByEmail(email)
                 .map(existing -> {
                     existing.setKeycloakId(jwt.getSubject());
@@ -66,12 +65,9 @@ public class CurrentUserService {
         if (realmAccess != null) {
             @SuppressWarnings("unchecked")
             List<String> roles = (List<String>) realmAccess.get("roles");
-            if (roles != null) {
-                if (roles.contains("ADMIN")) return UserRole.ADMIN;
-                if (roles.contains("AGENT")) return UserRole.AGENT;
-            }
+            if (roles != null && roles.contains("ADMIN")) return UserRole.ADMIN;
         }
-        return UserRole.CLIENT;
+        return UserRole.USER;
     }
 
     private String nvl(String value) {

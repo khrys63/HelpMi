@@ -12,6 +12,7 @@ import com.helpmi.exception.NotFoundException;
 import com.helpmi.repository.ProjectRepository;
 import com.helpmi.repository.TicketLinkRepository;
 import com.helpmi.repository.TicketRepository;
+import com.helpmi.repository.UserProjectRepository;
 import com.helpmi.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +30,7 @@ public class TicketLinkService {
     private final TicketLinkRepository linkRepository;
     private final TicketRepository ticketRepository;
     private final ProjectRepository projectRepository;
+    private final UserProjectRepository userProjectRepository;
     private final CurrentUserService currentUserService;
 
     public TicketLinkResponse createLink(UUID sourceTicketId, CreateTicketLinkRequest req) {
@@ -56,10 +58,14 @@ public class TicketLinkService {
     public void deleteLink(UUID linkId) {
         TicketLink link = linkRepository.findById(linkId)
                 .orElseThrow(() -> new NotFoundException("Lien introuvable"));
-        var user = currentUserService.getCurrentUser();
-        boolean isAdminOrAgent = user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.AGENT;
+        User user = currentUserService.getCurrentUser();
+        boolean isAdmin = user.getRole() == UserRole.ADMIN;
+        boolean isGestionnaire = !isAdmin && userProjectRepository
+                .findByUserIdAndProjectId(user.getId(), link.getSourceTicket().getProject().getId())
+                .map(up -> "GESTIONNAIRE".equals(up.getRole()))
+                .orElse(false);
         boolean isCreator = link.getCreatedBy() != null && link.getCreatedBy().getId().equals(user.getId());
-        if (!isAdminOrAgent && !isCreator) {
+        if (!isAdmin && !isGestionnaire && !isCreator) {
             throw new ForbiddenException("Vous n'êtes pas autorisé à supprimer ce lien");
         }
         linkRepository.delete(link);
@@ -77,25 +83,23 @@ public class TicketLinkService {
         } else if (user.getOrganization() == null) {
             return List.of();
         } else {
-            List<UUID> projectIds = projectRepository.findIdsByOrganizationId(user.getOrganization().getId());
+            List<UUID> projectIds = projectRepository.findIdsByUserId(user.getId());
             if (projectIds.isEmpty()) return List.of();
             results = ticketRepository.searchByQueryInProjects(pattern, projectIds, Pageable.ofSize(10));
         }
         return results.stream()
-                .filter(t -> !t.getId().equals(excludeId))
+                .filter(t -> excludeId == null || !t.getId().equals(excludeId))
                 .map(TicketSummary::from)
                 .toList();
     }
 
-    private TicketLinkResponse toResponse(TicketLink link, UUID currentTicketId) {
-        boolean isSource = link.getSourceTicket().getId().equals(currentTicketId);
-        Ticket linked = isSource ? link.getTargetTicket() : link.getSourceTicket();
-        return new TicketLinkResponse(link.getId(), TicketSummary.from(linked), link.getLinkType(),
-                isSource ? "OUTGOING" : "INCOMING");
-    }
-
     private Ticket findTicket(UUID id) {
         return ticketRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Ticket introuvable : " + id));
+                .orElseThrow(() -> new NotFoundException("Ticket introuvable"));
+    }
+
+    private TicketLinkResponse toResponse(TicketLink link, UUID sourceTicketId) {
+        return new TicketLinkResponse(link.getId(),
+                TicketSummary.from(link.getTargetTicket()), link.getLinkType(), "OUTGOING");
     }
 }

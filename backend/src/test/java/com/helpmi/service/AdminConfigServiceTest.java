@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import static com.helpmi.Fixtures.configValue;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -36,15 +37,23 @@ class AdminConfigServiceTest {
     // --- getAllCategories ---
 
     @Test
-    void getAllCategories_returnsMapWithAllFourKeys() {
+    void getAllCategories_returnsMapWithAllCategories() {
         when(configValueRepository.findByCategoryOrderByPosition(any())).thenReturn(List.of());
 
         Map<String, List<ConfigValueResponse>> result = service.getAllCategories();
 
-        assertThat(result).containsKeys("STATUS", "PRIORITY", "TYPE", "LINK_TYPE");
+        assertThat(result).containsKeys("STATUS", "PRIORITY", "TYPE", "LINK_TYPE", "PROJECT_ROLE");
+        assertThat(result).hasSize(5);
     }
 
     // --- getCategory ---
+
+    @Test
+    void getCategory_projectRole_isValid() {
+        when(configValueRepository.findByCategoryOrderByPosition("PROJECT_ROLE")).thenReturn(List.of());
+
+        assertThatCode(() -> service.getCategory("PROJECT_ROLE")).doesNotThrowAnyException();
+    }
 
     @Test
     void getCategory_invalidCategory_throws() {

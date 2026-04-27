@@ -81,7 +81,7 @@ const projectId = route.params.projectId
 const config = useConfigStore()
 const auth = useAuthStore()
 
-const canAssign = computed(() => auth.user?.role === 'ADMIN' || auth.user?.role === 'AGENT')
+const canAssign = computed(() => auth.user?.role === 'ADMIN' || auth.user?.role === 'USER')
 const users = ref([])
 const saving = ref(false)
 const error = ref('')

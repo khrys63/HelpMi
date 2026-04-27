@@ -1,7 +1,7 @@
 {
   "realm": "helpmi",
   "enabled": true,
-  "displayName": "JiraLike",
+  "displayName": "HelpMi",
   "sslRequired": "none",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
@@ -16,7 +16,7 @@
   "clients": [
     {
       "clientId": "helpmi-frontend",
-      "name": "JiraLike Frontend",
+      "name": "HelpMi Frontend",
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,

@@ -3,6 +3,7 @@ package com.helpmi.service;
 import com.helpmi.domain.Organization;
 import com.helpmi.domain.Project;
 import com.helpmi.domain.User;
+import com.helpmi.domain.UserProject;
 import com.helpmi.domain.enums.UserRole;
 import com.helpmi.dto.request.CreateOrganizationRequest;
 import com.helpmi.dto.request.UpdateOrganizationRequest;
@@ -57,6 +58,35 @@ class OrganizationServiceTest {
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).name()).isEqualTo("Test Organisation");
+    }
+
+    // --- get ---
+
+    @Test
+    void get_notAdmin_throws() {
+        when(currentUserService.getCurrentUser()).thenReturn(agentUser());
+        assertThatThrownBy(() -> service.get(UUID.randomUUID())).isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void get_notFound_throws() {
+        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
+        when(organizationRepository.findById(any())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.get(UUID.randomUUID())).isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void get_happy_returnsOrg() {
+        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
+        Organization org = organization();
+        when(organizationRepository.findById(org.getId())).thenReturn(Optional.of(org));
+        when(userRepository.findByOrganizationId(org.getId())).thenReturn(List.of());
+
+        OrganizationResponse result = service.get(org.getId());
+
+        assertThat(result.name()).isEqualTo("Test Organisation");
+        assertThat(result.id()).isEqualTo(org.getId());
     }
 
     // --- create ---
@@ -209,6 +239,44 @@ class OrganizationServiceTest {
         assertThat(agent.getOrganization()).isEqualTo(org);
     }
 
+    @Test
+    void setUserOrganization_orgChanges_clearsProjects() {
+        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
+        Organization currentOrg = organization();
+        Organization newOrg = organization();
+        User agent = agentUser();
+        agent.setOrganization(currentOrg);
+        agent.getUserProjects().add(UserProject.builder()
+                .id(UUID.randomUUID()).user(agent).project(project()).role("UTILISATEUR").build());
+        when(organizationRepository.findByIdWithProjects(newOrg.getId())).thenReturn(Optional.of(newOrg));
+        when(userRepository.findById(agent.getId())).thenReturn(Optional.of(agent));
+        when(userRepository.save(agent)).thenReturn(agent);
+        when(userRepository.findByOrganizationId(any())).thenReturn(List.of());
+
+        service.setUserOrganization(newOrg.getId(), agent.getId());
+
+        assertThat(agent.getUserProjects()).isEmpty();
+        assertThat(agent.getOrganization()).isEqualTo(newOrg);
+    }
+
+    @Test
+    void setUserOrganization_sameOrg_keepsProjects() {
+        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
+        Organization org = organization();
+        User agent = agentUser();
+        agent.setOrganization(org);
+        agent.getUserProjects().add(UserProject.builder()
+                .id(UUID.randomUUID()).user(agent).project(project()).role("GESTIONNAIRE").build());
+        when(organizationRepository.findByIdWithProjects(org.getId())).thenReturn(Optional.of(org));
+        when(userRepository.findById(agent.getId())).thenReturn(Optional.of(agent));
+        when(userRepository.save(agent)).thenReturn(agent);
+        when(userRepository.findByOrganizationId(any())).thenReturn(List.of(agent));
+
+        service.setUserOrganization(org.getId(), agent.getId());
+
+        assertThat(agent.getUserProjects()).hasSize(1);
+    }
+
     // --- removeUserFromOrganization ---
 
     @Test
@@ -239,5 +307,24 @@ class OrganizationServiceTest {
         service.removeUserFromOrganization(org.getId(), agent.getId());
 
         assertThat(agent.getOrganization()).isNull();
+    }
+
+    @Test
+    void removeUserFromOrganization_clearsProjects() {
+        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
+        Organization org = organization();
+        User agent = agentUser();
+        agent.setOrganization(org);
+        agent.getUserProjects().add(UserProject.builder()
+                .id(UUID.randomUUID()).user(agent).project(project()).role("GESTIONNAIRE").build());
+        when(organizationRepository.findByIdWithProjects(org.getId())).thenReturn(Optional.of(org));
+        when(userRepository.findById(agent.getId())).thenReturn(Optional.of(agent));
+        when(userRepository.save(agent)).thenReturn(agent);
+        when(userRepository.findByOrganizationId(any())).thenReturn(List.of());
+
+        service.removeUserFromOrganization(org.getId(), agent.getId());
+
+        assertThat(agent.getOrganization()).isNull();
+        assertThat(agent.getUserProjects()).isEmpty();
     }
 }

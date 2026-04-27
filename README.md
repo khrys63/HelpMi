@@ -23,6 +23,77 @@ Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces j
 
 ---
 
+## Rôles et droits
+
+Il existe deux **rôles globaux** (`ADMIN` et `USER`) et deux **rôles par projet** (`GESTIONNAIRE` et `UTILISATEUR`).
+
+### Prérequis (non-ADMIN)
+
+Un utilisateur sans organisation est bloqué sur l'écran d'attente jusqu'à affectation par un admin.  
+Un utilisateur avec organisation ne voit que les **projets de sa liste personnelle** (configurée individuellement par l'admin avec un rôle par projet).
+
+### Rôles par projet
+
+| Rôle projet | Signification |
+|---|---|
+| **GESTIONNAIRE** | Droits complets sur les tickets du projet (créer, modifier tout ticket, changer statut, supprimer les liens) |
+| **UTILISATEUR** | Droits restreints : peut créer des tickets, modifier/fermer uniquement ses propres tickets (reporter ou assigné) |
+
+### Projets
+
+| Action | ADMIN | GESTIONNAIRE | UTILISATEUR |
+|---|---|---|---|
+| Voir la liste | Tous les projets actifs | Ses projets | Ses projets |
+| Créer / modifier / désactiver | ✅ | ✗ | ✗ |
+
+### Tickets
+
+| Action | ADMIN | GESTIONNAIRE | UTILISATEUR |
+|---|---|---|---|
+| Lire (liste + détail) | ✅ | ✅ | ✅ |
+| Créer | ✅ | ✅ | ✅ |
+| Modifier (titre, description, priorité, type, date, assigné, clients, labels) | ✅ tous | ✅ tous | ✅ si reporter ou assigné |
+| Changer le statut | ✅ tous | ✅ tous | ✅ si reporter ou assigné |
+| Cloner / déplacer | ✅ tous | ✅ tous | ✅ si reporter ou assigné |
+| Supprimer | ✅ | ✗ | ✗ |
+
+### Commentaires
+
+| Action | ADMIN | GESTIONNAIRE | UTILISATEUR |
+|---|---|---|---|
+| Ajouter | ✅ | ✅ | ✅ |
+| Modifier / Supprimer | ✅ n'importe lequel | ✅ les siens | ✅ les siens |
+
+### Pièces jointes
+
+| Action | ADMIN | GESTIONNAIRE | UTILISATEUR |
+|---|---|---|---|
+| Uploader / Télécharger | ✅ | ✅ | ✅ |
+| Supprimer | ✅ n'importe laquelle | ✅ les siennes | ✅ les siennes |
+
+### Liens entre tickets
+
+| Action | ADMIN | GESTIONNAIRE | UTILISATEUR |
+|---|---|---|---|
+| Créer un lien | ✅ | ✅ | ✅ |
+| Supprimer un lien | ✅ n'importe lequel | ✅ n'importe lequel | ✅ les siens |
+
+### Utilisateurs
+
+| Action | ADMIN | USER (tout rôle projet) |
+|---|---|---|
+| Liste des utilisateurs actifs (pour assignation) | ✅ | ✅ |
+| Gestion des comptes (rôle, actif/inactif, organisation, projets) | ✅ | ✗ |
+
+### Administration (réservé ADMIN)
+
+- Organisations : CRUD, rattachement projets/utilisateurs
+- Clients : CRUD
+- Labels : CRUD
+- Valeurs de configuration (statuts, priorités, types, types de liens, rôles projet) : CRUD
+
+---
+
 ## Stack technique
 
 | Couche | Technologie |
@@ -113,8 +184,8 @@ Le realm Keycloak `helpmi` est importé automatiquement au premier démarrage. T
 | Utilisateur | Email | Mot de passe | Rôle |
 |---|---|---|---|
 | admin | `admin@helpmi.local` | `admin123` | ADMIN |
-| agent | `agent@helpmi.local` | `agent123` | AGENT |
-| client | `client@helpmi.local` | `client123` | CLIENT |
+| agent | `agent@helpmi.local` | `agent123` | USER |
+| client | `client@helpmi.local` | `client123` | USER |
 
 **3. Démarrer le backend**
 
@@ -179,6 +250,8 @@ Les migrations sont gérées par Flyway et s'appliquent automatiquement au déma
 | `V8__organizations.sql` | Organisations : table `organizations`, FK sur `users`, table de jointure `organization_projects` |
 | `V9__stand_by_status.sql` | Statut STAND_BY (entre EN_COURS et RÉSOLU) |
 | `V10__link_type_inverse_label.sql` | Colonne `inverse_label` sur les types de liens |
+| `V11__user_org_role_and_projects.sql` | Table `user_projects` avec PK composite, colonne `organization_role` sur les utilisateurs |
+| `V12__project_roles.sql` | Refonte des rôles : `user_projects` avec PK UUID et colonne `role` (GESTIONNAIRE/UTILISATEUR), suppression `organization_role`, migration `AGENT`/`CLIENT` → `USER`, catégorie `PROJECT_ROLE` |
 
 Les fichiers dans `db/dev-seed/` ne sont chargés qu'avec le profil `dev`.
 
@@ -231,7 +304,7 @@ Puis supprimer le service `keycloak` du compose (et les variables `KEYCLOAK_ADMI
 #   image: ...
 ```
 
-> Le realm doit exposer les rôles `ADMIN`, `AGENT`, `CLIENT` dans le claim JWT `realm_access.roles`.
+> Le realm doit exposer le rôle `ADMIN` dans le claim JWT `realm_access.roles`. Tout token sans ce rôle est traité comme `USER`.
 
 ### Stockage sur un S3 externe (production)
 
@@ -281,8 +354,8 @@ Le fichier contient trois comptes de démonstration importés automatiquement au
 | Email | Mot de passe | Rôle |
 |---|---|---|
 | `admin@helpmi.local` | `admin123` | ADMIN |
-| `agent@helpmi.local` | `agent123` | AGENT |
-| `client@helpmi.local` | `client123` | CLIENT |
+| `agent@helpmi.local` | `agent123` | USER |
+| `client@helpmi.local` | `client123` | USER |
 
 Ces comptes correspondent aux utilisateurs pré-seedés en base (profil `dev`). À la première connexion, le backend les retrouve par email et met à jour leur `keycloakId`.
 
@@ -302,19 +375,20 @@ Le rapport HTML de couverture est généré dans `backend/target/site/jacoco/ind
 
 ### Couverture actuelle
 
-212 tests unitaires Mockito (sans base de données ni contexte Spring).
+232 tests unitaires Mockito (sans base de données ni contexte Spring).
 
-| Service / Composant | Couverture lignes | Couverture branches |
-|---|---|---|
-| `LabelService`, `ClientService`, `CommentService` | 100 % | 100 % |
-| `RateLimiterService`, `PersonalTokenFilter` | 100 % | 100 % |
-| `TicketLinkService` | 100 % | 91 % |
-| `OrganizationService` | 97 % | 88 % |
-| `ProjectService`, `AdminConfigService` | 96 % | 82–89 % |
-| `TicketService` | 96 % | 84 % |
-| `PersonalTokenService` | 95 % | 100 % |
-| `UserService`, `AttachmentService` | 94 % | 75–100 % |
-| `GlobalExceptionHandler` | 89 % | n/a |
-| Couverture globale | **74,8 % lignes** | **75,3 % branches** |
+Ajouts récents (refonte rôles) : `updateUserProjects` entièrement couvert (6 cas), comportement clearProjects sur changement d'organisation (UserService + OrganizationService), catégorie `PROJECT_ROLE` validée dans AdminConfigService.
+
+| Service / Composant | Tests |
+|---|---|
+| `TicketService` | 54 |
+| `UserService` | 26 |
+| `OrganizationService` | 21 |
+| `ProjectService`, `PersonalTokenService` | 18 chacun |
+| `AdminConfigService` | 14 |
+| `TicketLinkService` | 15 |
+| `CommentService`, `LabelService`, `AttachmentService` | 10–12 chacun |
+| `ClientService`, `GlobalExceptionHandler` | 8 chacun |
+| `PersonalTokenFilter`, `RateLimiterService` | 7, 5 |
 
 Les controllers ne sont pas couverts (pas de tests d'intégration `@SpringBootTest`).

@@ -56,7 +56,7 @@ class ProjectServiceTest {
         agent.setOrganization(org);
         when(currentUserService.getCurrentUser()).thenReturn(agent);
         Project p = project();
-        when(projectRepository.findActiveByOrganizationId(org.getId())).thenReturn(List.of(p));
+        when(projectRepository.findActiveByUserId(agent.getId())).thenReturn(List.of(p));
 
         List<ProjectResponse> result = service.getAllProjects();
 
@@ -92,7 +92,7 @@ class ProjectServiceTest {
         when(currentUserService.getCurrentUser()).thenReturn(agent);
         Project p = project();
         when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
-        when(projectRepository.isProjectInOrganization(p.getId(), org.getId())).thenReturn(true);
+        when(projectRepository.isProjectAccessibleToUser(p.getId(), agent.getId())).thenReturn(true);
 
         assertThatCode(() -> service.getProject(p.getId())).doesNotThrowAnyException();
     }
@@ -105,8 +105,6 @@ class ProjectServiceTest {
         when(currentUserService.getCurrentUser()).thenReturn(client);
         Project p = project();
         when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
-        when(projectRepository.isProjectInOrganization(p.getId(), org.getId())).thenReturn(false);
-
         assertThatThrownBy(() -> service.getProject(p.getId()))
                 .isInstanceOf(ForbiddenException.class);
     }

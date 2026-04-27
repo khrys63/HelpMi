@@ -10,6 +10,7 @@ import com.helpmi.exception.ForbiddenException;
 import com.helpmi.exception.NotFoundException;
 import com.helpmi.repository.ProjectRepository;
 import com.helpmi.repository.TicketRepository;
+import com.helpmi.repository.UserProjectRepository;
 import com.helpmi.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final TicketRepository ticketRepository;
+    private final UserProjectRepository userProjectRepository;
     private final CurrentUserService currentUserService;
 
     @Transactional(readOnly = true)
@@ -35,7 +37,7 @@ public class ProjectService {
                     .stream().map(this::toResponse).toList();
         }
         if (user.getOrganization() == null) return List.of();
-        return projectRepository.findActiveByOrganizationId(user.getOrganization().getId())
+        return projectRepository.findActiveByUserId(user.getId())
                 .stream().map(this::toResponse).toList();
     }
 
@@ -90,6 +92,12 @@ public class ProjectService {
                 .orElseThrow(() -> new NotFoundException("Projet introuvable : " + id));
     }
 
+    public boolean isGestionnaire(UUID userId, UUID projectId) {
+        return userProjectRepository.findByUserIdAndProjectId(userId, projectId)
+                .map(up -> "GESTIONNAIRE".equals(up.getRole()))
+                .orElse(false);
+    }
+
     private void requireAdmin() {
         if (currentUserService.getCurrentUser().getRole() != UserRole.ADMIN) {
             throw new ForbiddenException("Réservé aux administrateurs");
@@ -104,7 +112,7 @@ public class ProjectService {
         User user = currentUserService.getCurrentUser();
         if (user.getRole() == UserRole.ADMIN) return;
         if (user.getOrganization() == null ||
-                !projectRepository.isProjectInOrganization(project.getId(), user.getOrganization().getId())) {
+                !projectRepository.isProjectAccessibleToUser(project.getId(), user.getId())) {
             throw new ForbiddenException("Accès refusé à ce projet");
         }
     }

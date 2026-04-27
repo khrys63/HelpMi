@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class AdminConfigService {
 
-    private static final Set<String> VALID_CATEGORIES = Set.of("STATUS", "PRIORITY", "TYPE", "LINK_TYPE");
+    private static final Set<String> VALID_CATEGORIES = Set.of("STATUS", "PRIORITY", "TYPE", "LINK_TYPE", "PROJECT_ROLE");
 
     private final ConfigValueRepository configValueRepository;
     private final TicketRepository ticketRepository;

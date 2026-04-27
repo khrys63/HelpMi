@@ -87,7 +87,8 @@ export const clientsAdminApi = {
 export const adminUsersApi = {
   list: () => api.get('/admin/users'),
   update: (id, data) => api.patch(`/admin/users/${id}`, data),
-  assignOrganization: (id, data) => api.put(`/admin/users/${id}/organization`, data)
+  assignOrganization: (id, data) => api.put(`/admin/users/${id}/organization`, data),
+  updateProjects: (id, data) => api.put(`/admin/users/${id}/projects`, data)
 }
 
 // Organisations (admin)

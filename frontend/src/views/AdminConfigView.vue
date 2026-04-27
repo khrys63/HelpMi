@@ -232,13 +232,14 @@ const tabs = [
   { key: 'PRIORITY',  label: 'Priorités' },
   { key: 'TYPE',      label: 'Types' },
   { key: 'LINK_TYPE', label: 'Types de liens' },
+  { key: 'PROJECT_ROLE', label: 'Rôles projet' },
   { key: 'CLIENT',    label: 'Clients' },
   { key: 'LABEL',     label: 'Étiquettes' },
 ]
 const activeTab = ref('STATUS')
 const currentTab = computed(() => tabs.find(t => t.key === activeTab.value))
 
-const isConfigTab   = computed(() => ['STATUS', 'PRIORITY', 'TYPE', 'LINK_TYPE'].includes(activeTab.value))
+const isConfigTab   = computed(() => ['STATUS', 'PRIORITY', 'TYPE', 'LINK_TYPE', 'PROJECT_ROLE'].includes(activeTab.value))
 const isLinkTypeTab = computed(() => activeTab.value === 'LINK_TYPE')
 const isClientTab   = computed(() => activeTab.value === 'CLIENT')
 const isLabelTab    = computed(() => activeTab.value === 'LABEL')
@@ -264,6 +265,7 @@ const displayItems = computed(() => {
     case 'PRIORITY':  return config.priorities
     case 'TYPE':      return config.types
     case 'LINK_TYPE': return config.linkTypes
+    case 'PROJECT_ROLE': return config.projectRoles
     default: return []
   }
 })

@@ -27,4 +27,13 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Project p WHERE p.id = :id")
     Optional<Project> findByIdForUpdate(@Param("id") UUID id);
+
+    @Query("SELECT up.project FROM UserProject up WHERE up.user.id = :userId AND up.project.active = true ORDER BY up.project.createdAt DESC")
+    List<Project> findActiveByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT up.project.id FROM UserProject up WHERE up.user.id = :userId AND up.project.active = true")
+    List<UUID> findIdsByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COUNT(up) > 0 FROM UserProject up WHERE up.user.id = :userId AND up.project.id = :projectId AND up.project.active = true")
+    boolean isProjectAccessibleToUser(@Param("projectId") UUID projectId, @Param("userId") UUID userId);
 }

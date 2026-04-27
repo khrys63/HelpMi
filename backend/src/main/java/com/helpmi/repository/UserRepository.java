@@ -22,8 +22,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
         WHERE u.active = true AND (
             u.role = com.helpmi.domain.enums.UserRole.ADMIN
             OR EXISTS (
-                SELECT 1 FROM Organization org JOIN org.projects p
-                WHERE org = u.organization AND p.id = :projectId AND p.active = true
+                SELECT 1 FROM UserProject up WHERE up.user = u AND up.project.id = :projectId
             )
         )
         ORDER BY u.firstName ASC, u.lastName ASC
@@ -35,8 +34,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
         WHERE u.id = :userId AND u.active = true AND (
             u.role = com.helpmi.domain.enums.UserRole.ADMIN
             OR EXISTS (
-                SELECT 1 FROM Organization org JOIN org.projects p
-                WHERE org = u.organization AND p.id = :projectId AND p.active = true
+                SELECT 1 FROM UserProject up WHERE up.user = u AND up.project.id = :projectId
             )
         )
     """)
