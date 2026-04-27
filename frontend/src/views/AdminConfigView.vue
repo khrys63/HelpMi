@@ -29,7 +29,8 @@
           <tr class="text-left text-xs text-gray-500 uppercase border-b">
             <template v-if="isConfigTab">
               <th class="pb-2 pr-4">Code</th>
-              <th class="pb-2 pr-4">Libellé</th>
+              <th class="pb-2 pr-4">Libellé direct</th>
+              <th v-if="isLinkTypeTab" class="pb-2 pr-4">Libellé inverse</th>
               <th class="pb-2 pr-4">Couleur</th>
               <th class="pb-2 pr-4">Actif</th>
               <th class="pb-2 pr-4">Position</th>
@@ -51,6 +52,7 @@
             <template v-if="isConfigTab">
               <td class="py-2.5 pr-4 font-mono text-gray-500 text-xs">{{ item.code }}</td>
               <td class="py-2.5 pr-4 font-medium text-gray-800">{{ item.label }}</td>
+              <td v-if="isLinkTypeTab" class="py-2.5 pr-4 text-gray-500 italic">{{ item.inverseLabel || '—' }}</td>
               <td class="py-2.5 pr-4">
                 <span :class="['inline-block w-4 h-4 rounded-full', dotClass(item.color)]"></span>
                 <span class="ml-1 text-gray-500 text-xs">{{ item.color }}</span>
@@ -80,7 +82,7 @@
             </td>
           </tr>
           <tr v-if="displayItems.length === 0">
-            <td :colspan="isConfigTab ? 6 : 4" class="py-6 text-center text-gray-400 italic">Aucune valeur.</td>
+            <td :colspan="isLinkTypeTab ? 7 : isConfigTab ? 6 : 4" class="py-6 text-center text-gray-400 italic">Aucune valeur.</td>
           </tr>
         </tbody>
       </table>
@@ -99,7 +101,24 @@
               class="w-full border rounded-lg px-3 py-2 text-sm uppercase" />
             <p class="text-xs text-gray-400 mt-0.5">Sera mis en majuscules, espaces → _</p>
           </div>
-          <div>
+          <div v-if="isLinkTypeTab" class="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-2">
+            <p class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Paire de libellés</p>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Libellé direct *
+                <span class="text-gray-400 font-normal">(ex : Bloque)</span>
+              </label>
+              <input v-model="form.label" placeholder="ex: Bloque"
+                class="w-full border rounded-lg px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Libellé inverse *
+                <span class="text-gray-400 font-normal">(ex : Bloqué par)</span>
+              </label>
+              <input v-model="form.inverseLabel" placeholder="ex: Bloqué par"
+                class="w-full border rounded-lg px-3 py-2 text-sm" />
+            </div>
+          </div>
+          <div v-else>
             <label class="block text-xs font-medium text-gray-600 mb-1">Libellé *</label>
             <input v-model="form.label" placeholder="Libellé affiché"
               class="w-full border rounded-lg px-3 py-2 text-sm" />
@@ -219,9 +238,10 @@ const tabs = [
 const activeTab = ref('STATUS')
 const currentTab = computed(() => tabs.find(t => t.key === activeTab.value))
 
-const isConfigTab = computed(() => ['STATUS', 'PRIORITY', 'TYPE', 'LINK_TYPE'].includes(activeTab.value))
-const isClientTab = computed(() => activeTab.value === 'CLIENT')
-const isLabelTab  = computed(() => activeTab.value === 'LABEL')
+const isConfigTab   = computed(() => ['STATUS', 'PRIORITY', 'TYPE', 'LINK_TYPE'].includes(activeTab.value))
+const isLinkTypeTab = computed(() => activeTab.value === 'LINK_TYPE')
+const isClientTab   = computed(() => activeTab.value === 'CLIENT')
+const isLabelTab    = computed(() => activeTab.value === 'LABEL')
 
 // Local data for CLIENT and LABEL tabs
 const clientItems = ref([])
@@ -269,7 +289,7 @@ function openCreate() {
   editingItem.value = null
   formError.value = ''
   if (isConfigTab.value) {
-    form.value = { code: '', label: '', color: 'blue', active: true, position: displayItems.value.length + 1 }
+    form.value = { code: '', label: '', inverseLabel: '', color: 'blue', active: true, position: displayItems.value.length + 1 }
   } else if (isClientTab.value) {
     form.value = { name: '', contactEmail: '', active: true }
   } else {
@@ -282,7 +302,7 @@ function openEdit(item) {
   editingItem.value = item
   formError.value = ''
   if (isConfigTab.value) {
-    form.value = { code: item.code, label: item.label, color: item.color || 'gray', active: item.active, position: item.position }
+    form.value = { code: item.code, label: item.label, inverseLabel: item.inverseLabel || '', color: item.color || 'gray', active: item.active, position: item.position }
   } else if (isClientTab.value) {
     form.value = { name: item.name, contactEmail: item.contactEmail || '', active: item.active }
   } else {

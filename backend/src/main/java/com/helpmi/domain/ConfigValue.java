@@ -26,6 +26,9 @@ public class ConfigValue {
     @Column(nullable = false, length = 100)
     private String label;
 
+    @Column(length = 100)
+    private String inverseLabel;
+
     @Column(length = 50)
     private String color;
 

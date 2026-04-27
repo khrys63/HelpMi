@@ -68,7 +68,7 @@ class AdminConfigServiceTest {
 
     @Test
     void create_invalidCategory_throws() {
-        ConfigValueRequest req = new ConfigValueRequest("CODE", "Label", "blue", true, 1);
+        ConfigValueRequest req = new ConfigValueRequest("CODE", "Label", null, "blue", true, 1);
 
         assertThatThrownBy(() -> service.create("UNKNOWN", req))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -76,7 +76,7 @@ class AdminConfigServiceTest {
 
     @Test
     void create_duplicateCode_throws() {
-        ConfigValueRequest req = new ConfigValueRequest("OPEN", "Ouvert", "green", true, 1);
+        ConfigValueRequest req = new ConfigValueRequest("OPEN", "Ouvert", null, "green", true, 1);
         when(configValueRepository.existsByCategoryAndCode("STATUS", "OPEN")).thenReturn(true);
 
         assertThatThrownBy(() -> service.create("STATUS", req))
@@ -86,7 +86,7 @@ class AdminConfigServiceTest {
 
     @Test
     void create_normalizesCodeToUppercase() {
-        ConfigValueRequest req = new ConfigValueRequest("my status", "Label", "blue", true, 1);
+        ConfigValueRequest req = new ConfigValueRequest("my status", "Label", null, "blue", true, 1);
         when(configValueRepository.existsByCategoryAndCode("STATUS", "MY_STATUS")).thenReturn(false);
         ConfigValue saved = configValue("STATUS", "MY_STATUS");
         when(configValueRepository.save(any())).thenReturn(saved);
@@ -98,7 +98,7 @@ class AdminConfigServiceTest {
 
     @Test
     void create_spacesConvertedToUnderscores() {
-        ConfigValueRequest req = new ConfigValueRequest("in progress", "En cours", "blue", true, 2);
+        ConfigValueRequest req = new ConfigValueRequest("in progress", "En cours", null, "blue", true, 2);
         when(configValueRepository.existsByCategoryAndCode("STATUS", "IN_PROGRESS")).thenReturn(false);
         ConfigValue saved = configValue("STATUS", "IN_PROGRESS");
         when(configValueRepository.save(any())).thenReturn(saved);
@@ -115,7 +115,7 @@ class AdminConfigServiceTest {
         when(configValueRepository.findById(any())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.update("STATUS", UUID.randomUUID(),
-                new ConfigValueRequest(null, "New", "red", true, 1)))
+                new ConfigValueRequest(null, "New", null, "red", true, 1)))
                 .isInstanceOf(NotFoundException.class);
     }
 
@@ -125,7 +125,7 @@ class AdminConfigServiceTest {
         when(configValueRepository.findById(cv.getId())).thenReturn(Optional.of(cv));
 
         assertThatThrownBy(() -> service.update("STATUS", cv.getId(),
-                new ConfigValueRequest(null, "New", "red", true, 1)))
+                new ConfigValueRequest(null, "New", null, "red", true, 1)))
                 .isInstanceOf(NotFoundException.class);
     }
 
@@ -135,7 +135,7 @@ class AdminConfigServiceTest {
         when(configValueRepository.findById(cv.getId())).thenReturn(Optional.of(cv));
         when(configValueRepository.save(cv)).thenReturn(cv);
 
-        service.update("STATUS", cv.getId(), new ConfigValueRequest(null, "Ouvert", "green", false, 5));
+        service.update("STATUS", cv.getId(), new ConfigValueRequest(null, "Ouvert", null, "green", false, 5));
 
         assertThat(cv.getLabel()).isEqualTo("Ouvert");
         assertThat(cv.getColor()).isEqualTo("green");

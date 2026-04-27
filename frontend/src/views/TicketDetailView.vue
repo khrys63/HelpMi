@@ -437,12 +437,10 @@ const linkType = ref(config.linkTypes[0]?.code ?? '')
 const linkAdding = ref(false)
 let linkSearchTimer = null
 
-const linkLabels = {
-  OUTGOING: { RELATES_TO: 'lié à', DEPENDS_ON: 'dépend de', BLOCKS: 'bloque', DUPLICATES: 'doublon de' },
-  INCOMING: { RELATES_TO: 'lié à', DEPENDS_ON: 'requis par', BLOCKS: 'bloqué par', DUPLICATES: 'dupliqué par' }
-}
 function linkLabel(type, direction) {
-  return linkLabels[direction]?.[type] ?? config.getLinkType(type)?.label ?? type
+  const lt = config.getLinkType(type)
+  if (!lt) return type
+  return direction === 'INCOMING' ? (lt.inverseLabel || lt.label) : lt.label
 }
 
 // édition titre
