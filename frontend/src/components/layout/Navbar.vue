@@ -19,8 +19,6 @@
             :title="`${auth.user.firstName} ${auth.user.lastName} — Profil & tokens API`">
             {{ initials }}
           </router-link>
-          <span>{{ auth.user.firstName }} {{ auth.user.lastName }}</span>
-          <span class="text-xs text-gray-400 uppercase">{{ auth.user.role }}</span>
           <button @click="auth.logout()"
             class="ml-2 text-xs text-gray-500 hover:text-red-600">Déconnexion</button>
         </div>

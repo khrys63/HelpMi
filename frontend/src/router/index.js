@@ -33,16 +33,19 @@ const router = createRouter({
     {
       path: '/admin/config',
       name: 'admin-config',
+      meta: { requiresAdmin: true },
       component: () => import('../views/AdminConfigView.vue')
     },
     {
       path: '/admin/organizations',
       name: 'admin-organizations',
+      meta: { requiresAdmin: true },
       component: () => import('../views/AdminOrganizationsView.vue')
     },
     {
       path: '/admin/users',
       name: 'admin-users',
+      meta: { requiresAdmin: true },
       component: () => import('../views/AdminUsersView.vue')
     },
     {
@@ -53,14 +56,22 @@ const router = createRouter({
   ]
 })
 
-// Redirect users without an org to the pending screen (except ADMIN and /pending-org itself)
 router.beforeEach((to) => {
   if (to.name === 'pending-org') return true
   const auth = useAuthStore()
   if (!auth.user) return true
-  if (auth.user.role !== 'ADMIN' && !auth.user.organizationId) {
+
+  const isAdmin = auth.user.role === 'ADMIN'
+  const hasOrg = !!auth.user.organizationId
+
+  if (to.meta.requiresAdmin && !isAdmin) {
+    return hasOrg ? { name: 'projects' } : { name: 'pending-org' }
+  }
+
+  if (!isAdmin && !hasOrg) {
     return { name: 'pending-org' }
   }
+
   return true
 })
 
