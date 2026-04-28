@@ -131,7 +131,7 @@ class TicketLinkServiceTest {
         Ticket target = ticket(project(), user);
         TicketLink link = buildLink(source, target, "RELATES_TO");
         UserProject up = UserProject.builder()
-                .id(UUID.randomUUID()).user(user).project(source.getProject()).role("GESTIONNAIRE").build();
+                .id(UUID.randomUUID()).user(user).project(source.getProject()).role("MANAGER").build();
         when(linkRepository.findById(link.getId())).thenReturn(Optional.of(link));
         when(currentUserService.getCurrentUser()).thenReturn(user);
         when(userProjectRepository.findByUserIdAndProjectId(user.getId(), source.getProject().getId()))

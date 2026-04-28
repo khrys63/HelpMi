@@ -29,5 +29,5 @@ public class UserProject {
 
     @Column(nullable = false, length = 100)
     @Builder.Default
-    private String role = "UTILISATEUR";
+    private String role = "MEMBER";
 }

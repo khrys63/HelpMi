@@ -94,7 +94,7 @@ public class ProjectService {
 
     public boolean isGestionnaire(UUID userId, UUID projectId) {
         return userProjectRepository.findByUserIdAndProjectId(userId, projectId)
-                .map(up -> "GESTIONNAIRE".equals(up.getRole()))
+                .map(up -> "MANAGER".equals(up.getRole()))
                 .orElse(false);
     }
 

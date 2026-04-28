@@ -247,7 +247,7 @@ class OrganizationServiceTest {
         User agent = agentUser();
         agent.setOrganization(currentOrg);
         agent.getUserProjects().add(UserProject.builder()
-                .id(UUID.randomUUID()).user(agent).project(project()).role("UTILISATEUR").build());
+                .id(UUID.randomUUID()).user(agent).project(project()).role("MEMBER").build());
         when(organizationRepository.findByIdWithProjects(newOrg.getId())).thenReturn(Optional.of(newOrg));
         when(userRepository.findById(agent.getId())).thenReturn(Optional.of(agent));
         when(userRepository.save(agent)).thenReturn(agent);
@@ -266,7 +266,7 @@ class OrganizationServiceTest {
         User agent = agentUser();
         agent.setOrganization(org);
         agent.getUserProjects().add(UserProject.builder()
-                .id(UUID.randomUUID()).user(agent).project(project()).role("GESTIONNAIRE").build());
+                .id(UUID.randomUUID()).user(agent).project(project()).role("MANAGER").build());
         when(organizationRepository.findByIdWithProjects(org.getId())).thenReturn(Optional.of(org));
         when(userRepository.findById(agent.getId())).thenReturn(Optional.of(agent));
         when(userRepository.save(agent)).thenReturn(agent);
@@ -316,7 +316,7 @@ class OrganizationServiceTest {
         User agent = agentUser();
         agent.setOrganization(org);
         agent.getUserProjects().add(UserProject.builder()
-                .id(UUID.randomUUID()).user(agent).project(project()).role("GESTIONNAIRE").build());
+                .id(UUID.randomUUID()).user(agent).project(project()).role("MANAGER").build());
         when(organizationRepository.findByIdWithProjects(org.getId())).thenReturn(Optional.of(org));
         when(userRepository.findById(agent.getId())).thenReturn(Optional.of(agent));
         when(userRepository.save(agent)).thenReturn(agent);

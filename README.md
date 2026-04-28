@@ -25,7 +25,7 @@ Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces j
 
 ## Rôles et droits
 
-Il existe deux **rôles globaux** (`ADMIN` et `USER`) et deux **rôles par projet** (`GESTIONNAIRE` et `UTILISATEUR`).
+Il existe deux **rôles globaux** (`ADMIN` et `USER`) et deux **rôles par projet** (`MANAGER` et `MEMBER`).
 
 ### Prérequis (non-ADMIN)
 
@@ -34,21 +34,21 @@ Un utilisateur avec organisation ne voit que les **projets de sa liste personnel
 
 ### Rôles par projet
 
-| Rôle projet | Signification |
-|---|---|
-| **GESTIONNAIRE** | Droits complets sur les tickets du projet (créer, modifier tout ticket, changer statut, supprimer les liens) |
-| **UTILISATEUR** | Droits restreints : peut créer des tickets, modifier/fermer uniquement ses propres tickets (reporter ou assigné) |
+| Code | Libellé UI | Signification |
+|---|---|---|
+| `MANAGER` | Gestionnaire | Droits complets sur les tickets du projet (créer, modifier tout ticket, changer statut, supprimer les liens) |
+| `MEMBER` | Membre | Droits restreints : peut créer des tickets, modifier/fermer uniquement ses propres tickets (reporter ou assigné) |
 
 ### Projets
 
-| Action | ADMIN | GESTIONNAIRE | UTILISATEUR |
+| Action | ADMIN | MANAGER | MEMBER |
 |---|---|---|---|
 | Voir la liste | Tous les projets actifs | Ses projets | Ses projets |
 | Créer / modifier / désactiver | ✅ | ✗ | ✗ |
 
 ### Tickets
 
-| Action | ADMIN | GESTIONNAIRE | UTILISATEUR |
+| Action | ADMIN | MANAGER | MEMBER |
 |---|---|---|---|
 | Lire (liste + détail) | ✅ | ✅ | ✅ |
 | Créer | ✅ | ✅ | ✅ |
@@ -59,21 +59,21 @@ Un utilisateur avec organisation ne voit que les **projets de sa liste personnel
 
 ### Commentaires
 
-| Action | ADMIN | GESTIONNAIRE | UTILISATEUR |
+| Action | ADMIN | MANAGER | MEMBER |
 |---|---|---|---|
 | Ajouter | ✅ | ✅ | ✅ |
 | Modifier / Supprimer | ✅ n'importe lequel | ✅ les siens | ✅ les siens |
 
 ### Pièces jointes
 
-| Action | ADMIN | GESTIONNAIRE | UTILISATEUR |
+| Action | ADMIN | MANAGER | MEMBER |
 |---|---|---|---|
 | Uploader / Télécharger | ✅ | ✅ | ✅ |
 | Supprimer | ✅ n'importe laquelle | ✅ les siennes | ✅ les siennes |
 
 ### Liens entre tickets
 
-| Action | ADMIN | GESTIONNAIRE | UTILISATEUR |
+| Action | ADMIN | MANAGER | MEMBER |
 |---|---|---|---|
 | Créer un lien | ✅ | ✅ | ✅ |
 | Supprimer un lien | ✅ n'importe lequel | ✅ n'importe lequel | ✅ les siens |
@@ -252,6 +252,7 @@ Les migrations sont gérées par Flyway et s'appliquent automatiquement au déma
 | `V10__link_type_inverse_label.sql` | Colonne `inverse_label` sur les types de liens |
 | `V11__user_org_role_and_projects.sql` | Table `user_projects` avec PK composite, colonne `organization_role` sur les utilisateurs |
 | `V12__project_roles.sql` | Refonte des rôles : `user_projects` avec PK UUID et colonne `role` (GESTIONNAIRE/UTILISATEUR), suppression `organization_role`, migration `AGENT`/`CLIENT` → `USER`, catégorie `PROJECT_ROLE` |
+| `V13__rename_project_roles.sql` | Renommage des codes rôles projet : `GESTIONNAIRE` → `MANAGER`, `UTILISATEUR` → `MEMBER` (dans `user_projects` et `config_values`) |
 
 Les fichiers dans `db/dev-seed/` ne sont chargés qu'avec le profil `dev`.
 

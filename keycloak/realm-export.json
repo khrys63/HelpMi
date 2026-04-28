@@ -9,8 +9,7 @@
   "roles": {
     "realm": [
       { "name": "ADMIN", "composite": false },
-      { "name": "AGENT", "composite": false },
-      { "name": "CLIENT", "composite": false }
+      { "name": "USER", "composite": false }
     ]
   },
   "clients": [
@@ -44,24 +43,24 @@
       "realmRoles": ["ADMIN"]
     },
     {
-      "username": "agent",
-      "email": "agent@helpmi.local",
-      "firstName": "Agent",
-      "lastName": "Dev",
+      "username": "user1",
+      "email": "user1@helpmi.local",
+      "firstName": "User",
+      "lastName": "One",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "agent123", "temporary": false }],
-      "realmRoles": ["AGENT"]
+      "credentials": [{ "type": "password", "value": "user123", "temporary": false }],
+      "realmRoles": ["USER"]
     },
     {
-      "username": "client",
-      "email": "client@helpmi.local",
-      "firstName": "Client",
-      "lastName": "Dev",
+      "username": "user2",
+      "email": "user2@helpmi.local",
+      "firstName": "User",
+      "lastName": "Two",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "client123", "temporary": false }],
-      "realmRoles": ["CLIENT"]
+      "credentials": [{ "type": "password", "value": "user123", "temporary": false }],
+      "realmRoles": ["USER"]
     }
   ]
 }

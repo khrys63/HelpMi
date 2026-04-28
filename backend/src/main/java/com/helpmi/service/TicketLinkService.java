@@ -62,7 +62,7 @@ public class TicketLinkService {
         boolean isAdmin = user.getRole() == UserRole.ADMIN;
         boolean isGestionnaire = !isAdmin && userProjectRepository
                 .findByUserIdAndProjectId(user.getId(), link.getSourceTicket().getProject().getId())
-                .map(up -> "GESTIONNAIRE".equals(up.getRole()))
+                .map(up -> "MANAGER".equals(up.getRole()))
                 .orElse(false);
         boolean isCreator = link.getCreatedBy() != null && link.getCreatedBy().getId().equals(user.getId());
         if (!isAdmin && !isGestionnaire && !isCreator) {

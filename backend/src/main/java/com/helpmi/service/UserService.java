@@ -105,7 +105,7 @@ public class UserService {
             user.getUserProjects().add(UserProject.builder()
                     .user(user)
                     .project(project)
-                    .role(entry.role() != null ? entry.role() : "UTILISATEUR")
+                    .role(entry.role() != null ? entry.role() : "MEMBER")
                     .build());
         }
         return UserResponse.from(userRepository.save(user));

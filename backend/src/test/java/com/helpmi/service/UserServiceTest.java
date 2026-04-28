@@ -224,7 +224,7 @@ class UserServiceTest {
         User target = clientUser();
         target.setOrganization(org);
         target.getUserProjects().add(UserProject.builder()
-                .id(UUID.randomUUID()).user(target).project(project()).role("UTILISATEUR").build());
+                .id(UUID.randomUUID()).user(target).project(project()).role("MEMBER").build());
         when(userRepository.findById(target.getId())).thenReturn(Optional.of(target));
         when(userRepository.save(target)).thenReturn(target);
 
@@ -256,7 +256,7 @@ class UserServiceTest {
         User target = clientUser();
         target.setOrganization(currentOrg);
         target.getUserProjects().add(UserProject.builder()
-                .id(UUID.randomUUID()).user(target).project(project()).role("UTILISATEUR").build());
+                .id(UUID.randomUUID()).user(target).project(project()).role("MEMBER").build());
         when(userRepository.findById(target.getId())).thenReturn(Optional.of(target));
         when(organizationRepository.findById(newOrg.getId())).thenReturn(Optional.of(newOrg));
         when(userRepository.save(target)).thenReturn(target);
@@ -274,7 +274,7 @@ class UserServiceTest {
         User target = clientUser();
         target.setOrganization(org);
         target.getUserProjects().add(UserProject.builder()
-                .id(UUID.randomUUID()).user(target).project(project()).role("UTILISATEUR").build());
+                .id(UUID.randomUUID()).user(target).project(project()).role("MEMBER").build());
         when(userRepository.findById(target.getId())).thenReturn(Optional.of(target));
         when(organizationRepository.findById(org.getId())).thenReturn(Optional.of(org));
         when(userRepository.save(target)).thenReturn(target);
@@ -317,7 +317,7 @@ class UserServiceTest {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(projectRepository.findIdsByOrganizationId(org.getId())).thenReturn(List.of(allowedId));
 
-        var entries = List.of(new UpdateUserProjectsRequest.ProjectRoleEntry(foreignId, "UTILISATEUR"));
+        var entries = List.of(new UpdateUserProjectsRequest.ProjectRoleEntry(foreignId, "MEMBER"));
         assertThatThrownBy(() -> service.updateUserProjects(user.getId(),
                 new UpdateUserProjectsRequest(entries)))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -335,11 +335,11 @@ class UserServiceTest {
         when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
         when(userRepository.save(user)).thenReturn(user);
 
-        var entries = List.of(new UpdateUserProjectsRequest.ProjectRoleEntry(p.getId(), "GESTIONNAIRE"));
+        var entries = List.of(new UpdateUserProjectsRequest.ProjectRoleEntry(p.getId(), "MANAGER"));
         UserResponse result = service.updateUserProjects(user.getId(), new UpdateUserProjectsRequest(entries));
 
         assertThat(result.projectRoles()).hasSize(1);
-        assertThat(result.projectRoles().get(0).role()).isEqualTo("GESTIONNAIRE");
+        assertThat(result.projectRoles().get(0).role()).isEqualTo("MANAGER");
         assertThat(result.projectRoles().get(0).projectId()).isEqualTo(p.getId());
     }
 
@@ -357,7 +357,7 @@ class UserServiceTest {
         var entries = List.of(new UpdateUserProjectsRequest.ProjectRoleEntry(p.getId(), null));
         UserResponse result = service.updateUserProjects(user.getId(), new UpdateUserProjectsRequest(entries));
 
-        assertThat(result.projectRoles().get(0).role()).isEqualTo("UTILISATEUR");
+        assertThat(result.projectRoles().get(0).role()).isEqualTo("MEMBER");
     }
 
     @Test

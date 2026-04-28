@@ -221,12 +221,12 @@ function isProjectSelected(projectId) {
 
 function toggleProject(projectId) {
   const idx = form.value.projectEntries.findIndex(e => e.projectId === projectId)
-  if (idx === -1) form.value.projectEntries.push({ projectId, role: 'UTILISATEUR' })
+  if (idx === -1) form.value.projectEntries.push({ projectId, role: 'MEMBER' })
   else form.value.projectEntries.splice(idx, 1)
 }
 
 function getProjectRole(projectId) {
-  return form.value.projectEntries.find(e => e.projectId === projectId)?.role || 'UTILISATEUR'
+  return form.value.projectEntries.find(e => e.projectId === projectId)?.role || 'MEMBER'
 }
 
 function setProjectRole(projectId, role) {
