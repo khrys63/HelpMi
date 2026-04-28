@@ -10,7 +10,7 @@ services:
       - "9001:9001"
 
   phpmyadmin:
-    image: phpmyadmin:latest
+    image: phpmyadmin:5.2.3
     container_name: helpmi_phpmyadmin
     environment:
       PMA_HOST: mariadb
