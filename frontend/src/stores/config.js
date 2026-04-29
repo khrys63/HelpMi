@@ -11,6 +11,9 @@ export const COLORS = {
   red:    { badge: 'bg-red-100 text-red-700',      dot: 'bg-red-500' },
   orange: { badge: 'bg-orange-100 text-orange-700', dot: 'bg-orange-500' },
   purple: { badge: 'bg-purple-100 text-purple-700', dot: 'bg-purple-500' },
+  pink:   { badge: 'bg-pink-100 text-pink-700',   dot: 'bg-pink-500' },
+  teal:   { badge: 'bg-teal-100 text-teal-700',   dot: 'bg-teal-500' },
+  indigo: { badge: 'bg-indigo-100 text-indigo-700', dot: 'bg-indigo-600' },
 }
 
 export const COLOR_OPTIONS = Object.keys(COLORS)

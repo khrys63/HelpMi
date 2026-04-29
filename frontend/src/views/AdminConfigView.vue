@@ -221,26 +221,31 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, h } from 'vue'
 import api from '../services/api.js'
 import { useConfigStore, COLOR_OPTIONS, COLORS, SUPPORTED_LOCALES } from '../stores/config.js'
 
-// Inline color picker component
 const ColorPicker = {
   props: ['modelValue'],
   emits: ['update:modelValue'],
-  template: `
-    <div class="flex gap-2 flex-wrap">
-      <button v-for="c in options" :key="c" type="button" @click="$emit('update:modelValue', c)"
-        :class="['w-7 h-7 rounded-full border-2 transition-all', dotClass(c),
-          modelValue === c ? 'border-gray-800 scale-110' : 'border-transparent']"
-        :title="c" />
-    </div>`,
-  setup(props) {
-    return {
-      options: COLOR_OPTIONS,
-      dotClass: c => COLORS[c]?.dot ?? 'bg-gray-300'
-    }
+  setup(props, { emit }) {
+    return () => h('div', { class: 'flex gap-2 flex-wrap' },
+      COLOR_OPTIONS.map(c =>
+        h('button', {
+          key: c,
+          type: 'button',
+          title: c,
+          class: [
+            'w-7 h-7 rounded-full border-2 transition-all',
+            COLORS[c]?.dot ?? 'bg-gray-300',
+            props.modelValue === c
+              ? 'border-gray-800 dark:border-white scale-110 ring-2 ring-offset-1 ring-gray-400 dark:ring-offset-gray-800'
+              : 'border-transparent hover:scale-105'
+          ],
+          onClick: () => emit('update:modelValue', c)
+        })
+      )
+    )
   }
 }
 
