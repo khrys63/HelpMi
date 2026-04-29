@@ -5,6 +5,7 @@ import com.helpmi.domain.enums.UserRole;
 import com.helpmi.exception.ForbiddenException;
 import com.helpmi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -24,16 +25,21 @@ public class CurrentUserService {
     @Transactional
     public User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (!(auth instanceof JwtAuthenticationToken jwtAuth)) {
-            throw new ForbiddenException("Authentification requise");
+        if (auth instanceof JwtAuthenticationToken jwtAuth) {
+            Jwt jwt = jwtAuth.getToken();
+            String keycloakId = jwt.getSubject();
+            User user = userRepository.findByKeycloakId(keycloakId)
+                    .orElseGet(() -> createOrMigrateUserFromJwt(jwt));
+            if (!user.isActive()) throw new ForbiddenException("Compte désactivé");
+            return user;
         }
-        Jwt jwt = jwtAuth.getToken();
-        String keycloakId = jwt.getSubject();
-
-        User user = userRepository.findByKeycloakId(keycloakId)
-                .orElseGet(() -> createOrMigrateUserFromJwt(jwt));
-        if (!user.isActive()) throw new ForbiddenException("Compte désactivé");
-        return user;
+        if (auth instanceof UsernamePasswordAuthenticationToken) {
+            String email = (String) auth.getPrincipal();
+            return userRepository.findByEmail(email)
+                    .filter(User::isActive)
+                    .orElseThrow(() -> new ForbiddenException("Utilisateur introuvable"));
+        }
+        throw new ForbiddenException("Authentification requise");
     }
 
     private User createOrMigrateUserFromJwt(Jwt jwt) {

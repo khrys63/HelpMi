@@ -31,10 +31,12 @@ public class AttachmentService {
     private final TicketRepository ticketRepository;
     private final CurrentUserService currentUserService;
     private final StorageService storageService;
+    private final ProjectService projectService;
 
     public AttachmentResponse upload(UUID ticketId, MultipartFile file) throws IOException {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new NotFoundException("Ticket introuvable"));
+        projectService.requireProjectAccess(ticket.getProject().getId());
 
         String originalName = file.getOriginalFilename();
         String extension = "";
@@ -62,6 +64,7 @@ public class AttachmentService {
     public Resource download(UUID attachmentId) throws IOException {
         Attachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new NotFoundException("Pièce jointe introuvable"));
+        projectService.requireProjectAccess(attachment.getTicket().getProject().getId());
         return new InputStreamResource(storageService.retrieve(attachment.getStoredName()));
     }
 
