@@ -271,7 +271,7 @@ docker compose up -d</code></pre>
     </div></div>
     <div class="step"><div><strong>Vérifier la santé après redémarrage</strong>
       <pre><code>docker ps --format "table {{.Names}}\t{{.Status}}"
-curl -s http://localhost:8080/actuator/health | python3 -m json.tool</code></pre>
+curl -s http://app.localhost:8080/actuator/health | python3 -m json.tool</code></pre>
     </div></div>
   </div>
   <div class="alert alert-yellow">Si le backend redémarre en boucle, chercher en priorité une erreur Flyway (migration SQL) ou une impossibilité de contacter MariaDB — voir incidents P2 ci-dessous.</div>
@@ -467,7 +467,7 @@ curl -I http://localhost:3000</code></pre>
       <pre><code># Le 502 vient du proxy Nginx → backend
 # Vérifier que le backend tourne
 docker ps | grep helpmi_backend
-curl -s http://localhost:8080/actuator/health</code></pre>
+curl -s http://app.localhost:8080/actuator/health</code></pre>
     </div></div>
     <div class="step"><div><strong>Redémarrer le frontend</strong>
       <pre><code>docker compose restart frontend</code></pre>
@@ -544,7 +544,7 @@ curl -s http://auth.localhost/realms/helpmi/.well-known/openid-configuration | \
     <div class="step"><div><strong>Si l'URL diffère (docker interne vs external)</strong>
       <pre><code># En prod, Keycloak est souvent accessible via 2 URLs :
 # - interne (conteneur → conteneur) : http://keycloak:8080/realms/helpmi
-# - externe (navigateur → hôte)     : http://host:8180/realms/helpmi
+# - externe (navigateur → hôte)     : http://auth.localhost/realms/helpmi
 # APP_KEYCLOAK_ISSUER_URI doit pointer vers l'URL EXTERNE (celle du navigateur)</code></pre>
     </div></div>
   </div>
@@ -603,7 +603,7 @@ docker ps -a --format "table {{.Names}}\t{{.Status}}"
 docker stats
 
 # Health du backend Spring
-curl -s http://localhost:8080/actuator/health</code></pre>
+curl -s http://app.localhost:8080/actuator/health</code></pre>
   </div>
   <div>
     <h3>Logs</h3>
@@ -837,7 +837,7 @@ curl -sv https://app.helpmi.example.com 2>&1 | grep -i "SSL\|certificate\|issuer
     <tr><td>Logs d'un service</td><td><code>docker logs -f helpmi_&lt;service&gt;</code></td></tr>
     <tr><td>Redémarrer un service</td><td><code>docker compose restart &lt;service&gt;</code></td></tr>
     <tr><td>Redémarrer tout</td><td><code>docker compose up -d</code></td></tr>
-    <tr><td>Health backend</td><td><code>curl -s http://localhost:8080/actuator/health</code></td></tr>
+    <tr><td>Health backend</td><td><code>curl -s http://app.localhost:8080/actuator/health</code></td></tr>
     <tr><td>Health MinIO</td><td><code>curl -sf http://localhost:9000/minio/health/live</code></td></tr>
     <tr><td>Token Keycloak (smoke test)</td><td><code>curl -s -X POST http://auth.localhost/realms/helpmi/protocol/openid-connect/token -d "client_id=helpmi-frontend&grant_type=password&username=admin&password=admin123"</code></td></tr>
     <tr><td>Console MySQL interactive</td><td><code>docker exec -it helpmi_mariadb mysql -u helpmi -p helpmi</code></td></tr>

@@ -11,7 +11,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${APP_KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/helpmi}
+          issuer-uri: ${APP_KEYCLOAK_ISSUER_URI:http://auth.localhost/realms/helpmi}
 
 app:
   storage:
