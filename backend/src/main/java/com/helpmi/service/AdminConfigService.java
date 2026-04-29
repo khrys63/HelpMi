@@ -53,7 +53,11 @@ public class AdminConfigService {
                 .category(category)
                 .code(code)
                 .label(req.label())
+                .labelEn(req.labelEn())
+                .labelBg(req.labelBg())
                 .inverseLabel(req.inverseLabel())
+                .inverseLabelEn(req.inverseLabelEn())
+                .inverseLabelBg(req.inverseLabelBg())
                 .color(req.color())
                 .active(req.active())
                 .position(req.position())
@@ -65,7 +69,11 @@ public class AdminConfigService {
         validate(category);
         ConfigValue cv = find(category, id);
         cv.setLabel(req.label());
+        cv.setLabelEn(req.labelEn());
+        cv.setLabelBg(req.labelBg());
         cv.setInverseLabel(req.inverseLabel());
+        cv.setInverseLabelEn(req.inverseLabelEn());
+        cv.setInverseLabelBg(req.inverseLabelBg());
         cv.setColor(req.color());
         cv.setActive(req.active());
         cv.setPosition(req.position());

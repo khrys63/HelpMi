@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '../services/api.js'
+import { i18n } from '../i18n.js'
 
 export const COLORS = {
   blue:   { badge: 'bg-blue-100 text-blue-800',   dot: 'bg-blue-500' },
@@ -14,27 +15,45 @@ export const COLORS = {
 
 export const COLOR_OPTIONS = Object.keys(COLORS)
 
+export const SUPPORTED_LOCALES = ['fr', 'en', 'bg']
+
+function localizeItem(item) {
+  const locale = i18n.global.locale.value
+  const label = item.labels?.[locale] || item.labels?.fr || item.label || ''
+  const inverseLabel = item.inverseLabels?.[locale] || item.inverseLabels?.fr || item.inverseLabel || undefined
+  return { ...item, label, inverseLabel }
+}
+
 export const useConfigStore = defineStore('config', () => {
-  const statuses   = ref([])
-  const priorities = ref([])
-  const types      = ref([])
-  const linkTypes  = ref([])
+  const statuses     = ref([])
+  const priorities   = ref([])
+  const types        = ref([])
+  const linkTypes    = ref([])
   const projectRoles = ref([])
   const clients      = ref([])
   const loaded       = ref(false)
+
+  function localizeAll() {
+    statuses.value     = statuses.value.map(localizeItem)
+    priorities.value   = priorities.value.map(localizeItem)
+    types.value        = types.value.map(localizeItem)
+    linkTypes.value    = linkTypes.value.map(localizeItem)
+    projectRoles.value = projectRoles.value.map(localizeItem)
+  }
 
   async function load() {
     const [{ data: config }, { data: clientList }] = await Promise.all([
       api.get('/admin/config'),
       api.get('/admin/clients')
     ])
-    statuses.value      = config.STATUS       || []
-    priorities.value    = config.PRIORITY     || []
-    types.value         = config.TYPE         || []
-    linkTypes.value     = config.LINK_TYPE    || []
-    projectRoles.value  = config.PROJECT_ROLE || []
-    clients.value       = clientList
+    statuses.value     = config.STATUS       || []
+    priorities.value   = config.PRIORITY     || []
+    types.value        = config.TYPE         || []
+    linkTypes.value    = config.LINK_TYPE    || []
+    projectRoles.value = config.PROJECT_ROLE || []
+    clients.value      = clientList
     loaded.value = true
+    localizeAll()
   }
 
   function getStatus(code)   { return statuses.value.find(s => s.code === code) }
@@ -42,6 +61,6 @@ export const useConfigStore = defineStore('config', () => {
   function getType(code)     { return types.value.find(t => t.code === code) }
   function getLinkType(code) { return linkTypes.value.find(l => l.code === code) }
 
-  return { statuses, priorities, types, linkTypes, projectRoles, clients, loaded, load,
-           getStatus, getPriority, getType, getLinkType }
+  return { statuses, priorities, types, linkTypes, projectRoles, clients, loaded,
+           load, localizeAll, getStatus, getPriority, getType, getLinkType }
 })

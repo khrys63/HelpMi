@@ -101,27 +101,47 @@
               class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm uppercase dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $t('admin.config.field_code_hint') }}</p>
           </div>
-          <div v-if="isLinkTypeTab" class="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-2">
-            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide mb-1">{{ $t('admin.config.link_labels_section') }}</p>
+          <!-- Labels multilingues LINK_TYPE -->
+          <div v-if="isLinkTypeTab" class="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-3">
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_label_direct') }}
-                <span class="text-gray-400 dark:text-gray-500 font-normal">{{ $t('admin.config.field_label_direct_hint') }}</span>
-              </label>
-              <input v-model="form.label" :placeholder="$t('admin.config.field_label_direct_hint')"
-                class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
+              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">{{ $t('admin.config.field_label_direct') }}
+                <span class="font-normal text-gray-400 dark:text-gray-500">{{ $t('admin.config.field_label_direct_hint') }}</span>
+              </p>
+              <div class="space-y-1.5">
+                <div v-for="lc in SUPPORTED_LOCALES" :key="'d'+lc" class="flex items-center gap-2">
+                  <span class="text-[10px] font-mono font-semibold w-5 text-center text-gray-400 dark:text-gray-500 uppercase shrink-0">{{ lc }}</span>
+                  <input v-model="form.labels[lc]"
+                    :class="['flex-1 border rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100',
+                      lc === 'fr' ? 'border-gray-300 dark:border-gray-500' : 'border-dashed border-gray-200 dark:border-gray-600']" />
+                </div>
+              </div>
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_label_inverse') }}
-                <span class="text-gray-400 dark:text-gray-500 font-normal">{{ $t('admin.config.field_label_inverse_hint') }}</span>
-              </label>
-              <input v-model="form.inverseLabel" :placeholder="$t('admin.config.field_label_inverse_hint')"
-                class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
+              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">{{ $t('admin.config.field_label_inverse') }}
+                <span class="font-normal text-gray-400 dark:text-gray-500">{{ $t('admin.config.field_label_inverse_hint') }}</span>
+              </p>
+              <div class="space-y-1.5">
+                <div v-for="lc in SUPPORTED_LOCALES" :key="'i'+lc" class="flex items-center gap-2">
+                  <span class="text-[10px] font-mono font-semibold w-5 text-center text-gray-400 dark:text-gray-500 uppercase shrink-0">{{ lc }}</span>
+                  <input v-model="form.inverseLabels[lc]"
+                    :class="['flex-1 border rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100',
+                      lc === 'fr' ? 'border-gray-300 dark:border-gray-500' : 'border-dashed border-gray-200 dark:border-gray-600']" />
+                </div>
+              </div>
             </div>
           </div>
+
+          <!-- Labels multilingues autres catégories -->
           <div v-else>
-            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_label') }}</label>
-            <input v-model="form.label" :placeholder="$t('admin.config.field_label_placeholder')"
-              class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">{{ $t('admin.config.field_label') }}</label>
+            <div class="space-y-1.5">
+              <div v-for="lc in SUPPORTED_LOCALES" :key="lc" class="flex items-center gap-2">
+                <span class="text-[10px] font-mono font-semibold w-5 text-center text-gray-400 dark:text-gray-500 uppercase shrink-0">{{ lc }}</span>
+                <input v-model="form.labels[lc]"
+                  :class="['flex-1 border rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100',
+                    lc === 'fr' ? 'border-gray-300 dark:border-gray-500' : 'border-dashed border-gray-200 dark:border-gray-600']" />
+              </div>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_color') }}</label>
@@ -201,9 +221,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import api from '../services/api.js'
-import { useConfigStore, COLOR_OPTIONS, COLORS } from '../stores/config.js'
+import { useConfigStore, COLOR_OPTIONS, COLORS, SUPPORTED_LOCALES } from '../stores/config.js'
 
 // Inline color picker component
 const ColorPicker = {
@@ -277,11 +297,13 @@ const form       = ref({})
 const formError  = ref('')
 const saving     = ref(false)
 
+function emptyLabels() { return Object.fromEntries(SUPPORTED_LOCALES.map(lc => [lc, ''])) }
+
 function openCreate() {
   editingItem.value = null
   formError.value = ''
   if (isConfigTab.value) {
-    form.value = { code: '', label: '', inverseLabel: '', color: 'blue', active: true, position: displayItems.value.length + 1 }
+    form.value = { code: '', labels: emptyLabels(), inverseLabels: emptyLabels(), color: 'blue', active: true, position: displayItems.value.length + 1 }
   } else if (isClientTab.value) {
     form.value = { name: '', contactEmail: '', active: true }
   } else {
@@ -294,7 +316,14 @@ function openEdit(item) {
   editingItem.value = item
   formError.value = ''
   if (isConfigTab.value) {
-    form.value = { code: item.code, label: item.label, inverseLabel: item.inverseLabel || '', color: item.color || 'gray', active: item.active, position: item.position }
+    form.value = {
+      code: item.code,
+      labels: Object.fromEntries(SUPPORTED_LOCALES.map(lc => [lc, item.labels?.[lc] || ''])),
+      inverseLabels: Object.fromEntries(SUPPORTED_LOCALES.map(lc => [lc, item.inverseLabels?.[lc] || ''])),
+      color: item.color || 'gray',
+      active: item.active,
+      position: item.position
+    }
   } else if (isClientTab.value) {
     form.value = { name: item.name, contactEmail: item.contactEmail || '', active: item.active }
   } else {
@@ -305,17 +334,34 @@ function openEdit(item) {
 
 function closeModal() { modal.value = false }
 
+function configPayload() {
+  const f = form.value
+  return {
+    code: f.code,
+    label:          f.labels.fr || '',
+    labelEn:        f.labels.en || null,
+    labelBg:        f.labels.bg || null,
+    inverseLabel:   f.inverseLabels.fr || null,
+    inverseLabelEn: f.inverseLabels.en || null,
+    inverseLabelBg: f.inverseLabels.bg || null,
+    color:    f.color,
+    active:   f.active,
+    position: f.position
+  }
+}
+
 async function save() {
   formError.value = ''
   saving.value = true
   try {
     if (isConfigTab.value) {
       const cat = activeTab.value
+      const payload = configPayload()
       if (editingItem.value) {
-        const { data } = await api.put(`/admin/config/${cat}/${editingItem.value.id}`, form.value)
+        const { data } = await api.put(`/admin/config/${cat}/${editingItem.value.id}`, payload)
         replaceInList(displayItems.value, data)
       } else {
-        const { data } = await api.post(`/admin/config/${cat}`, form.value)
+        const { data } = await api.post(`/admin/config/${cat}`, payload)
         displayItems.value.push(data)
       }
       await config.load()

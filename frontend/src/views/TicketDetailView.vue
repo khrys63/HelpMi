@@ -206,7 +206,7 @@
               <div class="flex-1">
                 <div class="flex items-baseline gap-2 mb-1">
                   <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ c.author?.firstName }} {{ c.author?.lastName }}</span>
-                  <span class="text-xs text-gray-400 dark:text-gray-500">{{ formatDate(c.createdAt) }}</span>
+                  <span class="text-xs text-gray-400 dark:text-gray-500">{{ formatDate(c.createdAt, locale.value) }}</span>
                   <span v-if="c.edited" class="text-xs text-gray-400 dark:text-gray-500">{{ $t('tickets.comment_edited') }}</span>
                 </div>
                 <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ c.body }}</p>
@@ -331,9 +331,9 @@
 
           <!-- Dates -->
           <div class="text-xs text-gray-400 dark:text-gray-500 space-y-1 pt-2 border-t dark:border-gray-700">
-            <p>{{ $t('tickets.dates_created', { date: formatDate(ticket.createdAt) }) }}</p>
-            <p>{{ $t('tickets.dates_updated', { date: formatDate(ticket.updatedAt) }) }}</p>
-            <p v-if="ticket.closedAt">{{ $t('tickets.dates_closed', { date: formatDate(ticket.closedAt) }) }}</p>
+            <p>{{ $t('tickets.dates_created', { date: formatDate(ticket.createdAt, locale.value) }) }}</p>
+            <p>{{ $t('tickets.dates_updated', { date: formatDate(ticket.updatedAt, locale.value) }) }}</p>
+            <p v-if="ticket.closedAt">{{ $t('tickets.dates_closed', { date: formatDate(ticket.closedAt, locale.value) }) }}</p>
           </div>
 
           <!-- Suppression (admin uniquement) -->
@@ -375,9 +375,10 @@ import { ticketsApi, usersApi, attachmentsApi, commentsApi, linksApi, labelsApi,
 import { useAuthStore } from '../stores/auth.js'
 import { useConfigStore, COLORS } from '../stores/config.js'
 import { useToastStore } from '../stores/toast.js'
+import { formatDate } from '../utils/dates.js'
 import StatusBadge from '../components/tickets/StatusBadge.vue'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const TRANSITIONS = computed(() => ({
   OPEN:        [{ status: 'IN_PROGRESS', label: t('status.transitions.OPEN_to_IN_PROGRESS') }, { status: 'STAND_BY', label: t('status.transitions.OPEN_to_STAND_BY') }, { status: 'CANCELLED', label: t('status.transitions.OPEN_to_CANCELLED') }],
@@ -697,11 +698,6 @@ async function removeLabel(labelId) {
   const ids = ticket.value.labels.map(l => l.id).filter(id => id !== labelId)
   const { data } = await ticketsApi.setLabels(projectId, ticketId, ids)
   ticket.value.labels = data
-}
-
-function formatDate(dt) {
-  if (!dt) return '-'
-  return new Date(dt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
 }
 
 function formatSize(bytes) {

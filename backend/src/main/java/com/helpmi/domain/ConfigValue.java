@@ -27,7 +27,19 @@ public class ConfigValue {
     private String label;
 
     @Column(length = 100)
+    private String labelEn;
+
+    @Column(length = 100)
+    private String labelBg;
+
+    @Column(length = 100)
     private String inverseLabel;
+
+    @Column(length = 100)
+    private String inverseLabelEn;
+
+    @Column(length = 100)
+    private String inverseLabelBg;
 
     @Column(length = 50)
     private String color;

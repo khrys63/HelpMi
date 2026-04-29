@@ -123,10 +123,10 @@
           <div class="flex-1 min-w-0">
             <p class="font-medium text-gray-900 dark:text-gray-100 text-sm">{{ t.name }}</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-              {{ $t('profile.token_created_at', { date: formatDate(t.createdAt) }) }}
-              <span v-if="t.lastUsedAt"> · {{ $t('profile.token_last_used', { date: formatDate(t.lastUsedAt) }) }}</span>
+              {{ $t('profile.token_created_at', { date: formatDateOnly(t.createdAt, i18nLocale.value) }) }}
+              <span v-if="t.lastUsedAt"> · {{ $t('profile.token_last_used', { date: formatDateOnly(t.lastUsedAt, i18nLocale.value) }) }}</span>
               <span v-if="t.expiresAt" :class="isExpired(t.expiresAt) ? 'text-red-500' : 'text-gray-400 dark:text-gray-500'">
-                · {{ $t('profile.token_expires', { date: formatDate(t.expiresAt) }) }}
+                · {{ $t('profile.token_expires', { date: formatDateOnly(t.expiresAt, i18nLocale.value) }) }}
               </span>
             </p>
           </div>
@@ -147,14 +147,17 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth.js'
 import { useThemeStore } from '../stores/theme.js'
 import { useLocaleStore } from '../stores/locale.js'
 import { personalTokensApi } from '../services/api.js'
+import { formatDateOnly } from '../utils/dates.js'
 
 const auth = useAuthStore()
 const theme = useThemeStore()
 const locale = useLocaleStore()
+const { locale: i18nLocale } = useI18n()
 
 const tokens = ref([])
 const loading = ref(true)
@@ -195,10 +198,6 @@ async function copyToken(token) {
   setTimeout(() => { copied.value = false }, 2000)
 }
 
-function formatDate(iso) {
-  if (!iso) return ''
-  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
 
 function isExpired(expiresAt) {
   return expiresAt && new Date(expiresAt) < new Date()
