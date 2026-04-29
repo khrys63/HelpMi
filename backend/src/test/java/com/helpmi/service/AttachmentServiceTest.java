@@ -6,9 +6,11 @@ import com.helpmi.domain.User;
 import com.helpmi.dto.response.AttachmentResponse;
 import com.helpmi.exception.ForbiddenException;
 import com.helpmi.exception.NotFoundException;
+import com.helpmi.exception.ForbiddenException;
 import com.helpmi.repository.AttachmentRepository;
 import com.helpmi.repository.TicketRepository;
 import com.helpmi.security.CurrentUserService;
+import com.helpmi.service.ProjectService;
 import com.helpmi.storage.StorageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +38,7 @@ class AttachmentServiceTest {
     @Mock TicketRepository ticketRepository;
     @Mock CurrentUserService currentUserService;
     @Mock StorageService storageService;
+    @Mock ProjectService projectService;
 
     @InjectMocks AttachmentService service;
 
@@ -218,6 +221,30 @@ class AttachmentServiceTest {
         service.delete(attachment.getId());
 
         verify(attachmentRepository).delete(attachment);
+    }
+
+    // ── contrôle d'accès projet (fix H1) ─────────────────────────────────────
+
+    @Test
+    void upload_accessDenied_throwsForbidden() {
+        User uploader = agentUser();
+        Ticket ticket = ticket(project(), uploader);
+        MultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", new byte[]{1});
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        doThrow(new ForbiddenException("Accès refusé")).when(projectService).requireProjectAccess(any());
+
+        assertThatThrownBy(() -> service.upload(ticket.getId(), file))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void download_accessDenied_throwsForbidden() throws Exception {
+        Attachment attachment = attachmentFor(agentUser(), "secret.pdf");
+        when(attachmentRepository.findById(attachment.getId())).thenReturn(Optional.of(attachment));
+        doThrow(new ForbiddenException("Accès refusé")).when(projectService).requireProjectAccess(any());
+
+        assertThatThrownBy(() -> service.download(attachment.getId()))
+                .isInstanceOf(ForbiddenException.class);
     }
 
     // ── helper ────────────────────────────────────────────────────────────────
