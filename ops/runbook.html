@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HelpMi — Runbook d'exploitation</title>
+<style>
+  :root {
+    --red:    #dc2626; --red-bg:    #fef2f2;
+    --orange: #ea580c; --orange-bg: #fff7ed;
+    --yellow: #ca8a04; --yellow-bg: #fefce8;
+    --green:  #16a34a; --green-bg:  #f0fdf4;
+    --blue:   #2563eb; --blue-bg:   #eff6ff;
+    --gray:   #374151; --gray-bg:   #f9fafb;
+    --border: #e5e7eb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color: #111827; background: #f3f4f6; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Layout */
+  .layout { display: flex; min-height: 100vh; }
+  nav { width: 240px; min-width: 240px; background: #1e293b; color: #94a3b8; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 24px 0; }
+  nav .logo { padding: 0 20px 20px; font-size: 16px; font-weight: 700; color: #f1f5f9; border-bottom: 1px solid #334155; margin-bottom: 12px; }
+  nav .logo span { display: block; font-size: 11px; font-weight: 400; color: #64748b; margin-top: 2px; }
+  nav ul { list-style: none; }
+  nav ul li a { display: block; padding: 6px 20px; color: #94a3b8; font-size: 13px; }
+  nav ul li a:hover { color: #f1f5f9; background: #334155; text-decoration: none; }
+  nav ul li a.section { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; margin-top: 14px; padding-bottom: 2px; pointer-events: none; }
+  nav ul li a.indent { padding-left: 32px; }
+
+  main { flex: 1; padding: 32px 40px; max-width: 1100px; }
+  h1 { font-size: 26px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+  .subtitle { color: #64748b; margin-bottom: 32px; font-size: 14px; }
+  h2 { font-size: 18px; font-weight: 700; color: #0f172a; margin: 40px 0 14px; padding-top: 8px; border-top: 2px solid var(--border); }
+  h3 { font-size: 15px; font-weight: 600; color: #1e293b; margin: 20px 0 8px; }
+  p { line-height: 1.6; color: #374151; margin-bottom: 8px; }
+  ul, ol { padding-left: 20px; line-height: 1.8; color: #374151; }
+
+  /* Code */
+  code { font-family: 'Fira Code', 'Cascadia Code', 'Courier New', monospace; font-size: 12.5px; }
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 10px 0; }
+  pre code { font-size: 12px; }
+  .inline-code { background: #f1f5f9; color: #be185d; border: 1px solid #e2e8f0; border-radius: 4px; padding: 1px 5px; }
+
+  /* Badges */
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; }
+  .badge-red    { background: var(--red-bg);    color: var(--red);    }
+  .badge-orange { background: var(--orange-bg); color: var(--orange); }
+  .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+  .badge-green  { background: var(--green-bg);  color: var(--green);  }
+  .badge-blue   { background: var(--blue-bg);   color: var(--blue);   }
+  .badge-gray   { background: var(--gray-bg);   color: var(--gray);   }
+
+  /* Cards */
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .card-title { font-weight: 600; font-size: 14px; flex: 1; }
+
+  /* Services grid */
+  .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .svc { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .svc-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .svc-container { font-size: 12px; color: #64748b; font-family: monospace; margin-bottom: 8px; }
+  .svc-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 3px 0; border-bottom: 1px solid #f1f5f9; }
+  .svc-row:last-child { border-bottom: none; }
+  .svc-label { color: #64748b; }
+  .svc-value { font-weight: 500; font-family: monospace; }
+
+  /* Incident table */
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 20px; }
+  th { background: var(--gray-bg); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: top; font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+  td a { color: var(--blue); }
+
+  /* Alert boxes */
+  .alert { border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px; border-left: 4px solid; }
+  .alert-red    { background: var(--red-bg);    border-color: var(--red);    color: #7f1d1d; }
+  .alert-orange { background: var(--orange-bg); border-color: var(--orange); color: #7c2d12; }
+  .alert-yellow { background: var(--yellow-bg); border-color: var(--yellow); color: #713f12; }
+  .alert-blue   { background: var(--blue-bg);   border-color: var(--blue);   color: #1e3a8a; }
+
+  /* Steps */
+  .steps { counter-reset: step; }
+  .step { display: flex; gap: 12px; margin-bottom: 10px; align-items: flex-start; }
+  .step::before { counter-increment: step; content: counter(step); background: #1e293b; color: #f1f5f9; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+
+  /* Priority sections */
+  .priority-header { display: flex; align-items: center; gap: 10px; margin: 28px 0 12px; }
+  .priority-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* Quick ref */
+  .qr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 700px) { .qr-grid { grid-template-columns: 1fr; } nav { display: none; } main { padding: 20px; } }
+
+  /* Print */
+  @media print { nav { display: none; } main { padding: 20px; } }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- NAV -->
+<nav>
+  <div class="logo">HelpMi<span>Runbook d'exploitation</span></div>
+  <ul>
+    <li><a class="section">Architecture</a></li>
+    <li><a class="indent" href="#urls">URLs d'accès</a></li>
+    <li><a class="indent" href="#services">Services & ports</a></li>
+    <li><a class="indent" href="#flux">Flux réseau</a></li>
+    <li><a class="indent" href="#volumes">Volumes & données</a></li>
+    <li><a class="section">Traefik</a></li>
+    <li><a class="indent" href="#traefik-ops">Opérations Traefik</a></li>
+    <li><a class="indent" href="#traefik-https">Migration HTTPS</a></li>
+    <li><a class="section">Incidents</a></li>
+    <li><a class="indent" href="#p1">🔴 Critique (P1)</a></li>
+    <li><a class="indent" href="#p2">🟠 Majeur (P2)</a></li>
+    <li><a class="indent" href="#p3">🟡 Modéré (P3)</a></li>
+    <li><a class="indent" href="#p4">🟢 Mineur (P4)</a></li>
+    <li><a class="section">Opérations</a></li>
+    <li><a class="indent" href="#routine">Commandes routinières</a></li>
+    <li><a class="indent" href="#backup">Sauvegarde / Restore</a></li>
+    <li><a class="indent" href="#reset">Reset environnement</a></li>
+    <li><a class="indent" href="#deploy">Redéploiement</a></li>
+    <li><a class="section">Référence</a></li>
+    <li><a class="indent" href="#env">Variables d'environnement</a></li>
+    <li><a class="indent" href="#quickref">Quick reference card</a></li>
+  </ul>
+</nav>
+
+<!-- MAIN -->
+<main>
+
+<h1>Runbook d'exploitation — HelpMi</h1>
+<p class="subtitle">Ce document est destiné à un DevOps intervenant sans connaissance préalable de l'application. Il couvre le diagnostic et la remédiation des incidents les plus probables.</p>
+
+<!-- ===== ARCHITECTURE ===== -->
+<h2 id="urls">URLs d'accès</h2>
+<table>
+  <thead><tr><th>Service</th><th>URL (dev)</th><th>URL (prod exemple)</th><th>Remarque</th></tr></thead>
+  <tbody>
+    <tr><td>Application</td><td><a href="http://app.localhost" target="_blank">http://app.localhost</a></td><td>https://app.helpmi.example.com</td><td>SPA Vue3</td></tr>
+    <tr><td>API backend</td><td><a href="http://api.localhost" target="_blank">http://api.localhost</a></td><td>https://api.helpmi.example.com</td><td>REST Spring Boot</td></tr>
+    <tr><td>Keycloak</td><td><a href="http://auth.localhost" target="_blank">http://auth.localhost</a></td><td>https://auth.helpmi.example.com</td><td>Admin : /admin</td></tr>
+    <tr><td>MinIO API</td><td><a href="http://minio.localhost" target="_blank">http://minio.localhost</a></td><td>https://minio.helpmi.example.com</td><td>S3-compatible</td></tr>
+    <tr><td>MinIO Console</td><td><a href="http://minio-console.localhost" target="_blank">http://minio-console.localhost</a></td><td>—</td><td><span class="badge badge-gray">dev uniquement</span></td></tr>
+    <tr><td>phpMyAdmin</td><td><a href="http://pma.localhost" target="_blank">http://pma.localhost</a></td><td>—</td><td><span class="badge badge-gray">dev uniquement</span></td></tr>
+    <tr><td>Traefik dashboard</td><td><a href="http://traefik.localhost" target="_blank">http://traefik.localhost</a> ou :8090</td><td>—</td><td>État du routage</td></tr>
+  </tbody>
+</table>
+<div class="alert alert-blue"><strong>Variable <code>TRAEFIK_DOMAIN</code></strong> dans <code>.env</code> : changer <code>localhost</code> en <code>helpmi.example.com</code> suffit à basculer toutes les URLs en prod. Le frontend doit être <strong>rebuild</strong> car <code>VITE_KEYCLOAK_URL</code> est baked à l'image au moment du build.</div>
+
+<h2 id="services">Services &amp; ports</h2>
+<div class="services-grid">
+  <div class="svc">
+    <div class="svc-name">🗄️ MariaDB 11</div>
+    <div class="svc-container">helpmi_mariadb</div>
+    <div class="svc-row"><span class="svc-label">Port host</span><span class="svc-value">3306</span></div>
+    <div class="svc-row"><span class="svc-label">Base</span><span class="svc-value">helpmi</span></div>
+    <div class="svc-row"><span class="svc-label">Volume</span><span class="svc-value">mariadb_data</span></div>
+    <div class="svc-row"><span class="svc-label">Healthcheck</span><span class="svc-value">--innodb_initialized</span></div>
+    <div class="svc-row"><span class="svc-label">Rôle</span><span class="svc-value">Persistence applicative</span></div>
+  </div>
+  <div class="svc">
+    <div class="svc-name">🔐 Keycloak 26.6</div>
+    <div class="svc-container">helpmi_keycloak</div>
+    <div class="svc-row"><span class="svc-label">Port host</span><span class="svc-value">8180</span></div>
+    <div class="svc-row"><span class="svc-label">Admin UI</span><span class="svc-value">:8180/admin</span></div>
+    <div class="svc-row"><span class="svc-label">Realm</span><span class="svc-value">helpmi</span></div>
+    <div class="svc-row"><span class="svc-label">Volume</span><span class="svc-value">aucun (stateless*)</span></div>
+    <div class="svc-row"><span class="svc-label">Rôle</span><span class="svc-value">Authentification / SSO</span></div>
+  </div>
+  <div class="svc">
+    <div class="svc-name">📦 MinIO</div>
+    <div class="svc-container">helpmi_minio</div>
+    <div class="svc-row"><span class="svc-label">Port API</span><span class="svc-value">9000</span></div>
+    <div class="svc-row"><span class="svc-label">Port console (dev)</span><span class="svc-value">9001</span></div>
+    <div class="svc-row"><span class="svc-label">Volume</span><span class="svc-value">minio_data</span></div>
+    <div class="svc-row"><span class="svc-label">Bucket</span><span class="svc-value">helpmi</span></div>
+    <div class="svc-row"><span class="svc-label">Rôle</span><span class="svc-value">Stockage pièces jointes</span></div>
+  </div>
+  <div class="svc">
+    <div class="svc-name">☕ Backend (Spring Boot)</div>
+    <div class="svc-container">helpmi_backend</div>
+    <div class="svc-row"><span class="svc-label">Port host</span><span class="svc-value">8080</span></div>
+    <div class="svc-row"><span class="svc-label">Health</span><span class="svc-value">/actuator/health</span></div>
+    <div class="svc-row"><span class="svc-label">Profil Spring</span><span class="svc-value">prod</span></div>
+    <div class="svc-row"><span class="svc-label">Java</span><span class="svc-value">21 (Temurin Alpine)</span></div>
+    <div class="svc-row"><span class="svc-label">Rôle</span><span class="svc-value">API REST + Flyway migrations</span></div>
+  </div>
+  <div class="svc">
+    <div class="svc-name">🔀 Traefik v3</div>
+    <div class="svc-container">helpmi_traefik</div>
+    <div class="svc-row"><span class="svc-label">Port HTTP</span><span class="svc-value">80</span></div>
+    <div class="svc-row"><span class="svc-label">Dashboard direct</span><span class="svc-value">:8090/dashboard/</span></div>
+    <div class="svc-row"><span class="svc-label">Réseau Docker</span><span class="svc-value">helpmi_proxy</span></div>
+    <div class="svc-row"><span class="svc-label">Rôle</span><span class="svc-value">Reverse proxy / SSL termination</span></div>
+  </div>
+  <div class="svc">
+    <div class="svc-name">🌐 Frontend (Vue 3 / Nginx)</div>
+    <div class="svc-container">helpmi_frontend</div>
+    <div class="svc-row"><span class="svc-label">Port host</span><span class="svc-value">via Traefik (app.localhost)</span></div>
+    <div class="svc-row"><span class="svc-label">Proxy /api → </span><span class="svc-value">backend:8080</span></div>
+    <div class="svc-row"><span class="svc-label">Max upload</span><span class="svc-value">50 MB</span></div>
+    <div class="svc-row"><span class="svc-label">Rôle</span><span class="svc-value">SPA + reverse proxy API</span></div>
+  </div>
+  <div class="svc" style="border-style:dashed;background:#fafafa;">
+    <div class="svc-name">🛠️ phpMyAdmin <span class="badge badge-gray">dev uniquement</span></div>
+    <div class="svc-container">helpmi_phpmyadmin</div>
+    <div class="svc-row"><span class="svc-label">Port host</span><span class="svc-value">8081</span></div>
+    <div class="svc-row"><span class="svc-label">Lancement</span><span class="svc-value">compose.dev.yml uniquement</span></div>
+  </div>
+</div>
+
+<div class="alert alert-blue">
+  <strong>* Keycloak sans volume :</strong> le realm est réimporté depuis <code>keycloak/realm-export.json</code> à chaque démarrage via <code>--import-realm</code>. Les données créées manuellement dans l'admin Keycloak (nouveaux users, clients…) sont perdues à chaque <code>compose down</code>. Toute modification doit être reportée dans le fichier d'export.
+</div>
+
+<h2 id="flux">Flux réseau</h2>
+<pre><code>Navigateur
+  │
+  ├──► :3000  helpmi_frontend (Nginx)
+  │           │
+  │           └──► /api/* ──► helpmi_backend :8080
+  │                           │
+  │                           ├──► helpmi_mariadb :3306
+  │                           ├──► helpmi_minio   :9000
+  │                           └──► helpmi_keycloak:8080 (validation JWT)
+  │
+  └──► :8180  helpmi_keycloak (login, token)
+</code></pre>
+<p>Le frontend ne communique <strong>jamais</strong> directement avec MariaDB ou MinIO. Tout passe par le backend.</p>
+
+<h2 id="volumes">Volumes Docker &amp; données persistantes</h2>
+<table>
+  <thead><tr><th>Volume</th><th>Service</th><th>Contenu</th><th>Critique</th></tr></thead>
+  <tbody>
+    <tr><td><code>mariadb_data</code></td><td>MariaDB</td><td>Toute la base applicative (tickets, users, orgs…)</td><td><span class="badge badge-red">Oui</span></td></tr>
+    <tr><td><code>minio_data</code></td><td>MinIO</td><td>Pièces jointes uploadées par les utilisateurs</td><td><span class="badge badge-orange">Oui</span></td></tr>
+  </tbody>
+</table>
+<div class="alert alert-red"><strong>Ne jamais lancer</strong> <code>docker compose down -v</code> en production sans sauvegarde préalable. Cette commande supprime les deux volumes.</div>
+
+<!-- ===== INCIDENTS P1 ===== -->
+<h2 id="p1">Incidents critiques — P1</h2>
+<p style="margin-bottom:14px;">Application totalement inaccessible. Intervention immédiate requise.</p>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-red">P1</span>
+    <span class="card-title">Un ou plusieurs conteneurs sont arrêtés / en crash loop</span>
+    <span class="badge badge-orange">Très probable</span>
+  </div>
+  <div class="steps">
+    <div class="step"><div><strong>Diagnostic rapide</strong>
+      <pre><code>docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"</code></pre>
+      Repérer les conteneurs avec statut <code>Exited</code> ou <code>Restarting</code>.
+    </div></div>
+    <div class="step"><div><strong>Consulter les logs du conteneur en cause</strong>
+      <pre><code># Remplacer helpmi_backend par le nom du conteneur défaillant
+docker logs helpmi_backend --tail 100
+docker logs helpmi_backend --tail 100 2>&1 | grep -i "error\|exception\|fatal"</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Redémarrer le service</strong>
+      <pre><code>docker compose restart backend
+# ou pour relancer tous les services
+docker compose up -d</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Vérifier la santé après redémarrage</strong>
+      <pre><code>docker ps --format "table {{.Names}}\t{{.Status}}"
+curl -s http://localhost:8080/actuator/health | python3 -m json.tool</code></pre>
+    </div></div>
+  </div>
+  <div class="alert alert-yellow">Si le backend redémarre en boucle, chercher en priorité une erreur Flyway (migration SQL) ou une impossibilité de contacter MariaDB — voir incidents P2 ci-dessous.</div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-red">P1</span>
+    <span class="card-title">MariaDB ne démarre pas — données inaccessibles</span>
+    <span class="badge badge-yellow">Probable</span>
+  </div>
+  <div class="steps">
+    <div class="step"><div><strong>Vérifier les logs MariaDB</strong>
+      <pre><code>docker logs helpmi_mariadb --tail 200</code></pre>
+      Chercher : <code>InnoDB: Unable to lock ./ibdata1</code> (processus orphelin), <code>Table is marked as crashed</code>, erreurs de droits.
+    </div></div>
+    <div class="step"><div><strong>Cas : processus orphelin (lock file)</strong>
+      <pre><code>docker stop helpmi_mariadb
+docker rm helpmi_mariadb
+docker compose up -d mariadb</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Cas : corruption InnoDB — repair mode</strong>
+      <pre><code># Ajouter temporairement en variable d'env puis redémarrer
+# Dans docker-compose.yml → environment de mariadb :
+#   MARIADB_EXTRA_FLAGS: --innodb-force-recovery=1
+
+docker compose stop mariadb
+# Éditer docker-compose.yml pour ajouter la variable
+docker compose up -d mariadb
+docker logs helpmi_mariadb -f  # attendre "ready for connections"
+
+# Dump immédiat avant tout
+docker exec helpmi_mariadb sh -c \
+  "mysqldump -u root -p\$MYSQL_ROOT_PASSWORD helpmi" > backup_recovery.sql
+
+# Retirer le flag innodb-force-recovery et redémarrer normalement</code></pre>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-red">P1</span>
+    <span class="card-title">Disque plein — conteneurs figés ou en erreur d'écriture</span>
+    <span class="badge badge-yellow">Probable</span>
+  </div>
+  <div class="steps">
+    <div class="step"><div><strong>Identifier la consommation</strong>
+      <pre><code>df -h
+docker system df
+du -sh /var/lib/docker/volumes/*/</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Nettoyer les ressources Docker inutilisées</strong>
+      <pre><code># Images/conteneurs/réseaux non utilisés (SANS supprimer les volumes)
+docker system prune -f
+
+# Logs de conteneurs (souvent très volumineux)
+truncate -s 0 $(docker inspect --format='{{.LogPath}}' helpmi_backend)
+truncate -s 0 $(docker inspect --format='{{.LogPath}}' helpmi_mariadb)</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Limiter la taille des logs (prévention)</strong>
+      <pre><code># À ajouter dans docker-compose.yml sur chaque service concerné :
+#   logging:
+#     options:
+#       max-size: "50m"
+#       max-file: "3"</code></pre>
+    </div></div>
+  </div>
+</div>
+
+<!-- ===== INCIDENTS P2 ===== -->
+<h2 id="p2">Incidents majeurs — P2</h2>
+<p style="margin-bottom:14px;">Une fonctionnalité clé est dégradée. Les utilisateurs sont impactés.</p>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-orange">P2</span>
+    <span class="card-title">Backend refuse de démarrer — erreur Flyway (migration SQL)</span>
+    <span class="badge badge-orange">Très probable après un déploiement</span>
+  </div>
+  <p>Flyway bloque si une migration échoue ou si le checksum d'un fichier existant a changé.</p>
+  <div class="steps">
+    <div class="step"><div><strong>Identifier l'erreur exacte</strong>
+      <pre><code>docker logs helpmi_backend 2>&1 | grep -A 5 "FlywayException\|Migration"</code></pre>
+      Messages courants :
+      <ul style="margin-top:6px">
+        <li><code>Validate failed: Migration checksum mismatch</code> → le fichier SQL a été modifié après application</li>
+        <li><code>Migration V14__ failed</code> → erreur SQL dans la nouvelle migration</li>
+        <li><code>Table 'flyway_schema_history' doesn't exist</code> → base vierge, premier démarrage</li>
+      </ul>
+    </div></div>
+    <div class="step"><div><strong>Cas checksum mismatch — repair</strong>
+      <pre><code># Se connecter à la base
+docker exec -it helpmi_mariadb mysql -u helpmi -p helpmi
+
+-- Voir l'état des migrations
+SELECT version, description, success, checksum FROM flyway_schema_history ORDER BY installed_rank DESC LIMIT 10;
+
+-- Supprimer l'entrée problématique (Flyway la réappliquera)
+-- ATTENTION : ne faire que sur une migration ayant échoué (success=0)
+DELETE FROM flyway_schema_history WHERE success = 0;</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Relancer le backend</strong>
+      <pre><code>docker compose restart backend
+docker logs helpmi_backend -f</code></pre>
+    </div></div>
+  </div>
+  <div class="alert alert-red">Ne jamais modifier un fichier <code>V*.sql</code> déjà appliqué en production. Toute correction doit passer par un nouveau fichier <code>V(n+1)__fix_xxx.sql</code>.</div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-orange">P2</span>
+    <span class="card-title">Authentification impossible — Keycloak KO</span>
+    <span class="badge badge-yellow">Probable</span>
+  </div>
+  <div class="steps">
+    <div class="step"><div><strong>Vérifier que Keycloak répond</strong>
+      <pre><code>curl -s http://localhost:8180/realms/helpmi/.well-known/openid-configuration | python3 -m json.tool | head -10
+# Doit retourner un JSON avec "issuer", "token_endpoint"...</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Redémarrer Keycloak</strong>
+      <pre><code>docker compose restart keycloak
+# Attendre ~30s le démarrage complet
+docker logs helpmi_keycloak -f | grep -i "started\|error"</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Vérifier que le realm est bien importé</strong>
+      <pre><code># Accéder à l'admin Keycloak : http://localhost:8180/admin
+# Login : valeurs KEYCLOAK_ADMIN / KEYCLOAK_ADMIN_PASSWORD du .env
+# Vérifier que le realm "helpmi" existe dans la liste
+
+# Si le realm manque : forcer la réimportation
+docker compose down keycloak
+docker compose up -d keycloak</code></pre>
+      <div class="alert alert-yellow">Le realm est réimporté depuis <code>keycloak/realm-export.json</code> au démarrage. Si ce fichier est absent ou corrompu, l'import échoue silencieusement.</div>
+    </div></div>
+    <div class="step"><div><strong>Tester la récupération d'un token (smoke test)</strong>
+      <pre><code>curl -s -X POST http://localhost:8180/realms/helpmi/protocol/openid-connect/token \
+  -d "client_id=helpmi-frontend" \
+  -d "grant_type=password" \
+  -d "username=admin" \
+  -d "password=admin123" \
+  | python3 -m json.tool | grep "access_token\|error"</code></pre>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-orange">P2</span>
+    <span class="card-title">Upload de fichiers impossible — MinIO KO</span>
+    <span class="badge badge-yellow">Probable</span>
+  </div>
+  <div class="steps">
+    <div class="step"><div><strong>Vérifier la santé MinIO</strong>
+      <pre><code>curl -sf http://localhost:9000/minio/health/live && echo "OK" || echo "KO"</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Redémarrer MinIO</strong>
+      <pre><code>docker compose restart minio
+docker logs helpmi_minio --tail 50</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Vérifier que le bucket existe</strong>
+      <pre><code># En dev, accéder à la console : http://localhost:9001
+# Login : MINIO_ROOT_USER / MINIO_ROOT_PASSWORD du .env
+# Le bucket "helpmi" doit exister
+
+# En CLI avec le client mc (si installé sur la machine)
+docker run --rm --network host \
+  -e MC_HOST_local="http://\${MINIO_ROOT_USER}:\${MINIO_ROOT_PASSWORD}@localhost:9000" \
+  minio/mc ls local/</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Recréer le bucket si absent</strong>
+      <pre><code>docker exec helpmi_minio sh -c \
+  "mc alias set local http://localhost:9000 \$MINIO_ROOT_USER \$MINIO_ROOT_PASSWORD && \
+   mc mb local/helpmi || true"</code></pre>
+      <div class="alert alert-yellow">Le bucket <strong>n'est pas créé automatiquement</strong> au premier démarrage. Le backend le crée lui-même au démarrage via le SDK S3 — vérifier les logs backend si le bucket est manquant.</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-orange">P2</span>
+    <span class="card-title">Frontend inaccessible (page blanche / 502)</span>
+    <span class="badge badge-yellow">Probable</span>
+  </div>
+  <div class="steps">
+    <div class="step"><div><strong>Vérifier le conteneur Nginx</strong>
+      <pre><code>docker logs helpmi_frontend --tail 50
+curl -I http://localhost:3000</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Cas 502 sur /api/* — backend non joignable</strong>
+      <pre><code># Le 502 vient du proxy Nginx → backend
+# Vérifier que le backend tourne
+docker ps | grep helpmi_backend
+curl -s http://localhost:8080/actuator/health</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Redémarrer le frontend</strong>
+      <pre><code>docker compose restart frontend</code></pre>
+    </div></div>
+  </div>
+</div>
+
+<!-- ===== INCIDENTS P3 ===== -->
+<h2 id="p3">Incidents modérés — P3</h2>
+<p style="margin-bottom:14px;">Fonctionnalité partielle dégradée. Contournement possible.</p>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-yellow">P3</span>
+    <span class="card-title">Backend lent / timeouts sur l'API</span>
+    <span class="badge badge-yellow">Probable</span>
+  </div>
+  <div class="steps">
+    <div class="step"><div><strong>Vérifier la charge du conteneur</strong>
+      <pre><code>docker stats --no-stream helpmi_backend helpmi_mariadb</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Chercher des requêtes SQL lentes</strong>
+      <pre><code>docker exec -it helpmi_mariadb mysql -u root -p helpmi -e \
+  "SHOW PROCESSLIST;"
+
+# Voir les slow queries (si activé)
+docker exec helpmi_mariadb mysql -u root -p helpmi -e \
+  "SHOW VARIABLES LIKE 'slow_query%';"</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Vérifier les connexions actives</strong>
+      <pre><code>docker exec helpmi_mariadb mysql -u root -p helpmi -e \
+  "SELECT count(*) as connexions FROM information_schema.PROCESSLIST;"</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Redémarrer le backend pour libérer le pool</strong>
+      <pre><code>docker compose restart backend</code></pre>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-yellow">P3</span>
+    <span class="card-title">Erreurs CORS — API bloquée par le navigateur</span>
+    <span class="badge badge-gray">Occasionnel après changement d'URL</span>
+  </div>
+  <p>Symptôme : erreur <em>"Access-Control-Allow-Origin"</em> dans la console du navigateur.</p>
+  <div class="steps">
+    <div class="step"><div><strong>Vérifier la variable CORS dans .env</strong>
+      <pre><code># Dans .env :
+APP_CORS_ALLOWED_ORIGINS=http://localhost:3000   # ← doit matcher l'URL du navigateur</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Corriger et redémarrer le backend</strong>
+      <pre><code># Éditer .env, puis :
+docker compose up -d --force-recreate backend</code></pre>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-yellow">P3</span>
+    <span class="card-title">Token JWT invalide / 401 en boucle</span>
+    <span class="badge badge-gray">Occasionnel</span>
+  </div>
+  <div class="steps">
+    <div class="step"><div><strong>Vérifier que l'issuer URI est cohérent</strong>
+      <pre><code># La variable APP_KEYCLOAK_ISSUER_URI dans .env doit correspondre
+# à ce que Keycloak retourne dans son discovery document :
+curl -s http://localhost:8180/realms/helpmi/.well-known/openid-configuration | \
+  python3 -c "import sys,json; d=json.load(sys.stdin); print(d['issuer'])"
+
+# Doit correspondre à APP_KEYCLOAK_ISSUER_URI dans .env</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Si l'URL diffère (docker interne vs external)</strong>
+      <pre><code># En prod, Keycloak est souvent accessible via 2 URLs :
+# - interne (conteneur → conteneur) : http://keycloak:8080/realms/helpmi
+# - externe (navigateur → hôte)     : http://host:8180/realms/helpmi
+# APP_KEYCLOAK_ISSUER_URI doit pointer vers l'URL EXTERNE (celle du navigateur)</code></pre>
+    </div></div>
+  </div>
+</div>
+
+<!-- ===== INCIDENTS P4 ===== -->
+<h2 id="p4">Incidents mineurs — P4</h2>
+<p style="margin-bottom:14px;">Impact limité, pas de perte de données, résolution planifiable.</p>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-green">P4</span>
+    <span class="card-title">Un utilisateur ne peut pas se connecter</span>
+    <span class="badge badge-gray">Occasionnel</span>
+  </div>
+  <div class="steps">
+    <div class="step"><div><strong>Vérifier dans Keycloak admin</strong>
+      <pre><code># http://localhost:8180/admin → Realm helpmi → Users
+# Chercher l'utilisateur → vérifier : "Enabled", "Email Verified", pas de lock</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Réinitialiser le mot de passe via l'admin Keycloak</strong>
+      <pre><code># Users → l'utilisateur → Credentials → Reset password</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Vérifier le rôle dans la base applicative</strong>
+      <pre><code>docker exec -it helpmi_mariadb mysql -u helpmi -p helpmi -e \
+  "SELECT id, email, role, active, organization_id FROM users WHERE email='user@example.com';"</code></pre>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-green">P4</span>
+    <span class="card-title">Un utilisateur voit la page "en attente d'affectation"</span>
+    <span class="badge badge-gray">Nominal — workflow attendu</span>
+  </div>
+  <p>Ce n'est pas un bug : tout utilisateur sans organisation est bloqué sur cette page par design. Un administrateur doit lui affecter une organisation depuis <strong>Admin → Utilisateurs</strong>.</p>
+  <p>En cas d'urgence, affectation directe en base :</p>
+  <pre><code>-- Trouver l'ID de l'organisation cible
+SELECT id, name FROM organizations WHERE active = 1;
+
+-- Affecter l'utilisateur
+UPDATE users SET organization_id = 'UUID-DE-LORG' WHERE email = 'user@example.com';</code></pre>
+</div>
+
+<!-- ===== ROUTINIÈRES ===== -->
+<h2 id="routine">Commandes routinières</h2>
+
+<div class="qr-grid">
+  <div>
+    <h3>État général</h3>
+    <pre><code># Tous les conteneurs et leur état
+docker ps -a --format "table {{.Names}}\t{{.Status}}"
+
+# Consommation ressources en temps réel
+docker stats
+
+# Health du backend Spring
+curl -s http://localhost:8080/actuator/health</code></pre>
+  </div>
+  <div>
+    <h3>Logs</h3>
+    <pre><code># Suivre les logs en direct
+docker logs -f helpmi_backend
+docker logs -f helpmi_mariadb
+docker logs -f helpmi_keycloak
+
+# 50 dernières lignes d'erreur
+docker logs helpmi_backend 2>&1 | grep -i error | tail -50</code></pre>
+  </div>
+  <div>
+    <h3>Base de données</h3>
+    <pre><code># Connexion interactive
+docker exec -it helpmi_mariadb mysql -u helpmi -p helpmi
+
+# Compter les tickets
+docker exec helpmi_mariadb mysql -u helpmi -p helpmi -e \
+  "SELECT status, COUNT(*) FROM tickets GROUP BY status;"
+
+# Migrations appliquées
+docker exec helpmi_mariadb mysql -u helpmi -p helpmi -e \
+  "SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;"</code></pre>
+  </div>
+  <div>
+    <h3>MinIO</h3>
+    <pre><code># Taille occupée par le bucket
+docker exec helpmi_minio du -sh /data/helpmi/ 2>/dev/null || \
+  docker exec helpmi_minio du -sh /data/
+
+# Santé
+curl -sf http://localhost:9000/minio/health/live && echo OK</code></pre>
+  </div>
+</div>
+
+<!-- ===== BACKUP ===== -->
+<h2 id="backup">Sauvegarde &amp; Restauration</h2>
+
+<h3>Sauvegarde MariaDB</h3>
+<pre><code># Dump complet (base helpmi) avec timestamp
+docker exec helpmi_mariadb sh -c \
+  'mysqldump -u root -p$MYSQL_ROOT_PASSWORD --single-transaction helpmi' \
+  > backup_helpmi_$(date +%Y%m%d_%H%M%S).sql
+
+# Vérifier le dump
+head -20 backup_helpmi_*.sql   # doit commencer par un commentaire mysqldump</code></pre>
+
+<h3>Restauration MariaDB</h3>
+<div class="alert alert-red"><strong>Destructif.</strong> Cette opération écrase la base existante. Faire un dump avant.</div>
+<pre><code># Restaurer depuis un fichier de dump
+docker exec -i helpmi_mariadb sh -c \
+  'mysql -u root -p$MYSQL_ROOT_PASSWORD helpmi' \
+  < backup_helpmi_20260101_120000.sql</code></pre>
+
+<h3>Sauvegarde MinIO (pièces jointes)</h3>
+<pre><code># Copier le volume sur l'hôte
+docker run --rm \
+  -v minio_data:/source:ro \
+  -v $(pwd)/backup_minio:/backup \
+  alpine tar czf /backup/minio_$(date +%Y%m%d).tar.gz -C /source .</code></pre>
+
+<h3>Restauration MinIO</h3>
+<pre><code>docker run --rm \
+  -v minio_data:/target \
+  -v $(pwd)/backup_minio:/backup \
+  alpine tar xzf /backup/minio_20260101.tar.gz -C /target</code></pre>
+
+<!-- ===== RESET ===== -->
+<h2 id="reset">Reset environnement de développement</h2>
+<div class="alert alert-red"><strong>Développement uniquement.</strong> Ces commandes suppriment toutes les données.</div>
+<pre><code># Reset complet (supprime conteneurs + volumes)
+docker compose down -v
+
+# Redémarrage propre (réimporte le realm Keycloak, rejoue les migrations Flyway)
+docker compose up -d
+
+# Vérifier que tout est healthy
+docker ps --format "table {{.Names}}\t{{.Status}}"</code></pre>
+
+<p>Pour le mode dev avec phpMyAdmin :</p>
+<pre><code>docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d</code></pre>
+
+<!-- ===== DEPLOY ===== -->
+<h2 id="deploy">Redéploiement (mise à jour applicative)</h2>
+<div class="steps">
+  <div class="step"><div><strong>Sauvegarde préalable obligatoire</strong>
+    <pre><code>docker exec helpmi_mariadb sh -c \
+  'mysqldump -u root -p$MYSQL_ROOT_PASSWORD --single-transaction helpmi' \
+  > backup_before_deploy_$(date +%Y%m%d_%H%M%S).sql</code></pre>
+  </div></div>
+  <div class="step"><div><strong>Mettre à jour les sources</strong>
+    <pre><code>git pull origin main</code></pre>
+  </div></div>
+  <div class="step"><div><strong>Reconstruire et redémarrer</strong>
+    <pre><code># Rebuild des images backend et frontend
+docker compose build --no-cache backend frontend
+
+# Redémarrer sans toucher aux volumes
+docker compose up -d --force-recreate backend frontend</code></pre>
+  </div></div>
+  <div class="step"><div><strong>Vérifier les migrations Flyway</strong>
+    <pre><code>docker logs helpmi_backend 2>&1 | grep -E "Flyway|migration|Migrating"
+# Chercher "Successfully applied X migrations"</code></pre>
+  </div></div>
+  <div class="step"><div><strong>Smoke test</strong>
+    <pre><code>curl -s http://localhost:8080/actuator/health
+curl -I http://localhost:3000</code></pre>
+  </div></div>
+</div>
+
+<!-- ===== ENV VARS ===== -->
+<h2 id="env">Variables d'environnement</h2>
+<table>
+  <thead><tr><th>Variable</th><th>Service(s)</th><th>Description</th><th>Valeur dev</th></tr></thead>
+  <tbody>
+    <tr><td><code>DB_USER</code></td><td>MariaDB, Backend</td><td>Utilisateur applicatif MariaDB</td><td>helpmi</td></tr>
+    <tr><td><code>DB_PASSWORD</code></td><td>MariaDB, Backend</td><td>Mot de passe applicatif</td><td><em>secret</em></td></tr>
+    <tr><td><code>DB_ROOT_PASSWORD</code></td><td>MariaDB</td><td>Mot de passe root MariaDB</td><td><em>secret</em></td></tr>
+    <tr><td><code>KEYCLOAK_ADMIN</code></td><td>Keycloak</td><td>Login admin Keycloak</td><td>admin</td></tr>
+    <tr><td><code>KEYCLOAK_ADMIN_PASSWORD</code></td><td>Keycloak</td><td>Mot de passe admin Keycloak</td><td><em>secret</em></td></tr>
+    <tr><td><code>APP_KEYCLOAK_ISSUER_URI</code></td><td>Backend</td><td>URL publique du realm (validation JWT)</td><td>http://localhost:8180/realms/helpmi</td></tr>
+    <tr><td><code>APP_CORS_ALLOWED_ORIGINS</code></td><td>Backend</td><td>Origine autorisée pour les requêtes CORS</td><td>http://localhost:3000</td></tr>
+    <tr><td><code>MINIO_ROOT_USER</code></td><td>MinIO, Backend</td><td>Access key MinIO</td><td>helpmi</td></tr>
+    <tr><td><code>MINIO_ROOT_PASSWORD</code></td><td>MinIO, Backend</td><td>Secret key MinIO</td><td><em>secret</em></td></tr>
+    <tr><td><code>VITE_KEYCLOAK_URL</code></td><td>Frontend (build)</td><td>URL Keycloak vue par le navigateur</td><td>http://localhost:8180</td></tr>
+    <tr><td><code>VITE_KEYCLOAK_REALM</code></td><td>Frontend (build)</td><td>Nom du realm Keycloak</td><td>helpmi</td></tr>
+    <tr><td><code>VITE_KEYCLOAK_CLIENT_ID</code></td><td>Frontend (build)</td><td>Client ID Keycloak pour le frontend</td><td>helpmi-frontend</td></tr>
+  </tbody>
+</table>
+<div class="alert alert-yellow">Les variables <code>VITE_*</code> sont baked dans l'image frontend au moment du build (<code>docker compose build</code>). Modifier ces variables nécessite un rebuild de l'image frontend.</div>
+
+<!-- ===== TRAEFIK ===== -->
+<h2 id="traefik-ops">Traefik — Opérations</h2>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-orange">P2</span>
+    <span class="card-title">Un service n'est pas joignable via son sous-domaine</span>
+    <span class="badge badge-yellow">Probable</span>
+  </div>
+  <div class="steps">
+    <div class="step"><div><strong>Ouvrir le dashboard Traefik</strong>
+      <pre><code>http://traefik.localhost    # ou http://localhost:8090/dashboard/</code></pre>
+      Vérifier que le router du service apparaît dans <em>HTTP → Routers</em> avec statut <span style="color:green">Enabled</span>.
+    </div></div>
+    <div class="step"><div><strong>Vérifier que le conteneur tourne et a les bons labels</strong>
+      <pre><code>docker inspect helpmi_frontend | grep -A 20 '"Labels"'</code></pre>
+      Les labels <code>traefik.enable=true</code> et <code>traefik.http.routers.*</code> doivent être présents.
+    </div></div>
+    <div class="step"><div><strong>Vérifier que le conteneur est sur le réseau helpmi_proxy</strong>
+      <pre><code>docker inspect helpmi_frontend | grep -A 5 '"Networks"'
+# helpmi_proxy doit apparaître</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Consulter les logs Traefik</strong>
+      <pre><code>docker logs helpmi_traefik --tail 50
+docker logs helpmi_traefik --tail 100 2>&1 | grep -i "error\|warn"</code></pre>
+    </div></div>
+    <div class="step"><div><strong>Forcer la redécouverte des conteneurs</strong>
+      <pre><code>docker compose restart traefik</code></pre>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="badge badge-yellow">P3</span>
+    <span class="card-title">Keycloak — erreur "invalid issuer" / tokens rejetés après changement de domaine</span>
+    <span class="badge badge-gray">Après modification de TRAEFIK_DOMAIN</span>
+  </div>
+  <p>L'issuer dans les tokens JWT est baked au moment de leur émission. Si <code>TRAEFIK_DOMAIN</code> change, les anciens tokens sont invalides et les nouveaux ne correspondent plus si le backend n'est pas redémarré.</p>
+  <div class="steps">
+    <div class="step"><div><strong>Vérifier la cohérence issuer / backend</strong>
+      <pre><code># Issuer que Keycloak encode dans les tokens :
+curl -s http://auth.localhost/realms/helpmi | python3 -c "import sys,json; print(json.load(sys.stdin)['issuer'])"
+
+# Issuer que le backend attend (variable APP_KEYCLOAK_ISSUER_URI) :
+docker inspect helpmi_backend | grep KEYCLOAK_ISSUER</code></pre>
+      Les deux valeurs doivent être identiques.
+    </div></div>
+    <div class="step"><div><strong>Si elles diffèrent — recréer backend et keycloak</strong>
+      <pre><code># Mettre à jour TRAEFIK_DOMAIN dans .env, puis :
+docker compose up -d --force-recreate keycloak backend
+# Attendre ~30s, tester un login</code></pre>
+    </div></div>
+  </div>
+  <div class="alert alert-yellow">Le frontend doit aussi être <strong>rebuild</strong> car <code>VITE_KEYCLOAK_URL</code> est baked dans l'image Nginx au moment du <code>docker compose build</code>.</div>
+</div>
+
+<h2 id="traefik-https">Migration HTTPS (production)</h2>
+<p>Prérequis : nom de domaine pointé sur le serveur, port 443 ouvert.</p>
+
+<h3>1. Configurer le domaine dans <code>.env</code></h3>
+<pre><code>TRAEFIK_DOMAIN=helpmi.example.com
+ACME_EMAIL=ops@helpmi.example.com
+APP_CORS_ALLOWED_ORIGINS=https://app.helpmi.example.com</code></pre>
+
+<h3>2. Créer le fichier ACME vide (requis par Traefik)</h3>
+<pre><code>mkdir -p traefik/letsencrypt
+touch traefik/letsencrypt/acme.json
+chmod 600 traefik/letsencrypt/acme.json</code></pre>
+
+<h3>3. Décommenter les blocs HTTPS dans <code>docker-compose.yml</code></h3>
+<p>Chercher tous les commentaires <code># HTTPS</code> et décommenter les lignes correspondantes :</p>
+<ul>
+  <li>Entrypoints <code>websecure</code> et redirection HTTP→HTTPS dans Traefik</li>
+  <li>Port <code>443:443</code></li>
+  <li>Volume <code>./traefik/letsencrypt:/letsencrypt</code></li>
+  <li>Labels <code>tls.certresolver=letsencrypt</code> sur chaque router</li>
+</ul>
+
+<h3>4. Rebuild frontend + redémarrage</h3>
+<pre><code># Le VITE_KEYCLOAK_URL doit être rebuild avec la nouvelle valeur
+docker compose build --no-cache frontend
+docker compose up -d</code></pre>
+
+<h3>5. Vérifier l'obtention du certificat</h3>
+<pre><code>docker logs helpmi_traefik -f | grep -i "acme\|certificate\|error"
+# Attendre "Certificates obtained successfully"
+
+# Test SSL
+curl -sv https://app.helpmi.example.com 2>&1 | grep -i "SSL\|certificate\|issuer"</code></pre>
+
+<div class="alert alert-blue">Let's Encrypt impose une limite de <strong>5 certificats par domaine par semaine</strong>. En test, utiliser le staging ACME : ajouter <code>--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory</code> dans la commande Traefik.</div>
+
+<!-- ===== QUICK REF ===== -->
+<h2 id="quickref">Quick reference card</h2>
+<table>
+  <thead><tr><th>Situation</th><th>Commande</th></tr></thead>
+  <tbody>
+    <tr><td>Voir l'état de tous les conteneurs</td><td><code>docker ps -a --format "table {{.Names}}\t{{.Status}}"</code></td></tr>
+    <tr><td>Logs d'un service</td><td><code>docker logs -f helpmi_&lt;service&gt;</code></td></tr>
+    <tr><td>Redémarrer un service</td><td><code>docker compose restart &lt;service&gt;</code></td></tr>
+    <tr><td>Redémarrer tout</td><td><code>docker compose up -d</code></td></tr>
+    <tr><td>Health backend</td><td><code>curl -s http://localhost:8080/actuator/health</code></td></tr>
+    <tr><td>Health MinIO</td><td><code>curl -sf http://localhost:9000/minio/health/live</code></td></tr>
+    <tr><td>Token Keycloak (smoke test)</td><td><code>curl -s -X POST http://localhost:8180/realms/helpmi/protocol/openid-connect/token -d "client_id=helpmi-frontend&grant_type=password&username=admin&password=admin123"</code></td></tr>
+    <tr><td>Console MySQL interactive</td><td><code>docker exec -it helpmi_mariadb mysql -u helpmi -p helpmi</code></td></tr>
+    <tr><td>Migrations appliquées</td><td><code>docker exec helpmi_mariadb mysql -u helpmi -p helpmi -e "SELECT version,success FROM flyway_schema_history;"</code></td></tr>
+    <tr><td>Dump base</td><td><code>docker exec helpmi_mariadb sh -c 'mysqldump -u root -p$MYSQL_ROOT_PASSWORD helpmi' > backup.sql</code></td></tr>
+    <tr><td>Consommation ressources</td><td><code>docker stats --no-stream</code></td></tr>
+    <tr><td>Espace disque Docker</td><td><code>docker system df</code></td></tr>
+    <tr><td>Nettoyage (sans volumes)</td><td><code>docker system prune -f</code></td></tr>
+    <tr><td>Reset complet dev</td><td><code>docker compose down -v &amp;&amp; docker compose up -d</code></td></tr>
+    <tr><td>Rebuild + redéploiement</td><td><code>docker compose build --no-cache backend frontend &amp;&amp; docker compose up -d --force-recreate backend frontend</code></td></tr>
+    <tr><td>Dashboard Traefik</td><td><a href="http://traefik.localhost" target="_blank">http://traefik.localhost</a> ou <a href="http://localhost:8090/dashboard/" target="_blank">http://localhost:8090/dashboard/</a></td></tr>
+    <tr><td>Routers actifs (API Traefik)</td><td><code>curl -s http://localhost:8090/api/http/routers | python3 -m json.tool | grep '"name"'</code></td></tr>
+    <tr><td>Services actifs (API Traefik)</td><td><code>curl -s http://localhost:8090/api/http/services | python3 -m json.tool | grep '"name"'</code></td></tr>
+    <tr><td>Vérifier issuer Keycloak</td><td><code>curl -s http://auth.localhost/realms/helpmi | python3 -c "import sys,json; print(json.load(sys.stdin)['issuer'])"</code></td></tr>
+  </tbody>
+</table>
+
+<br>
+<p style="text-align:center; color:#94a3b8; font-size:12px; margin-top:40px; padding-top:20px; border-top:1px solid var(--border);">
+  HelpMi — Runbook v1.0 — Généré le 2026-04-28
+</p>
+
+</main>
+</div>
+</body>
+</html>

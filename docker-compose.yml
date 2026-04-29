@@ -1,7 +1,56 @@
+# TRAEFIK_DOMAIN=localhost en dev, helpmi.example.com en prod
+# Accès : http://app.<domain>  http://auth.<domain>  http://api.<domain>
+#         http://minio.<domain>  http://traefik.<domain>
+#
+# Migration HTTPS (prod) :
+#   1. Pointer DNS *.helpmi.example.com vers le serveur
+#   2. Définir ACME_EMAIL dans .env
+#   3. Décommenter les blocs "# HTTPS"
+#   4. docker compose up -d --build
+
 services:
+
+  # ── Reverse proxy ──────────────────────────────────────────────────────────
+  traefik:
+    image: traefik:v3.3
+    container_name: helpmi_traefik
+    restart: unless-stopped
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=helpmi_proxy
+      - --entrypoints.web.address=:80
+      # HTTPS — décommenter pour la prod :
+      # - --entrypoints.websecure.address=:443
+      # - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      # - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      # - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      # - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+      # - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      # - "443:443"   # HTTPS
+      - "8090:8080"   # Dashboard direct → http://localhost:8090/dashboard/
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # - ./traefik/letsencrypt:/letsencrypt   # HTTPS
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      # HTTPS :
+      # - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+
+  # ── Base de données ─────────────────────────────────────────────────────────
   mariadb:
     image: mariadb:11.8.6
     container_name: helpmi_mariadb
+    restart: unless-stopped
     environment:
       MYSQL_DATABASE: helpmi
       MYSQL_USER: ${DB_USER}
@@ -10,76 +59,132 @@ services:
     volumes:
       - mariadb_data:/var/lib/mysql
     ports:
-      - "3306:3306"
+      - "3306:3306"   # Accès direct outils DB (DBeaver, etc.) — pas exposé via Traefik
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - proxy
 
+  # ── Authentification ────────────────────────────────────────────────────────
   keycloak:
     image: keycloak/keycloak:26.6
     container_name: helpmi_keycloak
+    restart: unless-stopped
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      # Pas de KC_HOSTNAME fixe : Keycloak utilise l'URL de la requête entrante comme issuer.
+      # Via Traefik (X-Forwarded-Host: auth.localhost) → issuer = auth.localhost
+      # Via accès direct (localhost:8180 en dev) → issuer = localhost:8180
+      # Évite le conflit de cookies entre les deux modes.
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
     command: start-dev --import-realm
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
-    ports:
-      - "8180:8080"
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=Host(`auth.${TRAEFIK_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.keycloak.entrypoints=web"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+      # HTTPS :
+      # - "traefik.http.routers.keycloak.tls.certresolver=letsencrypt"
 
+  # ── Stockage objets ─────────────────────────────────────────────────────────
   minio:
     image: minio/minio:latest
     container_name: helpmi_minio
+    restart: unless-stopped
     command: server /data
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
-    ports:
-      - "9000:9000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.minio.entrypoints=web"
+      - "traefik.http.routers.minio.service=minio"
+      - "traefik.http.services.minio.loadbalancer.server.port=9000"
+      # HTTPS :
+      # - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
 
+  # ── API backend ─────────────────────────────────────────────────────────────
   backend:
     build: ./backend
     container_name: helpmi_backend
+    restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/helpmi
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      APP_KEYCLOAK_ISSUER_URI: ${APP_KEYCLOAK_ISSUER_URI:-http://keycloak:8080/realms/helpmi}
+      # Issuer = URL publique vue par le backend via Traefik (auth.<domain>).
+      # Le backend container résout auth.<domain> via extra_hosts → host-gateway → Traefik → KC.
+      APP_KEYCLOAK_ISSUER_URI: "http://auth.${TRAEFIK_DOMAIN:-localhost}/realms/helpmi"
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS}
       APP_S3_ENDPOINT: http://minio:9000
       APP_S3_ACCESS_KEY: ${MINIO_ROOT_USER}
       APP_S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-    ports:
-      - "8080:8080"
+    # Résout auth.<domain> vers l'hôte → Traefik → Keycloak.
+    # Nécessaire pour que Spring valide les tokens JWT via l'URL publique.
+    extra_hosts:
+      - "auth.${TRAEFIK_DOMAIN:-localhost}:host-gateway"
     depends_on:
       mariadb:
         condition: service_healthy
       minio:
         condition: service_healthy
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.${TRAEFIK_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.services.backend.loadbalancer.server.port=8080"
+      # HTTPS :
+      # - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
 
+  # ── Frontend ────────────────────────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
       args:
         VITE_API_URL: /api
-        VITE_KEYCLOAK_URL: ${VITE_KEYCLOAK_URL:-http://localhost:8180}
+        # VITE_KEYCLOAK_URL est baked dans l'image au build — rebuild requis si changé
+        VITE_KEYCLOAK_URL: "http://auth.${TRAEFIK_DOMAIN:-localhost}"
         VITE_KEYCLOAK_REALM: ${VITE_KEYCLOAK_REALM:-helpmi}
         VITE_KEYCLOAK_CLIENT_ID: ${VITE_KEYCLOAK_CLIENT_ID:-helpmi-frontend}
     container_name: helpmi_frontend
-    ports:
-      - "3000:80"
+    restart: unless-stopped
     depends_on:
       - backend
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`app.${TRAEFIK_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      # HTTPS :
+      # - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+
+networks:
+  proxy:
+    name: helpmi_proxy
 
 volumes:
   mariadb_data:

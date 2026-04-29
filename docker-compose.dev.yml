@@ -1,5 +1,5 @@
 # Dev-only overrides — lancez avec :
-#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 #
 # NE PAS déployer en production.
 
@@ -7,17 +7,38 @@ services:
   minio:
     command: server /data --console-address ":9001"
     ports:
-      - "9001:9001"
+      - "9000:9000"   # accès direct pour mvn spring-boot:run
+      - "9001:9001"   # console MinIO (backup si Traefik KO)
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio-console.rule=Host(`minio-console.${TRAEFIK_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.minio-console.entrypoints=web"
+      - "traefik.http.routers.minio-console.service=minio-console"
+      - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
+
+  keycloak:
+    ports:
+      - "8180:8080"   # accès direct pour mvn spring-boot:run (issuer http://localhost:8180)
 
   phpmyadmin:
     image: phpmyadmin:5.2.3
     container_name: helpmi_phpmyadmin
+    restart: unless-stopped
     environment:
       PMA_HOST: mariadb
       PMA_USER: ${DB_USER}
       PMA_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "8081:80"
     depends_on:
       mariadb:
         condition: service_healthy
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pma.rule=Host(`pma.${TRAEFIK_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.pma.entrypoints=web"
+      - "traefik.http.services.pma.loadbalancer.server.port=80"
+
+networks:
+  proxy:
+    name: helpmi_proxy
