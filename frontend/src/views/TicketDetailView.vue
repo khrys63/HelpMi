@@ -1,11 +1,11 @@
 <template>
-  <div v-if="loading" class="text-center py-12 text-gray-400">Chargement…</div>
+  <div v-if="loading" class="text-center py-12 text-gray-400">{{ $t('common.loading') }}</div>
   <div v-else class="space-y-6">
     <!-- Breadcrumb + actions -->
     <div class="space-y-2">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-          <router-link to="/projects" class="hover:text-blue-600 dark:hover:text-blue-400">Projets</router-link>
+          <router-link to="/projects" class="hover:text-blue-600 dark:hover:text-blue-400">{{ $t('projects.title') }}</router-link>
           <span>/</span>
           <router-link :to="`/projects/${ticket.projectId}`" class="hover:text-blue-600 dark:hover:text-blue-400">{{ ticket.projectKey }}</router-link>
           <span>/</span>
@@ -39,7 +39,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0-4-4m4 4-4 4m0 6H4m0 0 4 4m-4-4 4-4"/>
             </svg>
-            Déplacer
+            {{ $t('tickets.move') }}
           </button>
           <button @click="cloneTicket" :disabled="cloning"
             class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors">
@@ -47,22 +47,22 @@
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
-            {{ cloning ? 'Clonage…' : 'Cloner' }}
+            {{ cloning ? $t('tickets.cloning') : $t('tickets.clone') }}
           </button>
         </div>
       </div>
 
       <!-- Panneau déplacement -->
       <div v-if="showMoveForm" class="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3">
-        <span class="text-sm text-gray-600 dark:text-gray-300 shrink-0">Déplacer vers :</span>
+        <span class="text-sm text-gray-600 dark:text-gray-300 shrink-0">{{ $t('tickets.move_to') }}</span>
         <select v-model="moveTargetProjectId" class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
           <option v-for="p in moveProjects" :key="p.id" :value="p.id">{{ p.key }} — {{ p.name }}</option>
         </select>
         <button @click="confirmMove" :disabled="!moveTargetProjectId || moving"
           class="bg-blue-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium shrink-0">
-          {{ moving ? 'Déplacement…' : 'Confirmer' }}
+          {{ moving ? $t('tickets.moving') : $t('common.confirm') }}
         </button>
-        <button @click="showMoveForm = false" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 shrink-0">Annuler</button>
+        <button @click="showMoveForm = false" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 shrink-0">{{ $t('common.cancel') }}</button>
       </div>
     </div>
 
@@ -84,9 +84,9 @@
               <div class="flex gap-2">
                 <button @click="saveTitle" :disabled="saving"
                   class="bg-blue-600 text-white text-xs px-3 py-1 rounded-md hover:bg-blue-700 disabled:opacity-50">
-                  {{ saving ? '…' : 'Enregistrer' }}
+                  {{ saving ? $t('common.saving') : $t('common.save') }}
                 </button>
-                <button @click="cancelTitle" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1">Annuler</button>
+                <button @click="cancelTitle" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1">{{ $t('common.cancel') }}</button>
               </div>
             </div>
           </div>
@@ -96,7 +96,7 @@
             <div v-if="!editingDescription" @click="startEditDescription"
               class="cursor-text rounded px-1 -mx-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors min-h-[2rem]">
               <p v-if="ticket.description" class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">{{ ticket.description }}</p>
-              <p v-else class="text-gray-400 dark:text-gray-500 text-sm italic">Cliquer pour ajouter une description…</p>
+              <p v-else class="text-gray-400 dark:text-gray-500 text-sm italic">{{ $t('tickets.click_to_add_desc') }}</p>
             </div>
             <div v-else class="space-y-2">
               <textarea v-model="editDescription" ref="descriptionInput" rows="6"
@@ -105,9 +105,9 @@
               <div class="flex gap-2">
                 <button @click="saveDescription" :disabled="saving"
                   class="bg-blue-600 text-white text-xs px-3 py-1 rounded-md hover:bg-blue-700 disabled:opacity-50">
-                  {{ saving ? '…' : 'Enregistrer' }}
+                  {{ saving ? $t('common.saving') : $t('common.save') }}
                 </button>
-                <button @click="cancelDescription" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1">Annuler</button>
+                <button @click="cancelDescription" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1">{{ $t('common.cancel') }}</button>
               </div>
             </div>
           </div>
@@ -115,7 +115,7 @@
 
         <!-- Pièces jointes -->
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <h2 class="font-semibold text-gray-800 dark:text-gray-200 mb-3">Pièces jointes ({{ ticket.attachments?.length || 0 }})</h2>
+          <h2 class="font-semibold text-gray-800 dark:text-gray-200 mb-3">{{ $t('tickets.attachments', { count: ticket.attachments?.length || 0 }) }}</h2>
           <ul v-if="ticket.attachments?.length" class="space-y-2 mb-4">
             <li v-for="a in ticket.attachments" :key="a.id"
               class="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2">
@@ -125,17 +125,17 @@
           </ul>
           <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
             <input type="file" class="hidden" @change="uploadFile" :disabled="uploading" />
-            {{ uploading ? 'Envoi…' : '+ Ajouter un fichier' }}
+            {{ uploading ? $t('tickets.uploading') : $t('tickets.add_file') }}
           </label>
         </div>
 
         <!-- Liens -->
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="font-semibold text-gray-800 dark:text-gray-200">Liens ({{ ticket.links?.length || 0 }})</h2>
+            <h2 class="font-semibold text-gray-800 dark:text-gray-200">{{ $t('tickets.links', { count: ticket.links?.length || 0 }) }}</h2>
             <button @click="showLinkForm = !showLinkForm"
               class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
-              {{ showLinkForm ? 'Annuler' : '+ Ajouter un lien' }}
+              {{ showLinkForm ? $t('common.cancel') : $t('tickets.add_link') }}
             </button>
           </div>
 
@@ -143,7 +143,7 @@
           <div v-if="showLinkForm" class="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-3">
             <div class="relative">
               <input v-model="linkSearch" @input="onLinkSearch"
-                placeholder="Référence ou titre du ticket…"
+                :placeholder="$t('tickets.link_search_placeholder')"
                 autocomplete="off"
                 class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
               <ul v-if="linkResults.length"
@@ -170,7 +170,7 @@
               </select>
               <button @click="addLink" :disabled="!linkTarget || linkAdding"
                 class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-                {{ linkAdding ? '…' : 'Lier' }}
+                {{ linkAdding ? $t('common.saving') : $t('tickets.link_action') }}
               </button>
             </div>
           </div>
@@ -192,12 +192,12 @@
                 class="text-gray-300 dark:text-gray-600 hover:text-red-500 text-base leading-none shrink-0">✕</button>
             </div>
           </div>
-          <p v-else-if="!showLinkForm" class="text-sm text-gray-400 dark:text-gray-500 italic">Aucun lien.</p>
+          <p v-else-if="!showLinkForm" class="text-sm text-gray-400 dark:text-gray-500 italic">{{ $t('tickets.no_links') }}</p>
         </div>
 
         <!-- Commentaires -->
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-          <h2 class="font-semibold text-gray-800 dark:text-gray-200 mb-4">Commentaires ({{ ticket.comments?.length || 0 }})</h2>
+          <h2 class="font-semibold text-gray-800 dark:text-gray-200 mb-4">{{ $t('tickets.comments', { count: ticket.comments?.length || 0 }) }}</h2>
           <div v-if="ticket.comments?.length" class="space-y-4 mb-5">
             <div v-for="c in ticket.comments" :key="c.id" class="flex gap-3">
               <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center text-xs font-bold shrink-0">
@@ -207,18 +207,18 @@
                 <div class="flex items-baseline gap-2 mb-1">
                   <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ c.author?.firstName }} {{ c.author?.lastName }}</span>
                   <span class="text-xs text-gray-400 dark:text-gray-500">{{ formatDate(c.createdAt) }}</span>
-                  <span v-if="c.edited" class="text-xs text-gray-400 dark:text-gray-500">(modifié)</span>
+                  <span v-if="c.edited" class="text-xs text-gray-400 dark:text-gray-500">{{ $t('tickets.comment_edited') }}</span>
                 </div>
                 <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ c.body }}</p>
               </div>
             </div>
           </div>
           <div class="flex gap-3">
-            <textarea v-model="newComment" rows="2" placeholder="Ajouter un commentaire…"
+            <textarea v-model="newComment" rows="2" :placeholder="$t('tickets.comment_placeholder')"
               class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
             <button @click="addComment" :disabled="!newComment.trim() || commentSaving"
               class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 self-end">
-              Envoyer
+              {{ $t('common.send') }}
             </button>
           </div>
         </div>
@@ -230,13 +230,13 @@
 
           <!-- Statut -->
           <div>
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Statut</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.status_label') }}</p>
             <StatusBadge :status="ticket.status" />
           </div>
 
           <!-- Priorité -->
           <div>
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Priorité</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.priority_label') }}</p>
             <select v-model="ticket.priority" @change="updateField('priority', ticket.priority)"
               class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
               <option v-for="p in config.priorities" :key="p.code" :value="p.code">{{ p.label }}</option>
@@ -245,7 +245,7 @@
 
           <!-- Type -->
           <div>
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Type</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.type_label') }}</p>
             <select v-model="ticket.type" @change="updateField('type', ticket.type)"
               class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
               <option v-for="t in config.types" :key="t.code" :value="t.code">{{ t.label }}</option>
@@ -254,7 +254,7 @@
 
           <!-- Échéance -->
           <div>
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Échéance</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">{{ $t('tickets.due_date_label') }}</p>
             <div class="flex items-center gap-1">
               <input type="date" v-model="dueDateInput" @change="saveDueDate"
                 class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100" />
@@ -265,34 +265,34 @@
 
           <!-- Reporter -->
           <div>
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Rapporteur</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">{{ $t('tickets.reporter_label') }}</p>
             <p class="text-sm text-gray-700 dark:text-gray-300">{{ ticket.reporter?.firstName }} {{ ticket.reporter?.lastName }}</p>
           </div>
 
           <!-- Assigné -->
           <div>
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Assigné à</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">{{ $t('tickets.assignee_label') }}</p>
             <select v-model="assigneeId" @change="reassign" class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
-              <option value="">Non assigné</option>
+              <option value="">{{ $t('tickets.field_assignee_none') }}</option>
               <option v-for="u in users" :key="u.id" :value="u.id">{{ u.firstName }} {{ u.lastName }}</option>
             </select>
           </div>
 
           <!-- Clients -->
           <div class="pt-2 border-t dark:border-gray-700">
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Clients</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.clients_label') }}</p>
             <div class="flex flex-wrap gap-1 mb-2">
               <span v-for="c in ticket.clients" :key="c.id"
                 class="inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs px-2 py-0.5 rounded-full">
                 {{ c.name }}
                 <button @click="removeClient(c.id)" class="text-indigo-400 hover:text-indigo-700 leading-none">✕</button>
               </span>
-              <span v-if="!ticket.clients?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">Aucun</span>
+              <span v-if="!ticket.clients?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">{{ $t('tickets.clients_none') }}</span>
             </div>
             <div class="relative">
               <select @change="addClient($event.target.value); $event.target.value = ''"
                 class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 dark:bg-gray-700">
-                <option value="">+ Ajouter un client…</option>
+                <option value="">{{ $t('tickets.add_client') }}</option>
                 <option v-for="c in availableClients" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
             </div>
@@ -300,19 +300,19 @@
 
           <!-- Étiquettes -->
           <div class="pt-2 border-t dark:border-gray-700">
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Étiquettes</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.labels_label') }}</p>
             <div class="flex flex-wrap gap-1 mb-2">
               <span v-for="l in ticket.labels" :key="l.id"
                 :class="['inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full', labelBadgeClass(l.color)]">
                 {{ l.name }}
                 <button @click="removeLabel(l.id)" class="opacity-60 hover:opacity-100 leading-none">✕</button>
               </span>
-              <span v-if="!ticket.labels?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">Aucune</span>
+              <span v-if="!ticket.labels?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">{{ $t('tickets.labels_none') }}</span>
             </div>
             <div class="relative">
               <input v-model="labelInput" @input="onLabelInput" @keydown.enter.prevent="confirmLabelInput"
                 @blur="hideSuggestionsDelayed"
-                placeholder="Rechercher ou créer…"
+                :placeholder="$t('tickets.label_search_placeholder')"
                 class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
               <ul v-if="labelSuggestions.length"
                 class="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-lg z-20 max-h-40 overflow-y-auto">
@@ -321,7 +321,7 @@
                     class="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-sm">
                     <span v-if="!s.create" :class="['w-2.5 h-2.5 rounded-full shrink-0', dotClass(s.color)]"></span>
                     <span :class="s.create ? 'text-blue-600 dark:text-blue-400 italic' : 'text-gray-800 dark:text-gray-200'">
-                      {{ s.create ? `Créer "${s.name}"` : s.name }}
+                      {{ s.create ? $t('tickets.label_create', { name: s.name }) : s.name }}
                     </span>
                   </button>
                 </li>
@@ -331,9 +331,9 @@
 
           <!-- Dates -->
           <div class="text-xs text-gray-400 dark:text-gray-500 space-y-1 pt-2 border-t dark:border-gray-700">
-            <p>Créé le {{ formatDate(ticket.createdAt) }}</p>
-            <p>Modifié le {{ formatDate(ticket.updatedAt) }}</p>
-            <p v-if="ticket.closedAt">Clôturé le {{ formatDate(ticket.closedAt) }}</p>
+            <p>{{ $t('tickets.dates_created', { date: formatDate(ticket.createdAt) }) }}</p>
+            <p>{{ $t('tickets.dates_updated', { date: formatDate(ticket.updatedAt) }) }}</p>
+            <p v-if="ticket.closedAt">{{ $t('tickets.dates_closed', { date: formatDate(ticket.closedAt) }) }}</p>
           </div>
 
           <!-- Suppression (admin uniquement) -->
@@ -341,22 +341,22 @@
             <div v-if="!confirmingDelete">
               <button @click="confirmingDelete = true"
                 class="w-full text-sm text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg px-3 py-1.5 text-left transition-colors">
-                Supprimer ce ticket…
+                {{ $t('tickets.delete_ticket') }}
               </button>
             </div>
             <div v-else class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 space-y-3">
-              <p class="text-sm font-medium text-red-800 dark:text-red-300">Supprimer {{ ticket.reference }} ?</p>
+              <p class="text-sm font-medium text-red-800 dark:text-red-300">{{ $t('tickets.delete_confirm_title', { ref: ticket.reference }) }}</p>
               <p class="text-xs text-red-600 dark:text-red-400">
-                Action irréversible. La référence <strong>{{ ticket.reference }}</strong> ne sera pas réattribuée.
+                {{ $t('tickets.delete_confirm_body', { ref: ticket.reference }) }}
               </p>
               <div class="flex gap-2">
                 <button @click="deleteTicket" :disabled="deleting"
                   class="flex-1 bg-red-600 text-white text-xs px-3 py-1.5 rounded-md hover:bg-red-700 disabled:opacity-50 font-medium">
-                  {{ deleting ? 'Suppression…' : 'Confirmer' }}
+                  {{ deleting ? $t('tickets.deleting') : $t('common.confirm') }}
                 </button>
                 <button @click="confirmingDelete = false"
                   class="flex-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-3 py-1.5 border dark:border-gray-600 rounded-md">
-                  Annuler
+                  {{ $t('common.cancel') }}
                 </button>
               </div>
             </div>
@@ -370,20 +370,23 @@
 <script setup>
 import { ref, nextTick, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ticketsApi, usersApi, attachmentsApi, commentsApi, linksApi, labelsApi, projectsApi } from '../services/api.js'
 import { useAuthStore } from '../stores/auth.js'
 import { useConfigStore, COLORS } from '../stores/config.js'
 import { useToastStore } from '../stores/toast.js'
 import StatusBadge from '../components/tickets/StatusBadge.vue'
 
-const TRANSITIONS = {
-  OPEN:        [{ status: 'IN_PROGRESS', label: 'Démarrer' },  { status: 'STAND_BY', label: 'Mettre en pause' }, { status: 'CANCELLED', label: 'Annuler' }],
-  IN_PROGRESS: [{ status: 'RESOLVED',   label: 'Résoudre' },  { status: 'STAND_BY', label: 'Mettre en pause' }, { status: 'CANCELLED', label: 'Annuler' }],
-  STAND_BY:    [{ status: 'IN_PROGRESS', label: 'Reprendre' }, { status: 'OPEN', label: 'Réouvrir' },            { status: 'CANCELLED', label: 'Annuler' }],
-  RESOLVED:    [{ status: 'CLOSED',     label: 'Fermer' },    { status: 'OPEN',       label: 'Réouvrir' }],
-  CLOSED:      [{ status: 'OPEN',       label: 'Réouvrir' }],
-  CANCELLED:   [{ status: 'OPEN',       label: 'Réouvrir' }],
-}
+const { t } = useI18n()
+
+const TRANSITIONS = computed(() => ({
+  OPEN:        [{ status: 'IN_PROGRESS', label: t('status.transitions.OPEN_to_IN_PROGRESS') }, { status: 'STAND_BY', label: t('status.transitions.OPEN_to_STAND_BY') }, { status: 'CANCELLED', label: t('status.transitions.OPEN_to_CANCELLED') }],
+  IN_PROGRESS: [{ status: 'RESOLVED',   label: t('status.transitions.IN_PROGRESS_to_RESOLVED') }, { status: 'STAND_BY', label: t('status.transitions.IN_PROGRESS_to_STAND_BY') }, { status: 'CANCELLED', label: t('status.transitions.IN_PROGRESS_to_CANCELLED') }],
+  STAND_BY:    [{ status: 'IN_PROGRESS', label: t('status.transitions.STAND_BY_to_IN_PROGRESS') }, { status: 'OPEN', label: t('status.transitions.STAND_BY_to_OPEN') }, { status: 'CANCELLED', label: t('status.transitions.STAND_BY_to_CANCELLED') }],
+  RESOLVED:    [{ status: 'CLOSED',     label: t('status.transitions.RESOLVED_to_CLOSED') }, { status: 'OPEN', label: t('status.transitions.RESOLVED_to_OPEN') }],
+  CLOSED:      [{ status: 'OPEN',       label: t('status.transitions.CLOSED_to_OPEN') }],
+  CANCELLED:   [{ status: 'OPEN',       label: t('status.transitions.CANCELLED_to_OPEN') }],
+}))
 
 const STATUS_BUTTON_COLORS = {
   blue:   'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200',
@@ -404,7 +407,7 @@ const toast = useToastStore()
 const isAdmin = computed(() => auth.user?.role === 'ADMIN')
 
 const showStatusMenu = ref(false)
-const availableTransitions = computed(() => TRANSITIONS[ticket.value.status] ?? [])
+const availableTransitions = computed(() => TRANSITIONS.value[ticket.value.status] ?? [])
 const currentStatusLabel = computed(() => config.getStatus(ticket.value.status)?.label ?? ticket.value.status)
 const statusButtonClass = computed(() => {
   const color = config.getStatus(ticket.value.status)?.color

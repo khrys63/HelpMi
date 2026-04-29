@@ -1,15 +1,15 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Organisations</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $t('admin.orgs.title') }}</h1>
       <button @click="openCreate"
         class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
-        + Nouvelle organisation
+        {{ $t('admin.orgs.new') }}
       </button>
     </div>
 
-    <div v-if="loading" class="text-center py-12 text-gray-400">Chargement…</div>
-    <div v-else-if="orgs.length === 0" class="text-center py-12 text-gray-400">Aucune organisation.</div>
+    <div v-if="loading" class="text-center py-12 text-gray-400">{{ $t('common.loading') }}</div>
+    <div v-else-if="orgs.length === 0" class="text-center py-12 text-gray-400">{{ $t('admin.orgs.no_orgs') }}</div>
 
     <div v-else class="space-y-4">
       <div v-for="org in orgs" :key="org.id"
@@ -19,19 +19,19 @@
             <div class="flex items-center gap-2 mb-1">
               <span class="font-semibold text-gray-900 dark:text-gray-100">{{ org.name }}</span>
               <span v-if="!org.active"
-                class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded">Inactive</span>
+                class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded">{{ $t('admin.orgs.inactive') }}</span>
             </div>
             <p class="text-xs text-gray-400 dark:text-gray-500">
-              {{ org.users.length }} utilisateur(s) · {{ org.projects.length }} projet(s)
+              {{ $t('admin.orgs.users_projects', { users: org.users.length, projects: org.projects.length }) }}
             </p>
           </div>
           <div class="flex gap-2">
             <button @click="openManage(org)"
-              class="text-sm text-blue-600 hover:text-blue-800 font-medium">Gérer</button>
+              class="text-sm text-blue-600 hover:text-blue-800 font-medium">{{ $t('admin.orgs.manage') }}</button>
             <button @click="openEdit(org)"
-              class="text-sm text-gray-500 hover:text-gray-800">Modifier</button>
+              class="text-sm text-gray-500 hover:text-gray-800">{{ $t('common.edit') }}</button>
             <button @click="confirmDelete(org)"
-              class="text-sm text-red-400 hover:text-red-600">Supprimer</button>
+              class="text-sm text-red-400 hover:text-red-600">{{ $t('common.delete') }}</button>
           </div>
         </div>
 
@@ -54,23 +54,23 @@
     <!-- Create / Edit modal -->
     <div v-if="modal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm">
-        <h2 class="text-lg font-bold mb-4 dark:text-gray-100">{{ editingOrg ? 'Modifier' : 'Nouvelle organisation' }}</h2>
+        <h2 class="text-lg font-bold mb-4 dark:text-gray-100">{{ editingOrg ? $t('admin.orgs.edit_title') : $t('admin.orgs.create_title') }}</h2>
         <div class="space-y-3">
           <div>
-            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Nom *</label>
-            <input ref="nameInput" v-model="form.name" placeholder="Nom de l'organisation"
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.orgs.field_name') }}</label>
+            <input ref="nameInput" v-model="form.name" :placeholder="$t('admin.orgs.field_name_placeholder')"
               class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
           </div>
           <label v-if="editingOrg" class="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="checkbox" v-model="form.active" class="rounded" /> Active
+            <input type="checkbox" v-model="form.active" class="rounded" /> {{ $t('admin.orgs.field_active') }}
           </label>
         </div>
         <p v-if="modalError" class="text-sm text-red-600 mt-3">{{ modalError }}</p>
         <div class="flex justify-end gap-2 mt-5">
-          <button @click="modal = false" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-4 py-2">Annuler</button>
+          <button @click="modal = false" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-4 py-2">{{ $t('common.cancel') }}</button>
           <button @click="saveOrg" :disabled="saving"
             class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-            {{ saving ? '…' : (editingOrg ? 'Enregistrer' : 'Créer') }}
+            {{ saving ? $t('common.saving') : (editingOrg ? $t('common.save') : $t('common.create')) }}
           </button>
         </div>
       </div>
@@ -79,35 +79,35 @@
     <!-- Manage access modal -->
     <div v-if="managing" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
-        <h2 class="text-lg font-bold mb-4 dark:text-gray-100">Gérer — {{ managing.name }}</h2>
+        <h2 class="text-lg font-bold mb-4 dark:text-gray-100">{{ $t('admin.orgs.manage_title', { name: managing.name }) }}</h2>
 
         <!-- Projects -->
         <div class="mb-5">
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Projets</h3>
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{{ $t('admin.orgs.projects_section') }}</h3>
           <div class="flex flex-wrap gap-2 mb-2">
             <span v-for="p in managing.projects" :key="p.id"
               class="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded">
               {{ p.key }} — {{ p.name }}
               <button @click="removeProject(p.id)" class="hover:text-red-500 ml-1">×</button>
             </span>
-            <span v-if="managing.projects.length === 0" class="text-xs text-gray-400 dark:text-gray-500">Aucun projet.</span>
+            <span v-if="managing.projects.length === 0" class="text-xs text-gray-400 dark:text-gray-500">{{ $t('admin.orgs.no_projects') }}</span>
           </div>
           <div class="flex gap-2">
             <select v-model="selectedProjectId"
               class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100">
-              <option value="">— Ajouter un projet —</option>
+              <option value="">{{ $t('admin.orgs.add_project') }}</option>
               <option v-for="p in availableProjects" :key="p.id" :value="p.id">
                 {{ p.key }} — {{ p.name }}
               </option>
             </select>
             <button @click="addProject" :disabled="!selectedProjectId"
-              class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm disabled:opacity-40">Ajouter</button>
+              class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm disabled:opacity-40">{{ $t('common.add') }}</button>
           </div>
         </div>
 
         <!-- Users -->
         <div>
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Utilisateurs</h3>
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{{ $t('admin.orgs.users_section') }}</h3>
           <div class="flex flex-wrap gap-2 mb-2">
             <span v-for="u in managing.users" :key="u.id"
               class="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-2 py-1 rounded">
@@ -115,25 +115,25 @@
               <span class="text-gray-400 dark:text-gray-500">({{ u.role }})</span>
               <button @click="removeUser(u.id)" class="hover:text-red-500 ml-1">×</button>
             </span>
-            <span v-if="managing.users.length === 0" class="text-xs text-gray-400 dark:text-gray-500">Aucun utilisateur.</span>
+            <span v-if="managing.users.length === 0" class="text-xs text-gray-400 dark:text-gray-500">{{ $t('admin.orgs.no_users') }}</span>
           </div>
           <div class="flex gap-2">
             <select v-model="selectedUserId"
               class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100">
-              <option value="">— Ajouter un utilisateur —</option>
+              <option value="">{{ $t('admin.orgs.add_user') }}</option>
               <option v-for="u in availableUsers" :key="u.id" :value="u.id">
                 {{ u.firstName }} {{ u.lastName }} ({{ u.role }})
               </option>
             </select>
             <button @click="addUser" :disabled="!selectedUserId"
-              class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm disabled:opacity-40">Ajouter</button>
+              class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm disabled:opacity-40">{{ $t('common.add') }}</button>
           </div>
         </div>
 
         <p v-if="manageError" class="text-sm text-red-600 mt-3">{{ manageError }}</p>
         <div class="flex justify-end mt-5">
           <button @click="managing = null"
-            class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-4 py-2">Fermer</button>
+            class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-4 py-2">{{ $t('common.close') }}</button>
         </div>
       </div>
     </div>
@@ -141,18 +141,17 @@
     <!-- Delete confirmation -->
     <div v-if="deleteTarget" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm">
-        <h2 class="text-lg font-bold text-red-700 dark:text-red-400 mb-2">Supprimer ?</h2>
+        <h2 class="text-lg font-bold text-red-700 dark:text-red-400 mb-2">{{ $t('admin.orgs.delete_title') }}</h2>
         <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
-          Supprimer <strong>{{ deleteTarget.name }}</strong> ?
-          Impossible si des utilisateurs y sont encore rattachés.
+          {{ $t('admin.orgs.delete_body', { name: deleteTarget.name }) }}
         </p>
         <p v-if="deleteError" class="text-sm text-red-600 mb-3">{{ deleteError }}</p>
         <div class="flex justify-end gap-2">
           <button @click="deleteTarget = null; deleteError = ''"
-            class="text-sm text-gray-500 dark:text-gray-400 px-4 py-2">Annuler</button>
+            class="text-sm text-gray-500 dark:text-gray-400 px-4 py-2">{{ $t('common.cancel') }}</button>
           <button @click="doDelete" :disabled="deleting"
             class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50">
-            {{ deleting ? '…' : 'Confirmer' }}
+            {{ deleting ? $t('common.saving') : $t('common.confirm') }}
           </button>
         </div>
       </div>

@@ -1,26 +1,26 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Configuration</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $t('admin.config.title') }}</h1>
     </div>
 
     <!-- Onglets -->
     <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700 flex-wrap">
-      <button v-for="tab in tabs" :key="tab.key" @click="switchTab(tab.key)"
+      <button v-for="tab in tabs" :key="tab" @click="switchTab(tab)"
         :class="['px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors',
-          activeTab === tab.key
+          activeTab === tab
             ? 'border-blue-600 text-blue-600'
             : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200']">
-        {{ tab.label }}
+        {{ $t('admin.config.tabs.' + tab) }}
       </button>
     </div>
 
     <!-- Contenu -->
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="font-semibold text-gray-800 dark:text-gray-200">{{ currentTab.label }}</h2>
+        <h2 class="font-semibold text-gray-800 dark:text-gray-200">{{ $t('admin.config.tabs.' + activeTab) }}</h2>
         <button @click="openCreate" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700">
-          + Ajouter
+          + {{ $t('admin.config.modal_add') }}
         </button>
       </div>
 
@@ -28,21 +28,21 @@
         <thead>
           <tr class="text-left text-xs text-gray-500 dark:text-gray-400 uppercase border-b dark:border-gray-700">
             <template v-if="isConfigTab">
-              <th class="pb-2 pr-4">Code</th>
-              <th class="pb-2 pr-4">Libellé direct</th>
-              <th v-if="isLinkTypeTab" class="pb-2 pr-4">Libellé inverse</th>
-              <th class="pb-2 pr-4">Couleur</th>
-              <th class="pb-2 pr-4">Actif</th>
-              <th class="pb-2 pr-4">Position</th>
+              <th class="pb-2 pr-4">{{ $t('admin.config.col_code') }}</th>
+              <th class="pb-2 pr-4">{{ $t('admin.config.col_label') }}</th>
+              <th v-if="isLinkTypeTab" class="pb-2 pr-4">{{ $t('admin.config.col_inverse_label') }}</th>
+              <th class="pb-2 pr-4">{{ $t('admin.config.col_color') }}</th>
+              <th class="pb-2 pr-4">{{ $t('admin.config.col_active') }}</th>
+              <th class="pb-2 pr-4">{{ $t('admin.config.col_position') }}</th>
             </template>
             <template v-else-if="isClientTab">
-              <th class="pb-2 pr-4">Nom</th>
-              <th class="pb-2 pr-4">Email contact</th>
-              <th class="pb-2 pr-4">Actif</th>
+              <th class="pb-2 pr-4">{{ $t('admin.config.col_name') }}</th>
+              <th class="pb-2 pr-4">{{ $t('admin.config.col_email') }}</th>
+              <th class="pb-2 pr-4">{{ $t('admin.config.col_active') }}</th>
             </template>
             <template v-else-if="isLabelTab">
-              <th class="pb-2 pr-4">Nom</th>
-              <th class="pb-2 pr-4">Couleur</th>
+              <th class="pb-2 pr-4">{{ $t('admin.config.col_name') }}</th>
+              <th class="pb-2 pr-4">{{ $t('admin.config.col_color') }}</th>
             </template>
             <th class="pb-2"></th>
           </tr>
@@ -58,7 +58,7 @@
                 <span class="ml-1 text-gray-500 text-xs">{{ item.color }}</span>
               </td>
               <td class="py-2.5 pr-4">
-                <span :class="item.active ? 'text-green-600' : 'text-gray-400'">{{ item.active ? 'Oui' : 'Non' }}</span>
+                <span :class="item.active ? 'text-green-600' : 'text-gray-400'">{{ item.active ? $t('common.yes') : $t('common.no') }}</span>
               </td>
               <td class="py-2.5 pr-4 text-gray-500">{{ item.position }}</td>
             </template>
@@ -66,7 +66,7 @@
               <td class="py-2.5 pr-4 font-medium text-gray-800 dark:text-gray-200">{{ item.name }}</td>
               <td class="py-2.5 pr-4 text-gray-500 dark:text-gray-400">{{ item.contactEmail || '—' }}</td>
               <td class="py-2.5 pr-4">
-                <span :class="item.active ? 'text-green-600' : 'text-gray-400'">{{ item.active ? 'Oui' : 'Non' }}</span>
+                <span :class="item.active ? 'text-green-600' : 'text-gray-400'">{{ item.active ? $t('common.yes') : $t('common.no') }}</span>
               </td>
             </template>
             <template v-else-if="isLabelTab">
@@ -77,12 +77,12 @@
               </td>
             </template>
             <td class="py-2.5 text-right space-x-2">
-              <button @click="openEdit(item)" class="text-blue-500 hover:text-blue-700 text-xs">Modifier</button>
-              <button @click="confirmDelete(item)" class="text-red-400 hover:text-red-600 text-xs">Supprimer</button>
+              <button @click="openEdit(item)" class="text-blue-500 hover:text-blue-700 text-xs">{{ $t('common.edit') }}</button>
+              <button @click="confirmDelete(item)" class="text-red-400 hover:text-red-600 text-xs">{{ $t('common.delete') }}</button>
             </td>
           </tr>
           <tr v-if="displayItems.length === 0">
-            <td :colspan="isLinkTypeTab ? 7 : isConfigTab ? 6 : 4" class="py-6 text-center text-gray-400 dark:text-gray-500 italic">Aucune valeur.</td>
+            <td :colspan="isLinkTypeTab ? 7 : isConfigTab ? 6 : 4" class="py-6 text-center text-gray-400 dark:text-gray-500 italic">{{ $t('admin.config.no_values') }}</td>
           </tr>
         </tbody>
       </table>
@@ -91,48 +91,48 @@
     <!-- Modal création / édition -->
     <div v-if="modal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md">
-        <h2 class="text-lg font-bold mb-4 dark:text-gray-100">{{ editingItem ? 'Modifier' : 'Ajouter' }} — {{ currentTab.label }}</h2>
+        <h2 class="text-lg font-bold mb-4 dark:text-gray-100">{{ editingItem ? $t('admin.config.modal_edit') : $t('admin.config.modal_add') }} — {{ $t('admin.config.tabs.' + activeTab) }}</h2>
 
         <!-- Formulaire config value (STATUS, PRIORITY, TYPE, LINK_TYPE) -->
         <div v-if="isConfigTab" class="space-y-3">
           <div v-if="!editingItem">
-            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Code *</label>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_code') }}</label>
             <input v-model="form.code" placeholder="EX: MON_STATUT"
               class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm uppercase dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Sera mis en majuscules, espaces → _</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ $t('admin.config.field_code_hint') }}</p>
           </div>
           <div v-if="isLinkTypeTab" class="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-2">
-            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide mb-1">Paire de libellés</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide mb-1">{{ $t('admin.config.link_labels_section') }}</p>
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Libellé direct *
-                <span class="text-gray-400 dark:text-gray-500 font-normal">(ex : Bloque)</span>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_label_direct') }}
+                <span class="text-gray-400 dark:text-gray-500 font-normal">{{ $t('admin.config.field_label_direct_hint') }}</span>
               </label>
-              <input v-model="form.label" placeholder="ex: Bloque"
+              <input v-model="form.label" :placeholder="$t('admin.config.field_label_direct_hint')"
                 class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Libellé inverse *
-                <span class="text-gray-400 dark:text-gray-500 font-normal">(ex : Bloqué par)</span>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_label_inverse') }}
+                <span class="text-gray-400 dark:text-gray-500 font-normal">{{ $t('admin.config.field_label_inverse_hint') }}</span>
               </label>
-              <input v-model="form.inverseLabel" placeholder="ex: Bloqué par"
+              <input v-model="form.inverseLabel" :placeholder="$t('admin.config.field_label_inverse_hint')"
                 class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
             </div>
           </div>
           <div v-else>
-            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Libellé *</label>
-            <input v-model="form.label" placeholder="Libellé affiché"
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_label') }}</label>
+            <input v-model="form.label" :placeholder="$t('admin.config.field_label_placeholder')"
               class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Couleur</label>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_color') }}</label>
             <ColorPicker v-model="form.color" />
           </div>
           <div class="flex gap-4">
             <label class="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" v-model="form.active" class="rounded" /> Actif
+              <input type="checkbox" v-model="form.active" class="rounded" /> {{ $t('admin.config.field_active') }}
             </label>
             <div class="flex items-center gap-2">
-              <label class="text-xs text-gray-600">Position</label>
+              <label class="text-xs text-gray-600">{{ $t('admin.config.field_position') }}</label>
               <input type="number" v-model.number="form.position" min="0"
                 class="w-16 border rounded px-2 py-1 text-sm" />
             </div>
@@ -142,39 +142,39 @@
         <!-- Formulaire client -->
         <div v-else-if="isClientTab" class="space-y-3">
           <div>
-            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Nom *</label>
-            <input v-model="form.name" placeholder="Nom du client"
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_client_name') }}</label>
+            <input v-model="form.name" :placeholder="$t('admin.config.field_client_name_placeholder')"
               class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Email contact</label>
-            <input v-model="form.contactEmail" type="email" placeholder="contact@client.com"
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_client_email') }}</label>
+            <input v-model="form.contactEmail" type="email" :placeholder="$t('admin.config.field_client_email_placeholder')"
               class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
           </div>
           <label class="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="checkbox" v-model="form.active" class="rounded" /> Actif
+            <input type="checkbox" v-model="form.active" class="rounded" /> {{ $t('admin.config.field_active') }}
           </label>
         </div>
 
         <!-- Formulaire étiquette -->
         <div v-else-if="isLabelTab" class="space-y-3">
           <div>
-            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Nom *</label>
-            <input v-model="form.name" placeholder="ex: urgent"
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_label_name') }}</label>
+            <input v-model="form.name" :placeholder="$t('admin.config.field_label_name_placeholder')"
               class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Couleur</label>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_color') }}</label>
             <ColorPicker v-model="form.color" />
           </div>
         </div>
 
         <p v-if="formError" class="text-sm text-red-600 mt-3">{{ formError }}</p>
         <div class="flex justify-end gap-2 mt-5">
-          <button @click="closeModal" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-4 py-2">Annuler</button>
+          <button @click="closeModal" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-4 py-2">{{ $t('common.cancel') }}</button>
           <button @click="save" :disabled="saving"
             class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-            {{ saving ? '…' : (editingItem ? 'Enregistrer' : 'Créer') }}
+            {{ saving ? $t('common.saving') : (editingItem ? $t('common.save') : $t('common.create')) }}
           </button>
         </div>
       </div>
@@ -183,17 +183,16 @@
     <!-- Modal confirmation suppression -->
     <div v-if="deleteTarget" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm">
-        <h2 class="text-lg font-bold text-red-700 dark:text-red-400 mb-2">Supprimer ?</h2>
+        <h2 class="text-lg font-bold text-red-700 dark:text-red-400 mb-2">{{ $t('admin.config.delete_title') }}</h2>
         <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
-          Supprimer <strong>{{ deleteTarget.label || deleteTarget.name }}</strong> ?
-          Cette action est irréversible et sera refusée si des tickets utilisent encore cette valeur.
+          {{ $t('admin.config.delete_body', { name: deleteTarget.label || deleteTarget.name }) }}
         </p>
         <p v-if="deleteError" class="text-sm text-red-600 mb-3">{{ deleteError }}</p>
         <div class="flex justify-end gap-2">
-          <button @click="deleteTarget = null; deleteError = ''" class="text-sm text-gray-500 dark:text-gray-400 px-4 py-2">Annuler</button>
+          <button @click="deleteTarget = null; deleteError = ''" class="text-sm text-gray-500 dark:text-gray-400 px-4 py-2">{{ $t('common.cancel') }}</button>
           <button @click="doDelete" :disabled="deleting"
             class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50">
-            {{ deleting ? '…' : 'Confirmer' }}
+            {{ deleting ? $t('common.saving') : $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -227,17 +226,8 @@ const ColorPicker = {
 
 const config = useConfigStore()
 
-const tabs = [
-  { key: 'STATUS',    label: 'Statuts' },
-  { key: 'PRIORITY',  label: 'Priorités' },
-  { key: 'TYPE',      label: 'Types' },
-  { key: 'LINK_TYPE', label: 'Types de liens' },
-  { key: 'PROJECT_ROLE', label: 'Rôles projet' },
-  { key: 'CLIENT',    label: 'Clients' },
-  { key: 'LABEL',     label: 'Étiquettes' },
-]
+const tabs = ['STATUS', 'PRIORITY', 'TYPE', 'LINK_TYPE', 'PROJECT_ROLE', 'CLIENT', 'LABEL']
 const activeTab = ref('STATUS')
-const currentTab = computed(() => tabs.find(t => t.key === activeTab.value))
 
 const isConfigTab   = computed(() => ['STATUS', 'PRIORITY', 'TYPE', 'LINK_TYPE', 'PROJECT_ROLE'].includes(activeTab.value))
 const isLinkTypeTab = computed(() => activeTab.value === 'LINK_TYPE')

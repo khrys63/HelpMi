@@ -5,6 +5,7 @@ import com.helpmi.domain.User;
 import com.helpmi.domain.UserProject;
 import com.helpmi.domain.enums.UserRole;
 import com.helpmi.dto.request.AssignOrganizationRequest;
+import com.helpmi.dto.request.UpdateLocaleRequest;
 import com.helpmi.dto.request.UpdateThemeRequest;
 import com.helpmi.dto.request.UpdateUserProjectsRequest;
 import com.helpmi.dto.request.UpdateUserRequest;
@@ -126,6 +127,13 @@ public class UserService {
     public UserResponse updateTheme(UpdateThemeRequest req) {
         User user = currentUserService.getCurrentUser();
         user.setTheme(req.theme());
+        return UserResponse.from(userRepository.save(user));
+    }
+
+    @Transactional
+    public UserResponse updateLocale(UpdateLocaleRequest req) {
+        User user = currentUserService.getCurrentUser();
+        user.setLocale(req.locale());
         return UserResponse.from(userRepository.save(user));
     }
 

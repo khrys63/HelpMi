@@ -1,12 +1,12 @@
 <template>
   <div>
-    <div v-if="loading" class="text-center py-12 text-gray-400">Chargement…</div>
+    <div v-if="loading" class="text-center py-12 text-gray-400">{{ $t('common.loading') }}</div>
     <template v-else>
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
         <div>
           <div class="flex items-center gap-2 mb-1">
-            <router-link to="/projects" class="text-sm text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400">Projets</router-link>
+            <router-link to="/projects" class="text-sm text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('projects.title') }}</router-link>
             <span class="text-gray-300 dark:text-gray-600">/</span>
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ project.name }}</span>
           </div>
@@ -17,7 +17,7 @@
         </div>
         <router-link :to="`/projects/${project.id}/tickets/new`"
           class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
-          + Nouveau ticket
+          {{ $t('tickets.new') }}
         </router-link>
       </div>
 
@@ -30,7 +30,7 @@
               selectedStatuses.length < config.statuses.length
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                 : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300']">
-            Statuts
+            {{ $t('tickets.filter_statuses') }}
             <span v-if="selectedStatuses.length < config.statuses.length"
               class="bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-medium">
               {{ selectedStatuses.length }}
@@ -56,7 +56,7 @@
               selectedPriorities.length < config.priorities.length
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                 : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300']">
-            Priorités
+            {{ $t('tickets.filter_priorities') }}
             <span v-if="selectedPriorities.length < config.priorities.length"
               class="bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-medium">
               {{ selectedPriorities.length }}
@@ -82,7 +82,7 @@
               selectedTypes.length < config.types.length
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                 : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300']">
-            Types
+            {{ $t('tickets.filter_types') }}
             <span v-if="selectedTypes.length < config.types.length"
               class="bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-medium">
               {{ selectedTypes.length }}
@@ -103,7 +103,7 @@
       </div>
 
       <!-- Liste tickets -->
-      <div v-if="tickets.length === 0" class="text-center py-12 text-gray-400 dark:text-gray-500">Aucun ticket.</div>
+      <div v-if="tickets.length === 0" class="text-center py-12 text-gray-400 dark:text-gray-500">{{ $t('tickets.no_tickets') }}</div>
       <div v-else class="space-y-2">
         <router-link v-for="t in tickets" :key="t.id"
           :to="`/projects/${project.id}/tickets/${t.id}`"

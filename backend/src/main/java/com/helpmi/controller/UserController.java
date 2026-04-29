@@ -1,5 +1,6 @@
 package com.helpmi.controller;
 
+import com.helpmi.dto.request.UpdateLocaleRequest;
 import com.helpmi.dto.request.UpdateThemeRequest;
 import com.helpmi.dto.response.UserResponse;
 import com.helpmi.service.UserService;
@@ -29,5 +30,10 @@ public class UserController {
     @PatchMapping("/me/theme")
     public UserResponse updateTheme(@Valid @RequestBody UpdateThemeRequest req) {
         return userService.updateTheme(req);
+    }
+
+    @PatchMapping("/me/locale")
+    public UserResponse updateLocale(@Valid @RequestBody UpdateLocaleRequest req) {
+        return userService.updateLocale(req);
     }
 }

@@ -6,25 +6,25 @@
         HelpMi
       </router-link>
       <div class="flex items-center gap-4">
-        <router-link to="/projects" class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Projets</router-link>
+        <router-link to="/projects" class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.projects') }}</router-link>
         <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/users"
-          class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Utilisateurs</router-link>
+          class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.users') }}</router-link>
         <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/organizations"
-          class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Organisations</router-link>
+          class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.organizations') }}</router-link>
         <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/config"
-          class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Configuration</router-link>
-        <button @click="theme.toggle()" :title="theme.current === 'dark' ? 'Passer en clair' : 'Passer en sombre'"
+          class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.config') }}</router-link>
+        <button @click="theme.toggle()" :title="$t(theme.current === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')"
           class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 transition-colors text-lg leading-none">
           {{ theme.current === 'dark' ? '☀️' : '🌙' }}
         </button>
         <div v-if="auth.user" class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
           <router-link to="/profile"
             class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-medium text-xs hover:bg-blue-700 transition-colors"
-            :title="`${auth.user.firstName} ${auth.user.lastName} — Profil & tokens API`">
+            :title="`${auth.user.firstName} ${auth.user.lastName}`">
             {{ initials }}
           </router-link>
           <button @click="auth.logout()"
-            class="ml-2 text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400">Déconnexion</button>
+            class="ml-2 text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400">{{ $t('nav.logout') }}</button>
         </div>
       </div>
     </div>

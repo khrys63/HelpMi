@@ -60,6 +60,10 @@ public class User {
     @Builder.Default
     private String theme = "light";
 
+    @Column(nullable = false)
+    @Builder.Default
+    private String locale = "fr";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;

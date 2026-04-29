@@ -1,10 +1,10 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Utilisateurs</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $t('admin.users.title') }}</h1>
       <span v-if="pendingCount > 0"
         class="bg-amber-100 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">
-        {{ pendingCount }} en attente d'affectation
+        {{ $t('admin.users.pending_badge', { count: pendingCount }) }}
       </span>
     </div>
 
@@ -13,11 +13,11 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="text-left text-xs text-gray-500 dark:text-gray-400 uppercase border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-            <th class="px-4 py-3">Nom</th>
-            <th class="px-4 py-3">Email</th>
-            <th class="px-4 py-3">Rôle</th>
-            <th class="px-4 py-3">Organisation</th>
-            <th class="px-4 py-3">Statut</th>
+            <th class="px-4 py-3">{{ $t('admin.users.col_name') }}</th>
+            <th class="px-4 py-3">{{ $t('admin.users.col_email') }}</th>
+            <th class="px-4 py-3">{{ $t('admin.users.col_role') }}</th>
+            <th class="px-4 py-3">{{ $t('admin.users.col_org') }}</th>
+            <th class="px-4 py-3">{{ $t('admin.users.col_status') }}</th>
             <th class="px-4 py-3"></th>
           </tr>
         </thead>
@@ -26,7 +26,7 @@
             :class="['hover:bg-gray-50 dark:hover:bg-gray-700/50', isPending(u) ? 'bg-amber-50 dark:bg-amber-900/20' : '']">
             <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
               {{ u.firstName }} {{ u.lastName }}
-              <span v-if="u.id === currentUserId" class="ml-1 text-xs text-gray-400">(vous)</span>
+              <span v-if="u.id === currentUserId" class="ml-1 text-xs text-gray-400">{{ $t('admin.users.you') }}</span>
             </td>
             <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ u.email }}</td>
             <td class="px-4 py-3">
@@ -35,21 +35,21 @@
             <td class="px-4 py-3">
               <span v-if="u.organizationName" class="text-gray-700 dark:text-gray-300">{{ u.organizationName }}</span>
               <span v-else-if="u.role !== 'ADMIN'"
-                class="text-amber-600 dark:text-amber-400 text-xs font-medium">Sans organisation</span>
+                class="text-amber-600 dark:text-amber-400 text-xs font-medium">{{ $t('admin.users.no_org') }}</span>
               <span v-else class="text-gray-400 dark:text-gray-500 text-xs">—</span>
             </td>
             <td class="px-4 py-3">
               <span :class="u.active ? 'text-green-600' : 'text-gray-400'">
-                {{ u.active ? 'Actif' : 'Inactif' }}
+                {{ u.active ? $t('common.active') : $t('common.inactive') }}
               </span>
             </td>
             <td class="px-4 py-3 text-right">
               <button v-if="u.id !== currentUserId" @click="openEdit(u)"
-                class="text-blue-500 hover:text-blue-700 text-xs font-medium">Modifier</button>
+                class="text-blue-500 hover:text-blue-700 text-xs font-medium">{{ $t('common.edit') }}</button>
             </td>
           </tr>
           <tr v-if="users.length === 0">
-            <td colspan="6" class="px-4 py-8 text-center text-gray-400">Aucun utilisateur.</td>
+            <td colspan="6" class="px-4 py-8 text-center text-gray-400">{{ $t('admin.orgs.no_users') }}</td>
           </tr>
         </tbody>
       </table>
@@ -58,15 +58,15 @@
     <!-- Edit modal -->
     <div v-if="editing" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <h2 class="text-lg font-bold mb-1 dark:text-gray-100">Modifier l'utilisateur</h2>
+        <h2 class="text-lg font-bold mb-1 dark:text-gray-100">{{ $t('admin.users.edit_title') }}</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">{{ editing.firstName }} {{ editing.lastName }}</p>
 
         <div class="space-y-5">
           <!-- Compte -->
           <div class="space-y-3">
-            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Compte</p>
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ $t('admin.users.section_account') }}</p>
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Rôle</label>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.users.field_role') }}</label>
               <select v-model="form.role" class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100">
                 <option value="ADMIN">ADMIN</option>
                 <option value="USER">USER</option>
@@ -74,18 +74,18 @@
             </div>
             <label class="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" v-model="form.active" class="rounded" />
-              Compte actif
+              {{ $t('admin.users.field_active') }}
             </label>
           </div>
 
           <!-- Organisation -->
           <div v-if="form.role !== 'ADMIN'" class="space-y-3">
-            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Organisation</p>
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ $t('admin.users.section_org') }}</p>
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Organisation</label>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.users.field_org') }}</label>
               <select v-model="form.organizationId" @change="onOrgChange(form.organizationId)"
                 class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100">
-                <option :value="null">— Sans organisation —</option>
+                <option :value="null">{{ $t('admin.users.org_none') }}</option>
                 <option v-for="org in orgs" :key="org.id" :value="org.id">{{ org.name }}</option>
               </select>
             </div>
@@ -93,10 +93,10 @@
 
           <!-- Projets -->
           <div v-if="form.role !== 'ADMIN' && form.organizationId" class="space-y-3">
-            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Projets accessibles</p>
-            <div v-if="loadingOrgProjects" class="text-xs text-gray-400">Chargement…</div>
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ $t('admin.users.section_projects') }}</p>
+            <div v-if="loadingOrgProjects" class="text-xs text-gray-400">{{ $t('common.loading') }}</div>
             <div v-else-if="orgProjects.length === 0" class="text-xs text-gray-400 dark:text-gray-500 italic">
-              Aucun projet rattaché à cette organisation.
+              {{ $t('admin.users.no_org_projects') }}
             </div>
             <div v-else class="space-y-1 max-h-56 overflow-y-auto border dark:border-gray-600 rounded-lg p-3 dark:bg-gray-700/30">
               <div v-for="p in orgProjects" :key="p.id"
@@ -118,7 +118,7 @@
               </div>
             </div>
             <p class="text-xs text-gray-400 dark:text-gray-500">
-              {{ form.projectEntries.length }} projet(s) sélectionné(s)
+              {{ $t('admin.users.projects_count', { count: form.projectEntries.length }) }}
             </p>
           </div>
         </div>
@@ -126,10 +126,10 @@
         <p v-if="editError" class="text-sm text-red-600 mt-4">{{ editError }}</p>
         <div class="flex justify-end gap-2 mt-5">
           <button @click="editing = null"
-            class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-4 py-2">Annuler</button>
+            class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-4 py-2">{{ $t('common.cancel') }}</button>
           <button @click="saveUser" :disabled="saving"
             class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-            {{ saving ? '…' : 'Enregistrer' }}
+            {{ saving ? $t('common.saving') : $t('common.save') }}
           </button>
         </div>
       </div>
