@@ -7,17 +7,17 @@
             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
-      <h1 class="text-xl font-bold text-gray-900 mb-2">Compte en attente d'activation</h1>
-      <p class="text-gray-500 text-sm leading-relaxed">
+      <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Compte en attente d'activation</h1>
+      <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
         Votre compte a bien été créé, mais aucune organisation ne vous a encore été attribuée.<br>
         Contactez votre administrateur pour obtenir l'accès aux projets.
       </p>
-      <p class="mt-4 text-xs text-gray-400">Connecté en tant que
+      <p class="mt-4 text-xs text-gray-400 dark:text-gray-500">Connecté en tant que
         <strong>{{ auth.user?.firstName }} {{ auth.user?.lastName }}</strong>
         ({{ auth.user?.email }})
       </p>
       <button @click="auth.logout()"
-        class="mt-6 text-sm text-gray-500 hover:text-red-600 underline">
+        class="mt-6 text-sm text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 underline">
         Se déconnecter
       </button>
     </div>

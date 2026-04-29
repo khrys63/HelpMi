@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
     <Navbar />
     <main class="max-w-7xl mx-auto px-4 py-6">
       <router-view :key="$route.fullPath" />

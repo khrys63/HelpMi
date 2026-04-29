@@ -1,11 +1,11 @@
 package com.helpmi.controller;
 
+import com.helpmi.dto.request.UpdateThemeRequest;
 import com.helpmi.dto.response.UserResponse;
 import com.helpmi.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -24,5 +24,10 @@ public class UserController {
     @GetMapping("/me")
     public UserResponse getMe() {
         return userService.getCurrentUser();
+    }
+
+    @PatchMapping("/me/theme")
+    public UserResponse updateTheme(@Valid @RequestBody UpdateThemeRequest req) {
+        return userService.updateTheme(req);
     }
 }

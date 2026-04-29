@@ -4,12 +4,12 @@
     <!-- Breadcrumb + actions -->
     <div class="space-y-2">
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2 text-sm text-gray-500">
-          <router-link to="/projects" class="hover:text-blue-600">Projets</router-link>
+        <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <router-link to="/projects" class="hover:text-blue-600 dark:hover:text-blue-400">Projets</router-link>
           <span>/</span>
-          <router-link :to="`/projects/${ticket.projectId}`" class="hover:text-blue-600">{{ ticket.projectKey }}</router-link>
+          <router-link :to="`/projects/${ticket.projectId}`" class="hover:text-blue-600 dark:hover:text-blue-400">{{ ticket.projectKey }}</router-link>
           <span>/</span>
-          <span class="text-gray-700 font-mono">{{ ticket.reference }}</span>
+          <span class="text-gray-700 dark:text-gray-300 font-mono">{{ ticket.reference }}</span>
         </div>
         <div class="flex items-center gap-2">
 
@@ -25,24 +25,24 @@
               </svg>
             </button>
             <div v-if="showStatusMenu && availableTransitions.length"
-              class="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1 min-w-36 overflow-hidden">
+              class="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-20 py-1 min-w-36 overflow-hidden">
               <button v-for="t in availableTransitions" :key="t.status"
                 @click.stop="applyTransition(t.status)"
-                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 {{ t.label }}
               </button>
             </div>
           </div>
 
           <button @click="openMoveForm"
-            class="inline-flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors">
+            class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0-4-4m4 4-4 4m0 6H4m0 0 4 4m-4-4 4-4"/>
             </svg>
             Déplacer
           </button>
           <button @click="cloneTicket" :disabled="cloning"
-            class="inline-flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+            class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -53,40 +53,40 @@
       </div>
 
       <!-- Panneau déplacement -->
-      <div v-if="showMoveForm" class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-        <span class="text-sm text-gray-600 shrink-0">Déplacer vers :</span>
-        <select v-model="moveTargetProjectId" class="flex-1 border rounded-lg px-3 py-1.5 text-sm">
+      <div v-if="showMoveForm" class="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3">
+        <span class="text-sm text-gray-600 dark:text-gray-300 shrink-0">Déplacer vers :</span>
+        <select v-model="moveTargetProjectId" class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
           <option v-for="p in moveProjects" :key="p.id" :value="p.id">{{ p.key }} — {{ p.name }}</option>
         </select>
         <button @click="confirmMove" :disabled="!moveTargetProjectId || moving"
           class="bg-blue-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium shrink-0">
           {{ moving ? 'Déplacement…' : 'Confirmer' }}
         </button>
-        <button @click="showMoveForm = false" class="text-sm text-gray-500 hover:text-gray-700 shrink-0">Annuler</button>
+        <button @click="showMoveForm = false" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 shrink-0">Annuler</button>
       </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Contenu principal -->
       <div class="lg:col-span-2 space-y-5">
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
 
           <!-- Titre éditable -->
           <div class="mb-4 group">
             <div v-if="!editingTitle" @click="startEditTitle"
-              class="text-xl font-bold text-gray-900 cursor-text rounded px-1 -mx-1 hover:bg-gray-50 transition-colors">
+              class="text-xl font-bold text-gray-900 dark:text-gray-100 cursor-text rounded px-1 -mx-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
               {{ ticket.title }}
             </div>
             <div v-else class="space-y-2">
               <input v-model="editTitle" ref="titleInput"
                 @keydown.enter="saveTitle" @keydown.escape="cancelTitle"
-                class="w-full text-xl font-bold text-gray-900 border border-blue-400 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                class="w-full text-xl font-bold text-gray-900 dark:text-gray-100 border border-blue-400 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700" />
               <div class="flex gap-2">
                 <button @click="saveTitle" :disabled="saving"
                   class="bg-blue-600 text-white text-xs px-3 py-1 rounded-md hover:bg-blue-700 disabled:opacity-50">
                   {{ saving ? '…' : 'Enregistrer' }}
                 </button>
-                <button @click="cancelTitle" class="text-xs text-gray-500 hover:text-gray-700 px-3 py-1">Annuler</button>
+                <button @click="cancelTitle" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1">Annuler</button>
               </div>
             </div>
           </div>
@@ -94,78 +94,78 @@
           <!-- Description éditable -->
           <div class="group">
             <div v-if="!editingDescription" @click="startEditDescription"
-              class="cursor-text rounded px-1 -mx-1 hover:bg-gray-50 transition-colors min-h-[2rem]">
-              <p v-if="ticket.description" class="text-gray-700 text-sm whitespace-pre-wrap">{{ ticket.description }}</p>
-              <p v-else class="text-gray-400 text-sm italic">Cliquer pour ajouter une description…</p>
+              class="cursor-text rounded px-1 -mx-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors min-h-[2rem]">
+              <p v-if="ticket.description" class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">{{ ticket.description }}</p>
+              <p v-else class="text-gray-400 dark:text-gray-500 text-sm italic">Cliquer pour ajouter une description…</p>
             </div>
             <div v-else class="space-y-2">
               <textarea v-model="editDescription" ref="descriptionInput" rows="6"
                 @keydown.escape="cancelDescription"
-                class="w-full text-sm text-gray-700 border border-blue-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                class="w-full text-sm text-gray-700 dark:text-gray-300 border border-blue-400 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700" />
               <div class="flex gap-2">
                 <button @click="saveDescription" :disabled="saving"
                   class="bg-blue-600 text-white text-xs px-3 py-1 rounded-md hover:bg-blue-700 disabled:opacity-50">
                   {{ saving ? '…' : 'Enregistrer' }}
                 </button>
-                <button @click="cancelDescription" class="text-xs text-gray-500 hover:text-gray-700 px-3 py-1">Annuler</button>
+                <button @click="cancelDescription" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1">Annuler</button>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Pièces jointes -->
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 class="font-semibold text-gray-800 mb-3">Pièces jointes ({{ ticket.attachments?.length || 0 }})</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h2 class="font-semibold text-gray-800 dark:text-gray-200 mb-3">Pièces jointes ({{ ticket.attachments?.length || 0 }})</h2>
           <ul v-if="ticket.attachments?.length" class="space-y-2 mb-4">
             <li v-for="a in ticket.attachments" :key="a.id"
-              class="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
-              <a :href="a.downloadUrl" target="_blank" class="text-blue-600 hover:underline truncate">{{ a.fileName }}</a>
-              <span class="text-gray-400 text-xs shrink-0 ml-2">{{ formatSize(a.size) }}</span>
+              class="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2">
+              <a :href="a.downloadUrl" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline truncate">{{ a.fileName }}</a>
+              <span class="text-gray-400 dark:text-gray-500 text-xs shrink-0 ml-2">{{ formatSize(a.size) }}</span>
             </li>
           </ul>
-          <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800">
+          <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
             <input type="file" class="hidden" @change="uploadFile" :disabled="uploading" />
             {{ uploading ? 'Envoi…' : '+ Ajouter un fichier' }}
           </label>
         </div>
 
         <!-- Liens -->
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="font-semibold text-gray-800">Liens ({{ ticket.links?.length || 0 }})</h2>
+            <h2 class="font-semibold text-gray-800 dark:text-gray-200">Liens ({{ ticket.links?.length || 0 }})</h2>
             <button @click="showLinkForm = !showLinkForm"
-              class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+              class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
               {{ showLinkForm ? 'Annuler' : '+ Ajouter un lien' }}
             </button>
           </div>
 
           <!-- Formulaire ajout -->
-          <div v-if="showLinkForm" class="mb-4 p-3 bg-gray-50 rounded-lg space-y-3">
+          <div v-if="showLinkForm" class="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-3">
             <div class="relative">
               <input v-model="linkSearch" @input="onLinkSearch"
                 placeholder="Référence ou titre du ticket…"
                 autocomplete="off"
-                class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
               <ul v-if="linkResults.length"
-                class="absolute top-full left-0 right-0 bg-white border rounded-lg shadow-lg z-20 max-h-52 overflow-y-auto">
+                class="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-lg z-20 max-h-52 overflow-y-auto">
                 <li v-for="t in linkResults" :key="t.id">
                   <button @click="selectLinkTarget(t)"
-                    class="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm">
-                    <span class="font-mono text-xs text-gray-400 shrink-0">{{ t.reference }}</span>
-                    <span class="truncate text-gray-800">{{ t.title }}</span>
-                    <span class="ml-auto text-xs text-gray-400 shrink-0">{{ t.projectKey }}</span>
+                    class="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-sm">
+                    <span class="font-mono text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ t.reference }}</span>
+                    <span class="truncate text-gray-800 dark:text-gray-200">{{ t.title }}</span>
+                    <span class="ml-auto text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ t.projectKey }}</span>
                   </button>
                 </li>
               </ul>
             </div>
 
-            <div v-if="linkTarget" class="flex items-center gap-2 text-sm bg-blue-50 rounded-lg px-3 py-1.5">
-              <span class="font-mono text-xs text-blue-500">{{ linkTarget.reference }}</span>
-              <span class="text-gray-700 truncate">{{ linkTarget.title }}</span>
+            <div v-if="linkTarget" class="flex items-center gap-2 text-sm bg-blue-50 dark:bg-blue-900/30 rounded-lg px-3 py-1.5">
+              <span class="font-mono text-xs text-blue-500 dark:text-blue-400">{{ linkTarget.reference }}</span>
+              <span class="text-gray-700 dark:text-gray-300 truncate">{{ linkTarget.title }}</span>
             </div>
 
             <div class="flex gap-2">
-              <select v-model="linkType" class="flex-1 border rounded-lg px-3 py-1.5 text-sm">
+              <select v-model="linkType" class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
                 <option v-for="lt in config.linkTypes" :key="lt.code" :value="lt.code">{{ lt.label }}</option>
               </select>
               <button @click="addLink" :disabled="!linkTarget || linkAdding"
@@ -179,43 +179,43 @@
           <div v-if="ticket.links?.length" class="space-y-1.5">
             <div v-for="link in ticket.links" :key="link.id"
               class="flex items-center gap-3 text-sm py-1">
-              <span class="text-xs text-gray-400 w-24 shrink-0 text-right italic">
+              <span class="text-xs text-gray-400 dark:text-gray-500 w-24 shrink-0 text-right italic">
                 {{ linkLabel(link.linkType, link.direction) }}
               </span>
               <router-link
                 :to="`/projects/${link.linkedTicket.projectId}/tickets/${link.linkedTicket.id}`"
-                class="flex items-center gap-1.5 flex-1 min-w-0 hover:text-blue-600">
-                <span class="font-mono text-xs text-gray-400 shrink-0">{{ link.linkedTicket.reference }}</span>
+                class="flex items-center gap-1.5 flex-1 min-w-0 hover:text-blue-600 dark:hover:text-blue-400 dark:text-gray-300">
+                <span class="font-mono text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ link.linkedTicket.reference }}</span>
                 <span class="truncate">{{ link.linkedTicket.title }}</span>
               </router-link>
               <button @click="removeLink(link.id)"
-                class="text-gray-300 hover:text-red-500 text-base leading-none shrink-0">✕</button>
+                class="text-gray-300 dark:text-gray-600 hover:text-red-500 text-base leading-none shrink-0">✕</button>
             </div>
           </div>
-          <p v-else-if="!showLinkForm" class="text-sm text-gray-400 italic">Aucun lien.</p>
+          <p v-else-if="!showLinkForm" class="text-sm text-gray-400 dark:text-gray-500 italic">Aucun lien.</p>
         </div>
 
         <!-- Commentaires -->
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 class="font-semibold text-gray-800 mb-4">Commentaires ({{ ticket.comments?.length || 0 }})</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h2 class="font-semibold text-gray-800 dark:text-gray-200 mb-4">Commentaires ({{ ticket.comments?.length || 0 }})</h2>
           <div v-if="ticket.comments?.length" class="space-y-4 mb-5">
             <div v-for="c in ticket.comments" :key="c.id" class="flex gap-3">
-              <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0">
+              <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center text-xs font-bold shrink-0">
                 {{ (c.author?.firstName?.[0] || '?') + (c.author?.lastName?.[0] || '') }}
               </div>
               <div class="flex-1">
                 <div class="flex items-baseline gap-2 mb-1">
-                  <span class="text-sm font-medium text-gray-800">{{ c.author?.firstName }} {{ c.author?.lastName }}</span>
-                  <span class="text-xs text-gray-400">{{ formatDate(c.createdAt) }}</span>
-                  <span v-if="c.edited" class="text-xs text-gray-400">(modifié)</span>
+                  <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ c.author?.firstName }} {{ c.author?.lastName }}</span>
+                  <span class="text-xs text-gray-400 dark:text-gray-500">{{ formatDate(c.createdAt) }}</span>
+                  <span v-if="c.edited" class="text-xs text-gray-400 dark:text-gray-500">(modifié)</span>
                 </div>
-                <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ c.body }}</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ c.body }}</p>
               </div>
             </div>
           </div>
           <div class="flex gap-3">
             <textarea v-model="newComment" rows="2" placeholder="Ajouter un commentaire…"
-              class="flex-1 border rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 outline-none" />
+              class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
             <button @click="addComment" :disabled="!newComment.trim() || commentSaving"
               class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 self-end">
               Envoyer
@@ -226,72 +226,72 @@
 
       <!-- Sidebar -->
       <div class="space-y-4">
-        <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
 
           <!-- Statut -->
           <div>
-            <p class="text-xs font-medium text-gray-500 uppercase mb-2">Statut</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Statut</p>
             <StatusBadge :status="ticket.status" />
           </div>
 
           <!-- Priorité -->
           <div>
-            <p class="text-xs font-medium text-gray-500 uppercase mb-2">Priorité</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Priorité</p>
             <select v-model="ticket.priority" @change="updateField('priority', ticket.priority)"
-              class="w-full border rounded-lg px-3 py-1.5 text-sm">
+              class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
               <option v-for="p in config.priorities" :key="p.code" :value="p.code">{{ p.label }}</option>
             </select>
           </div>
 
           <!-- Type -->
           <div>
-            <p class="text-xs font-medium text-gray-500 uppercase mb-2">Type</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Type</p>
             <select v-model="ticket.type" @change="updateField('type', ticket.type)"
-              class="w-full border rounded-lg px-3 py-1.5 text-sm">
+              class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
               <option v-for="t in config.types" :key="t.code" :value="t.code">{{ t.label }}</option>
             </select>
           </div>
 
           <!-- Échéance -->
           <div>
-            <p class="text-xs font-medium text-gray-500 uppercase mb-1">Échéance</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Échéance</p>
             <div class="flex items-center gap-1">
               <input type="date" v-model="dueDateInput" @change="saveDueDate"
-                class="flex-1 border rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100" />
               <button v-if="dueDateInput" @click="clearDueDate"
-                class="text-gray-300 hover:text-red-500 text-base leading-none shrink-0 px-1">✕</button>
+                class="text-gray-300 dark:text-gray-600 hover:text-red-500 text-base leading-none shrink-0 px-1">✕</button>
             </div>
           </div>
 
           <!-- Reporter -->
           <div>
-            <p class="text-xs font-medium text-gray-500 uppercase mb-1">Rapporteur</p>
-            <p class="text-sm text-gray-700">{{ ticket.reporter?.firstName }} {{ ticket.reporter?.lastName }}</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Rapporteur</p>
+            <p class="text-sm text-gray-700 dark:text-gray-300">{{ ticket.reporter?.firstName }} {{ ticket.reporter?.lastName }}</p>
           </div>
 
           <!-- Assigné -->
           <div>
-            <p class="text-xs font-medium text-gray-500 uppercase mb-1">Assigné à</p>
-            <select v-model="assigneeId" @change="reassign" class="w-full border rounded-lg px-3 py-1.5 text-sm">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Assigné à</p>
+            <select v-model="assigneeId" @change="reassign" class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
               <option value="">Non assigné</option>
               <option v-for="u in users" :key="u.id" :value="u.id">{{ u.firstName }} {{ u.lastName }}</option>
             </select>
           </div>
 
           <!-- Clients -->
-          <div class="pt-2 border-t">
-            <p class="text-xs font-medium text-gray-500 uppercase mb-2">Clients</p>
+          <div class="pt-2 border-t dark:border-gray-700">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Clients</p>
             <div class="flex flex-wrap gap-1 mb-2">
               <span v-for="c in ticket.clients" :key="c.id"
-                class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs px-2 py-0.5 rounded-full">
+                class="inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs px-2 py-0.5 rounded-full">
                 {{ c.name }}
                 <button @click="removeClient(c.id)" class="text-indigo-400 hover:text-indigo-700 leading-none">✕</button>
               </span>
-              <span v-if="!ticket.clients?.length" class="text-xs text-gray-400 italic">Aucun</span>
+              <span v-if="!ticket.clients?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">Aucun</span>
             </div>
             <div class="relative">
               <select @change="addClient($event.target.value); $event.target.value = ''"
-                class="w-full border rounded-lg px-3 py-1.5 text-sm text-gray-600">
+                class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 dark:bg-gray-700">
                 <option value="">+ Ajouter un client…</option>
                 <option v-for="c in availableClients" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
@@ -299,28 +299,28 @@
           </div>
 
           <!-- Étiquettes -->
-          <div class="pt-2 border-t">
-            <p class="text-xs font-medium text-gray-500 uppercase mb-2">Étiquettes</p>
+          <div class="pt-2 border-t dark:border-gray-700">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Étiquettes</p>
             <div class="flex flex-wrap gap-1 mb-2">
               <span v-for="l in ticket.labels" :key="l.id"
                 :class="['inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full', labelBadgeClass(l.color)]">
                 {{ l.name }}
                 <button @click="removeLabel(l.id)" class="opacity-60 hover:opacity-100 leading-none">✕</button>
               </span>
-              <span v-if="!ticket.labels?.length" class="text-xs text-gray-400 italic">Aucune</span>
+              <span v-if="!ticket.labels?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">Aucune</span>
             </div>
             <div class="relative">
               <input v-model="labelInput" @input="onLabelInput" @keydown.enter.prevent="confirmLabelInput"
                 @blur="hideSuggestionsDelayed"
                 placeholder="Rechercher ou créer…"
-                class="w-full border rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
               <ul v-if="labelSuggestions.length"
-                class="absolute top-full left-0 right-0 bg-white border rounded-lg shadow-lg z-20 max-h-40 overflow-y-auto">
+                class="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-lg z-20 max-h-40 overflow-y-auto">
                 <li v-for="s in labelSuggestions" :key="s.id ?? s.name">
                   <button @mousedown.prevent="selectLabel(s)"
-                    class="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm">
+                    class="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-sm">
                     <span v-if="!s.create" :class="['w-2.5 h-2.5 rounded-full shrink-0', dotClass(s.color)]"></span>
-                    <span :class="s.create ? 'text-blue-600 italic' : 'text-gray-800'">
+                    <span :class="s.create ? 'text-blue-600 dark:text-blue-400 italic' : 'text-gray-800 dark:text-gray-200'">
                       {{ s.create ? `Créer "${s.name}"` : s.name }}
                     </span>
                   </button>
@@ -330,23 +330,23 @@
           </div>
 
           <!-- Dates -->
-          <div class="text-xs text-gray-400 space-y-1 pt-2 border-t">
+          <div class="text-xs text-gray-400 dark:text-gray-500 space-y-1 pt-2 border-t dark:border-gray-700">
             <p>Créé le {{ formatDate(ticket.createdAt) }}</p>
             <p>Modifié le {{ formatDate(ticket.updatedAt) }}</p>
             <p v-if="ticket.closedAt">Clôturé le {{ formatDate(ticket.closedAt) }}</p>
           </div>
 
           <!-- Suppression (admin uniquement) -->
-          <div v-if="isAdmin" class="pt-2 border-t">
+          <div v-if="isAdmin" class="pt-2 border-t dark:border-gray-700">
             <div v-if="!confirmingDelete">
               <button @click="confirmingDelete = true"
-                class="w-full text-sm text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg px-3 py-1.5 text-left transition-colors">
+                class="w-full text-sm text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg px-3 py-1.5 text-left transition-colors">
                 Supprimer ce ticket…
               </button>
             </div>
-            <div v-else class="bg-red-50 border border-red-200 rounded-lg p-3 space-y-3">
-              <p class="text-sm font-medium text-red-800">Supprimer {{ ticket.reference }} ?</p>
-              <p class="text-xs text-red-600">
+            <div v-else class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 space-y-3">
+              <p class="text-sm font-medium text-red-800 dark:text-red-300">Supprimer {{ ticket.reference }} ?</p>
+              <p class="text-xs text-red-600 dark:text-red-400">
                 Action irréversible. La référence <strong>{{ ticket.reference }}</strong> ne sera pas réattribuée.
               </p>
               <div class="flex gap-2">
@@ -355,7 +355,7 @@
                   {{ deleting ? 'Suppression…' : 'Confirmer' }}
                 </button>
                 <button @click="confirmingDelete = false"
-                  class="flex-1 text-xs text-gray-600 hover:text-gray-900 px-3 py-1.5 border rounded-md">
+                  class="flex-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-3 py-1.5 border dark:border-gray-600 rounded-md">
                   Annuler
                 </button>
               </div>

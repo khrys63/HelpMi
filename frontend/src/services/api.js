@@ -65,7 +65,8 @@ export const attachmentsApi = {
 export const usersApi = {
   list: () => api.get('/users'),
   me: () => api.get('/users/me'),
-  assignable: projectId => api.get(`/projects/${projectId}/assignable-users`)
+  assignable: projectId => api.get(`/projects/${projectId}/assignable-users`),
+  updateTheme: theme => api.patch('/users/me/theme', { theme })
 }
 
 // Personal tokens

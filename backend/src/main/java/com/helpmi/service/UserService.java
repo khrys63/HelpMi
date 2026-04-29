@@ -5,6 +5,7 @@ import com.helpmi.domain.User;
 import com.helpmi.domain.UserProject;
 import com.helpmi.domain.enums.UserRole;
 import com.helpmi.dto.request.AssignOrganizationRequest;
+import com.helpmi.dto.request.UpdateThemeRequest;
 import com.helpmi.dto.request.UpdateUserProjectsRequest;
 import com.helpmi.dto.request.UpdateUserRequest;
 import com.helpmi.dto.response.UserResponse;
@@ -119,6 +120,13 @@ public class UserService {
     @Transactional
     public UserResponse getCurrentUser() {
         return UserResponse.from(currentUserService.getCurrentUser());
+    }
+
+    @Transactional
+    public UserResponse updateTheme(UpdateThemeRequest req) {
+        User user = currentUserService.getCurrentUser();
+        user.setTheme(req.theme());
+        return UserResponse.from(userRepository.save(user));
     }
 
     private User findUser(UUID id) {

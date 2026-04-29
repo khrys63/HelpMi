@@ -56,6 +56,10 @@ public class User {
     @EqualsAndHashCode.Exclude
     private List<UserProject> userProjects = new ArrayList<>();
 
+    @Column(nullable = false)
+    @Builder.Default
+    private String theme = "light";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;

@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Organisations</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Organisations</h1>
       <button @click="openCreate"
         class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
         + Nouvelle organisation
@@ -13,15 +13,15 @@
 
     <div v-else class="space-y-4">
       <div v-for="org in orgs" :key="org.id"
-        class="bg-white rounded-xl border border-gray-200 p-5">
+        class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         <div class="flex items-start justify-between">
           <div>
             <div class="flex items-center gap-2 mb-1">
-              <span class="font-semibold text-gray-900">{{ org.name }}</span>
+              <span class="font-semibold text-gray-900 dark:text-gray-100">{{ org.name }}</span>
               <span v-if="!org.active"
-                class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">Inactive</span>
+                class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded">Inactive</span>
             </div>
-            <p class="text-xs text-gray-400">
+            <p class="text-xs text-gray-400 dark:text-gray-500">
               {{ org.users.length }} utilisateur(s) · {{ org.projects.length }} projet(s)
             </p>
           </div>
@@ -39,11 +39,11 @@
         <div v-if="org.users.length > 0 || org.projects.length > 0" class="mt-3 flex flex-wrap gap-3">
           <div v-if="org.projects.length > 0" class="flex flex-wrap gap-1">
             <span v-for="p in org.projects" :key="p.id"
-              class="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded font-mono">{{ p.key }}</span>
+              class="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs px-2 py-0.5 rounded font-mono">{{ p.key }}</span>
           </div>
           <div v-if="org.users.length > 0" class="flex flex-wrap gap-1">
             <span v-for="u in org.users" :key="u.id"
-              class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">
+              class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-2 py-0.5 rounded">
               {{ u.firstName }} {{ u.lastName }}
             </span>
           </div>
@@ -53,13 +53,13 @@
 
     <!-- Create / Edit modal -->
     <div v-if="modal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
-        <h2 class="text-lg font-bold mb-4">{{ editingOrg ? 'Modifier' : 'Nouvelle organisation' }}</h2>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm">
+        <h2 class="text-lg font-bold mb-4 dark:text-gray-100">{{ editingOrg ? 'Modifier' : 'Nouvelle organisation' }}</h2>
         <div class="space-y-3">
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Nom *</label>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Nom *</label>
             <input ref="nameInput" v-model="form.name" placeholder="Nom de l'organisation"
-              class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+              class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
           </div>
           <label v-if="editingOrg" class="flex items-center gap-2 text-sm cursor-pointer">
             <input type="checkbox" v-model="form.active" class="rounded" /> Active
@@ -67,7 +67,7 @@
         </div>
         <p v-if="modalError" class="text-sm text-red-600 mt-3">{{ modalError }}</p>
         <div class="flex justify-end gap-2 mt-5">
-          <button @click="modal = false" class="text-sm text-gray-500 hover:text-gray-700 px-4 py-2">Annuler</button>
+          <button @click="modal = false" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-4 py-2">Annuler</button>
           <button @click="saveOrg" :disabled="saving"
             class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
             {{ saving ? '…' : (editingOrg ? 'Enregistrer' : 'Créer') }}
@@ -78,23 +78,23 @@
 
     <!-- Manage access modal -->
     <div v-if="managing" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
-        <h2 class="text-lg font-bold mb-4">Gérer — {{ managing.name }}</h2>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+        <h2 class="text-lg font-bold mb-4 dark:text-gray-100">Gérer — {{ managing.name }}</h2>
 
         <!-- Projects -->
         <div class="mb-5">
-          <h3 class="text-sm font-semibold text-gray-700 mb-2">Projets</h3>
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Projets</h3>
           <div class="flex flex-wrap gap-2 mb-2">
             <span v-for="p in managing.projects" :key="p.id"
-              class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded">
+              class="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded">
               {{ p.key }} — {{ p.name }}
               <button @click="removeProject(p.id)" class="hover:text-red-500 ml-1">×</button>
             </span>
-            <span v-if="managing.projects.length === 0" class="text-xs text-gray-400">Aucun projet.</span>
+            <span v-if="managing.projects.length === 0" class="text-xs text-gray-400 dark:text-gray-500">Aucun projet.</span>
           </div>
           <div class="flex gap-2">
             <select v-model="selectedProjectId"
-              class="flex-1 border rounded-lg px-3 py-2 text-sm">
+              class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100">
               <option value="">— Ajouter un projet —</option>
               <option v-for="p in availableProjects" :key="p.id" :value="p.id">
                 {{ p.key }} — {{ p.name }}
@@ -107,19 +107,19 @@
 
         <!-- Users -->
         <div>
-          <h3 class="text-sm font-semibold text-gray-700 mb-2">Utilisateurs</h3>
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Utilisateurs</h3>
           <div class="flex flex-wrap gap-2 mb-2">
             <span v-for="u in managing.users" :key="u.id"
-              class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+              class="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-2 py-1 rounded">
               {{ u.firstName }} {{ u.lastName }}
-              <span class="text-gray-400">({{ u.role }})</span>
+              <span class="text-gray-400 dark:text-gray-500">({{ u.role }})</span>
               <button @click="removeUser(u.id)" class="hover:text-red-500 ml-1">×</button>
             </span>
-            <span v-if="managing.users.length === 0" class="text-xs text-gray-400">Aucun utilisateur.</span>
+            <span v-if="managing.users.length === 0" class="text-xs text-gray-400 dark:text-gray-500">Aucun utilisateur.</span>
           </div>
           <div class="flex gap-2">
             <select v-model="selectedUserId"
-              class="flex-1 border rounded-lg px-3 py-2 text-sm">
+              class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100">
               <option value="">— Ajouter un utilisateur —</option>
               <option v-for="u in availableUsers" :key="u.id" :value="u.id">
                 {{ u.firstName }} {{ u.lastName }} ({{ u.role }})
@@ -133,23 +133,23 @@
         <p v-if="manageError" class="text-sm text-red-600 mt-3">{{ manageError }}</p>
         <div class="flex justify-end mt-5">
           <button @click="managing = null"
-            class="text-sm text-gray-600 hover:text-gray-900 px-4 py-2">Fermer</button>
+            class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-4 py-2">Fermer</button>
         </div>
       </div>
     </div>
 
     <!-- Delete confirmation -->
     <div v-if="deleteTarget" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
-        <h2 class="text-lg font-bold text-red-700 mb-2">Supprimer ?</h2>
-        <p class="text-sm text-gray-700 mb-4">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm">
+        <h2 class="text-lg font-bold text-red-700 dark:text-red-400 mb-2">Supprimer ?</h2>
+        <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
           Supprimer <strong>{{ deleteTarget.name }}</strong> ?
           Impossible si des utilisateurs y sont encore rattachés.
         </p>
         <p v-if="deleteError" class="text-sm text-red-600 mb-3">{{ deleteError }}</p>
         <div class="flex justify-end gap-2">
           <button @click="deleteTarget = null; deleteError = ''"
-            class="text-sm text-gray-500 px-4 py-2">Annuler</button>
+            class="text-sm text-gray-500 dark:text-gray-400 px-4 py-2">Annuler</button>
           <button @click="doDelete" :disabled="deleting"
             class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50">
             {{ deleting ? '…' : 'Confirmer' }}

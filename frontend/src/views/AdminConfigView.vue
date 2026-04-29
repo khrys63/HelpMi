@@ -1,24 +1,24 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Configuration</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Configuration</h1>
     </div>
 
     <!-- Onglets -->
-    <div class="flex gap-1 mb-6 border-b border-gray-200 flex-wrap">
+    <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700 flex-wrap">
       <button v-for="tab in tabs" :key="tab.key" @click="switchTab(tab.key)"
         :class="['px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors',
           activeTab === tab.key
             ? 'border-blue-600 text-blue-600'
-            : 'border-transparent text-gray-500 hover:text-gray-700']">
+            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200']">
         {{ tab.label }}
       </button>
     </div>
 
     <!-- Contenu -->
-    <div class="bg-white rounded-xl border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="font-semibold text-gray-800">{{ currentTab.label }}</h2>
+        <h2 class="font-semibold text-gray-800 dark:text-gray-200">{{ currentTab.label }}</h2>
         <button @click="openCreate" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700">
           + Ajouter
         </button>
@@ -26,7 +26,7 @@
 
       <table class="w-full text-sm">
         <thead>
-          <tr class="text-left text-xs text-gray-500 uppercase border-b">
+          <tr class="text-left text-xs text-gray-500 dark:text-gray-400 uppercase border-b dark:border-gray-700">
             <template v-if="isConfigTab">
               <th class="pb-2 pr-4">Code</th>
               <th class="pb-2 pr-4">Libellé direct</th>
@@ -47,12 +47,12 @@
             <th class="pb-2"></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
-          <tr v-for="item in displayItems" :key="item.id" class="hover:bg-gray-50">
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          <tr v-for="item in displayItems" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
             <template v-if="isConfigTab">
-              <td class="py-2.5 pr-4 font-mono text-gray-500 text-xs">{{ item.code }}</td>
-              <td class="py-2.5 pr-4 font-medium text-gray-800">{{ item.label }}</td>
-              <td v-if="isLinkTypeTab" class="py-2.5 pr-4 text-gray-500 italic">{{ item.inverseLabel || '—' }}</td>
+              <td class="py-2.5 pr-4 font-mono text-gray-500 dark:text-gray-400 text-xs">{{ item.code }}</td>
+              <td class="py-2.5 pr-4 font-medium text-gray-800 dark:text-gray-200">{{ item.label }}</td>
+              <td v-if="isLinkTypeTab" class="py-2.5 pr-4 text-gray-500 dark:text-gray-400 italic">{{ item.inverseLabel || '—' }}</td>
               <td class="py-2.5 pr-4">
                 <span :class="['inline-block w-4 h-4 rounded-full', dotClass(item.color)]"></span>
                 <span class="ml-1 text-gray-500 text-xs">{{ item.color }}</span>
@@ -63,17 +63,17 @@
               <td class="py-2.5 pr-4 text-gray-500">{{ item.position }}</td>
             </template>
             <template v-else-if="isClientTab">
-              <td class="py-2.5 pr-4 font-medium text-gray-800">{{ item.name }}</td>
-              <td class="py-2.5 pr-4 text-gray-500">{{ item.contactEmail || '—' }}</td>
+              <td class="py-2.5 pr-4 font-medium text-gray-800 dark:text-gray-200">{{ item.name }}</td>
+              <td class="py-2.5 pr-4 text-gray-500 dark:text-gray-400">{{ item.contactEmail || '—' }}</td>
               <td class="py-2.5 pr-4">
                 <span :class="item.active ? 'text-green-600' : 'text-gray-400'">{{ item.active ? 'Oui' : 'Non' }}</span>
               </td>
             </template>
             <template v-else-if="isLabelTab">
-              <td class="py-2.5 pr-4 font-medium text-gray-800">{{ item.name }}</td>
+              <td class="py-2.5 pr-4 font-medium text-gray-800 dark:text-gray-200">{{ item.name }}</td>
               <td class="py-2.5 pr-4">
                 <span v-if="item.color" :class="['inline-block w-4 h-4 rounded-full mr-1', dotClass(item.color)]"></span>
-                <span class="text-gray-500 text-xs">{{ item.color || '—' }}</span>
+                <span class="text-gray-500 dark:text-gray-400 text-xs">{{ item.color || '—' }}</span>
               </td>
             </template>
             <td class="py-2.5 text-right space-x-2">
@@ -82,7 +82,7 @@
             </td>
           </tr>
           <tr v-if="displayItems.length === 0">
-            <td :colspan="isLinkTypeTab ? 7 : isConfigTab ? 6 : 4" class="py-6 text-center text-gray-400 italic">Aucune valeur.</td>
+            <td :colspan="isLinkTypeTab ? 7 : isConfigTab ? 6 : 4" class="py-6 text-center text-gray-400 dark:text-gray-500 italic">Aucune valeur.</td>
           </tr>
         </tbody>
       </table>
@@ -90,41 +90,41 @@
 
     <!-- Modal création / édition -->
     <div v-if="modal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-        <h2 class="text-lg font-bold mb-4">{{ editingItem ? 'Modifier' : 'Ajouter' }} — {{ currentTab.label }}</h2>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md">
+        <h2 class="text-lg font-bold mb-4 dark:text-gray-100">{{ editingItem ? 'Modifier' : 'Ajouter' }} — {{ currentTab.label }}</h2>
 
         <!-- Formulaire config value (STATUS, PRIORITY, TYPE, LINK_TYPE) -->
         <div v-if="isConfigTab" class="space-y-3">
           <div v-if="!editingItem">
-            <label class="block text-xs font-medium text-gray-600 mb-1">Code *</label>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Code *</label>
             <input v-model="form.code" placeholder="EX: MON_STATUT"
-              class="w-full border rounded-lg px-3 py-2 text-sm uppercase" />
-            <p class="text-xs text-gray-400 mt-0.5">Sera mis en majuscules, espaces → _</p>
+              class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm uppercase dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Sera mis en majuscules, espaces → _</p>
           </div>
-          <div v-if="isLinkTypeTab" class="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-2">
-            <p class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Paire de libellés</p>
+          <div v-if="isLinkTypeTab" class="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-2">
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide mb-1">Paire de libellés</p>
             <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Libellé direct *
-                <span class="text-gray-400 font-normal">(ex : Bloque)</span>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Libellé direct *
+                <span class="text-gray-400 dark:text-gray-500 font-normal">(ex : Bloque)</span>
               </label>
               <input v-model="form.label" placeholder="ex: Bloque"
-                class="w-full border rounded-lg px-3 py-2 text-sm" />
+                class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-600 mb-1">Libellé inverse *
-                <span class="text-gray-400 font-normal">(ex : Bloqué par)</span>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Libellé inverse *
+                <span class="text-gray-400 dark:text-gray-500 font-normal">(ex : Bloqué par)</span>
               </label>
               <input v-model="form.inverseLabel" placeholder="ex: Bloqué par"
-                class="w-full border rounded-lg px-3 py-2 text-sm" />
+                class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
             </div>
           </div>
           <div v-else>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Libellé *</label>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Libellé *</label>
             <input v-model="form.label" placeholder="Libellé affiché"
-              class="w-full border rounded-lg px-3 py-2 text-sm" />
+              class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Couleur</label>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Couleur</label>
             <ColorPicker v-model="form.color" />
           </div>
           <div class="flex gap-4">
@@ -142,14 +142,14 @@
         <!-- Formulaire client -->
         <div v-else-if="isClientTab" class="space-y-3">
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Nom *</label>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Nom *</label>
             <input v-model="form.name" placeholder="Nom du client"
-              class="w-full border rounded-lg px-3 py-2 text-sm" />
+              class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Email contact</label>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Email contact</label>
             <input v-model="form.contactEmail" type="email" placeholder="contact@client.com"
-              class="w-full border rounded-lg px-3 py-2 text-sm" />
+              class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
           </div>
           <label class="flex items-center gap-2 text-sm cursor-pointer">
             <input type="checkbox" v-model="form.active" class="rounded" /> Actif
@@ -159,19 +159,19 @@
         <!-- Formulaire étiquette -->
         <div v-else-if="isLabelTab" class="space-y-3">
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Nom *</label>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Nom *</label>
             <input v-model="form.name" placeholder="ex: urgent"
-              class="w-full border rounded-lg px-3 py-2 text-sm" />
+              class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Couleur</label>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Couleur</label>
             <ColorPicker v-model="form.color" />
           </div>
         </div>
 
         <p v-if="formError" class="text-sm text-red-600 mt-3">{{ formError }}</p>
         <div class="flex justify-end gap-2 mt-5">
-          <button @click="closeModal" class="text-sm text-gray-500 hover:text-gray-700 px-4 py-2">Annuler</button>
+          <button @click="closeModal" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-4 py-2">Annuler</button>
           <button @click="save" :disabled="saving"
             class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
             {{ saving ? '…' : (editingItem ? 'Enregistrer' : 'Créer') }}
@@ -182,15 +182,15 @@
 
     <!-- Modal confirmation suppression -->
     <div v-if="deleteTarget" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
-        <h2 class="text-lg font-bold text-red-700 mb-2">Supprimer ?</h2>
-        <p class="text-sm text-gray-700 mb-4">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm">
+        <h2 class="text-lg font-bold text-red-700 dark:text-red-400 mb-2">Supprimer ?</h2>
+        <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
           Supprimer <strong>{{ deleteTarget.label || deleteTarget.name }}</strong> ?
           Cette action est irréversible et sera refusée si des tickets utilisent encore cette valeur.
         </p>
         <p v-if="deleteError" class="text-sm text-red-600 mb-3">{{ deleteError }}</p>
         <div class="flex justify-end gap-2">
-          <button @click="deleteTarget = null; deleteError = ''" class="text-sm text-gray-500 px-4 py-2">Annuler</button>
+          <button @click="deleteTarget = null; deleteError = ''" class="text-sm text-gray-500 dark:text-gray-400 px-4 py-2">Annuler</button>
           <button @click="doDelete" :disabled="deleting"
             class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50">
             {{ deleting ? '…' : 'Confirmer' }}

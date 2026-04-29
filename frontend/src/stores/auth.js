@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import Keycloak from 'keycloak-js'
+import { useThemeStore } from './theme.js'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -33,6 +34,7 @@ export const useAuthStore = defineStore('auth', () => {
       headers: { Authorization: `Bearer ${kc.token}` }
     })
     user.value = await res.json()
+    useThemeStore().apply(user.value.theme ?? 'light')
   }
 
   function logout() {

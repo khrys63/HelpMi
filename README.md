@@ -169,7 +169,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb key
 | Service | URL | Rôle |
 |---|---|---|
 | MariaDB | `localhost:3306` | Base de données |
-| Keycloak | `http://localhost:8180` | Authentification |
+| Keycloak | `http://auth.localhost` | Authentification |
 | MinIO API | `http://localhost:9000` | Stockage des pièces jointes |
 | MinIO Console | `http://localhost:9001` | Interface d'administration MinIO |
 | phpMyAdmin | `http://localhost:8081` | Interface SQL |
@@ -225,7 +225,7 @@ docker compose up --build
 |---|---|
 | Frontend | http://localhost:3000 |
 | Backend API | http://localhost:8080 |
-| Keycloak | http://localhost:8180 |
+| Keycloak | http://auth.localhost |
 | MinIO API | http://localhost:9000 |
 
 Le realm Keycloak `helpmi` est importé automatiquement au premier démarrage. MinIO crée automatiquement le bucket `helpmi` au premier démarrage du backend.
@@ -293,7 +293,7 @@ Par défaut le compose démarre un Keycloak intégré. Pour utiliser un Keycloak
 | Variable | Défaut (KC intégré) | Description |
 |---|---|---|
 | `APP_KEYCLOAK_ISSUER_URI` | `http://keycloak:8080/realms/helpmi` | Issuer JWT — lu par le backend pour valider les tokens |
-| `VITE_KEYCLOAK_URL` | `http://localhost:8180` | URL de base Keycloak — utilisée par le frontend au build |
+| `VITE_KEYCLOAK_URL` | `http://auth.localhost` | URL de base Keycloak — utilisée par le frontend au build |
 | `VITE_KEYCLOAK_REALM` | `helpmi` | Nom du realm |
 | `VITE_KEYCLOAK_CLIENT_ID` | `helpmi-frontend` | Client ID OIDC public |
 

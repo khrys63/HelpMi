@@ -4,13 +4,13 @@
       <div
         v-for="t in toast.toasts"
         :key="t.id"
-        class="pointer-events-auto flex items-start gap-3 bg-white rounded-xl shadow-lg border-l-4 px-4 py-3 w-80"
+        class="pointer-events-auto flex items-start gap-3 bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 px-4 py-3 w-80"
         :class="borderClass(t.type)"
       >
         <div class="flex-1 min-w-0">
-          <p class="text-sm text-gray-800 leading-snug">{{ t.message }}</p>
+          <p class="text-sm text-gray-800 dark:text-gray-200 leading-snug">{{ t.message }}</p>
         </div>
-        <button @click="toast.remove(t.id)" class="text-gray-300 hover:text-gray-600 shrink-0 text-base leading-none mt-0.5">✕</button>
+        <button @click="toast.remove(t.id)" class="text-gray-300 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-300 shrink-0 text-base leading-none mt-0.5">✕</button>
       </div>
     </transition-group>
   </div>

@@ -390,7 +390,7 @@ docker logs helpmi_backend -f</code></pre>
   </div>
   <div class="steps">
     <div class="step"><div><strong>Vérifier que Keycloak répond</strong>
-      <pre><code>curl -s http://localhost:8180/realms/helpmi/.well-known/openid-configuration | python3 -m json.tool | head -10
+      <pre><code>curl -s http://auth.localhost/realms/helpmi/.well-known/openid-configuration | python3 -m json.tool | head -10
 # Doit retourner un JSON avec "issuer", "token_endpoint"...</code></pre>
     </div></div>
     <div class="step"><div><strong>Redémarrer Keycloak</strong>
@@ -399,7 +399,7 @@ docker logs helpmi_backend -f</code></pre>
 docker logs helpmi_keycloak -f | grep -i "started\|error"</code></pre>
     </div></div>
     <div class="step"><div><strong>Vérifier que le realm est bien importé</strong>
-      <pre><code># Accéder à l'admin Keycloak : http://localhost:8180/admin
+      <pre><code># Accéder à l'admin Keycloak : http://auth.localhost/admin
 # Login : valeurs KEYCLOAK_ADMIN / KEYCLOAK_ADMIN_PASSWORD du .env
 # Vérifier que le realm "helpmi" existe dans la liste
 
@@ -409,7 +409,7 @@ docker compose up -d keycloak</code></pre>
       <div class="alert alert-yellow">Le realm est réimporté depuis <code>keycloak/realm-export.json</code> au démarrage. Si ce fichier est absent ou corrompu, l'import échoue silencieusement.</div>
     </div></div>
     <div class="step"><div><strong>Tester la récupération d'un token (smoke test)</strong>
-      <pre><code>curl -s -X POST http://localhost:8180/realms/helpmi/protocol/openid-connect/token \
+      <pre><code>curl -s -X POST http://auth.localhost/realms/helpmi/protocol/openid-connect/token \
   -d "client_id=helpmi-frontend" \
   -d "grant_type=password" \
   -d "username=admin" \
@@ -536,7 +536,7 @@ docker compose up -d --force-recreate backend</code></pre>
     <div class="step"><div><strong>Vérifier que l'issuer URI est cohérent</strong>
       <pre><code># La variable APP_KEYCLOAK_ISSUER_URI dans .env doit correspondre
 # à ce que Keycloak retourne dans son discovery document :
-curl -s http://localhost:8180/realms/helpmi/.well-known/openid-configuration | \
+curl -s http://auth.localhost/realms/helpmi/.well-known/openid-configuration | \
   python3 -c "import sys,json; d=json.load(sys.stdin); print(d['issuer'])"
 
 # Doit correspondre à APP_KEYCLOAK_ISSUER_URI dans .env</code></pre>
@@ -562,7 +562,7 @@ curl -s http://localhost:8180/realms/helpmi/.well-known/openid-configuration | \
   </div>
   <div class="steps">
     <div class="step"><div><strong>Vérifier dans Keycloak admin</strong>
-      <pre><code># http://localhost:8180/admin → Realm helpmi → Users
+      <pre><code># http://auth.localhost/admin → Realm helpmi → Users
 # Chercher l'utilisateur → vérifier : "Enabled", "Email Verified", pas de lock</code></pre>
     </div></div>
     <div class="step"><div><strong>Réinitialiser le mot de passe via l'admin Keycloak</strong>
@@ -724,11 +724,11 @@ curl -I http://localhost:3000</code></pre>
     <tr><td><code>DB_ROOT_PASSWORD</code></td><td>MariaDB</td><td>Mot de passe root MariaDB</td><td><em>secret</em></td></tr>
     <tr><td><code>KEYCLOAK_ADMIN</code></td><td>Keycloak</td><td>Login admin Keycloak</td><td>admin</td></tr>
     <tr><td><code>KEYCLOAK_ADMIN_PASSWORD</code></td><td>Keycloak</td><td>Mot de passe admin Keycloak</td><td><em>secret</em></td></tr>
-    <tr><td><code>APP_KEYCLOAK_ISSUER_URI</code></td><td>Backend</td><td>URL publique du realm (validation JWT)</td><td>http://localhost:8180/realms/helpmi</td></tr>
+    <tr><td><code>APP_KEYCLOAK_ISSUER_URI</code></td><td>Backend</td><td>URL publique du realm (validation JWT)</td><td>http://auth.localhost/realms/helpmi</td></tr>
     <tr><td><code>APP_CORS_ALLOWED_ORIGINS</code></td><td>Backend</td><td>Origine autorisée pour les requêtes CORS</td><td>http://localhost:3000</td></tr>
     <tr><td><code>MINIO_ROOT_USER</code></td><td>MinIO, Backend</td><td>Access key MinIO</td><td>helpmi</td></tr>
     <tr><td><code>MINIO_ROOT_PASSWORD</code></td><td>MinIO, Backend</td><td>Secret key MinIO</td><td><em>secret</em></td></tr>
-    <tr><td><code>VITE_KEYCLOAK_URL</code></td><td>Frontend (build)</td><td>URL Keycloak vue par le navigateur</td><td>http://localhost:8180</td></tr>
+    <tr><td><code>VITE_KEYCLOAK_URL</code></td><td>Frontend (build)</td><td>URL Keycloak vue par le navigateur</td><td>http://auth.localhost</td></tr>
     <tr><td><code>VITE_KEYCLOAK_REALM</code></td><td>Frontend (build)</td><td>Nom du realm Keycloak</td><td>helpmi</td></tr>
     <tr><td><code>VITE_KEYCLOAK_CLIENT_ID</code></td><td>Frontend (build)</td><td>Client ID Keycloak pour le frontend</td><td>helpmi-frontend</td></tr>
   </tbody>
@@ -839,7 +839,7 @@ curl -sv https://app.helpmi.example.com 2>&1 | grep -i "SSL\|certificate\|issuer
     <tr><td>Redémarrer tout</td><td><code>docker compose up -d</code></td></tr>
     <tr><td>Health backend</td><td><code>curl -s http://localhost:8080/actuator/health</code></td></tr>
     <tr><td>Health MinIO</td><td><code>curl -sf http://localhost:9000/minio/health/live</code></td></tr>
-    <tr><td>Token Keycloak (smoke test)</td><td><code>curl -s -X POST http://localhost:8180/realms/helpmi/protocol/openid-connect/token -d "client_id=helpmi-frontend&grant_type=password&username=admin&password=admin123"</code></td></tr>
+    <tr><td>Token Keycloak (smoke test)</td><td><code>curl -s -X POST http://auth.localhost/realms/helpmi/protocol/openid-connect/token -d "client_id=helpmi-frontend&grant_type=password&username=admin&password=admin123"</code></td></tr>
     <tr><td>Console MySQL interactive</td><td><code>docker exec -it helpmi_mariadb mysql -u helpmi -p helpmi</code></td></tr>
     <tr><td>Migrations appliquées</td><td><code>docker exec helpmi_mariadb mysql -u helpmi -p helpmi -e "SELECT version,success FROM flyway_schema_history;"</code></td></tr>
     <tr><td>Dump base</td><td><code>docker exec helpmi_mariadb sh -c 'mysqldump -u root -p$MYSQL_ROOT_PASSWORD helpmi' > backup.sql</code></td></tr>

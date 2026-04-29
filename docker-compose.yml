@@ -32,17 +32,17 @@ services:
     ports:
       - "80:80"
       # - "443:443"   # HTTPS
-      - "8090:8080"   # Dashboard direct → http://localhost:8090/dashboard/
+      # - "8090:8080"   # Dashboard direct → http://localhost:8090/dashboard/
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # - ./traefik/letsencrypt:/letsencrypt   # HTTPS
     networks:
       - proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN:-localhost}`)"
-      - "traefik.http.routers.dashboard.entrypoints=web"
-      - "traefik.http.routers.dashboard.service=api@internal"
+    # labels:
+      # - "traefik.enable=true"
+      # - "traefik.http.routers.dashboard.rule=Host(`traefik.${TRAEFIK_DOMAIN:-localhost}`)"
+      # - "traefik.http.routers.dashboard.entrypoints=web"
+      # - "traefik.http.routers.dashboard.service=api@internal"
       # HTTPS :
       # - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
 
