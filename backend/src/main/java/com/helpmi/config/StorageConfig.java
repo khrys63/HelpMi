@@ -1,5 +1,6 @@
 package com.helpmi.config;
 
+import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,11 @@ public class StorageConfig {
 
     @Value("${app.storage.s3.secret-key}")
     private String secretKey;
+
+    @Bean
+    public Tika tika() {
+        return new Tika();
+    }
 
     @Bean
     public S3Client s3Client() {

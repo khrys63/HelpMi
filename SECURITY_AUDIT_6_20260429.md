@@ -92,7 +92,7 @@ public Resource download(UUID attachmentId) {
 
 ## 🟡 Moyen
 
-### M1 — Content-Type des fichiers non validé
+### ~~M1 — Content-Type des fichiers non validé~~
 
 **Fichier** : `AttachmentService.java:45`
 
@@ -100,22 +100,15 @@ public Resource download(UUID attachmentId) {
 String contentType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
 ```
 
-Le MIME type est fourni par le client HTTP, pas détecté depuis le contenu réel. Un attaquant peut déclarer `text/html` pour un fichier malveillant. Le header `Content-Disposition: attachment` atténue le risque XSS mais ne l'élimine pas (comportement variable selon les navigateurs).
+Le MIME type était fourni par le client HTTP, pas détecté depuis le contenu réel. Un attaquant pouvait déclarer `text/html` pour un fichier malveillant.
 
-**Correction** : restreindre aux types autorisés, ou utiliser Apache Tika pour détecter le type depuis le contenu réel.
-
-```java
-private static final Set<String> ALLOWED_TYPES = Set.of(
-    "image/jpeg", "image/png", "image/gif", "image/webp",
-    "application/pdf", "text/plain",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-);
-
-// Dans upload() :
-if (!ALLOWED_TYPES.contains(contentType)) {
-    throw new IllegalArgumentException("Type de fichier non autorisé : " + contentType);
-}
-```
+> ✅ **Corrigé le 2026-04-29**
+>
+> - Ajout de `tika-core:2.9.2` dans `pom.xml` et d'un bean `Tika` dans `StorageConfig.java`
+> - `AttachmentService.upload()` lit les bytes du fichier, puis appelle `tika.detect(bytes, filename)` — détection basée sur le contenu réel, indépendante du header `Content-Type` client
+> - Validation contre une allowlist de 12 types autorisés (`ALLOWED_TYPES`) ; tout autre type lève `IllegalArgumentException`
+> - Le type stocké en base et transmis au storage est celui détecté par Tika, pas celui déclaré par le client
+> - Tests ajoutés : `upload_disallowedType_throwsIllegalArgument`, `upload_usesDetectedType_notClientProvided`
 
 ### M2 — Énumération des utilisateurs
 
@@ -182,7 +175,7 @@ La propriété `app.security.disabled: false` est définie mais non référencé
 |---|---|---|
 | ~~🔴 P0~~ | ~~C1 — PATs non-fonctionnels~~ | ✅ Corrigé le 2026-04-29 |
 | ~~🟠 P1~~ | ~~H1 — Access control pièces jointes~~ | ✅ Corrigé le 2026-04-29 |
-| 🟡 P2 | M1 — Validation MIME type uploads | Moyen |
+| ~~🟡 P2~~ | ~~M1 — Validation MIME type uploads~~ | ✅ Corrigé le 2026-04-29 |
 | 🟡 P2 | M2 — Énumération utilisateurs | Moyen |
 | 🟡 P3 | M3 — Headers sécurité | Faible |
 | 🔵 P4 | L1, L2, L3 | Informatif |

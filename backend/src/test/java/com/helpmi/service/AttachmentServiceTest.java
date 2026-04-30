@@ -6,12 +6,11 @@ import com.helpmi.domain.User;
 import com.helpmi.dto.response.AttachmentResponse;
 import com.helpmi.exception.ForbiddenException;
 import com.helpmi.exception.NotFoundException;
-import com.helpmi.exception.ForbiddenException;
 import com.helpmi.repository.AttachmentRepository;
 import com.helpmi.repository.TicketRepository;
 import com.helpmi.security.CurrentUserService;
-import com.helpmi.service.ProjectService;
 import com.helpmi.storage.StorageService;
+import org.apache.tika.Tika;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -39,6 +38,7 @@ class AttachmentServiceTest {
     @Mock CurrentUserService currentUserService;
     @Mock StorageService storageService;
     @Mock ProjectService projectService;
+    @Mock Tika tika;
 
     @InjectMocks AttachmentService service;
 
@@ -62,6 +62,7 @@ class AttachmentServiceTest {
         MultipartFile file = new MockMultipartFile("file", "report.pdf", "application/pdf", new byte[]{1, 2, 3});
 
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(tika.detect(any(byte[].class), anyString())).thenReturn("application/pdf");
         when(currentUserService.getCurrentUser()).thenReturn(uploader);
         when(attachmentRepository.save(any())).thenAnswer(inv -> {
             Attachment a = inv.getArgument(0);
@@ -92,6 +93,7 @@ class AttachmentServiceTest {
         MultipartFile file = new MockMultipartFile("file", "image.png", "image/png", new byte[]{1});
 
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(tika.detect(any(byte[].class), anyString())).thenReturn("image/png");
         when(currentUserService.getCurrentUser()).thenReturn(uploader);
         when(attachmentRepository.save(any())).thenAnswer(inv -> {
             Attachment a = inv.getArgument(0);
@@ -113,6 +115,7 @@ class AttachmentServiceTest {
         MultipartFile file = new MockMultipartFile("file", "Makefile", "text/plain", new byte[]{1});
 
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(tika.detect(any(byte[].class), anyString())).thenReturn("text/plain");
         when(currentUserService.getCurrentUser()).thenReturn(uploader);
         when(attachmentRepository.save(any())).thenAnswer(inv -> {
             Attachment a = inv.getArgument(0);
@@ -125,6 +128,45 @@ class AttachmentServiceTest {
         AttachmentResponse response = service.upload(ticket.getId(), file);
 
         assertThat(response.fileName()).isEqualTo("Makefile");
+    }
+
+    // ── validation MIME (fix M1) ──────────────────────────────────────────────
+
+    @Test
+    void upload_disallowedType_throwsIllegalArgument() throws IOException {
+        User uploader = agentUser();
+        Ticket ticket = ticket(project(), uploader);
+        MultipartFile file = new MockMultipartFile("file", "malicious.html", "text/html",
+                "<script>alert(1)</script>".getBytes());
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(tika.detect(any(byte[].class), anyString())).thenReturn("text/html");
+
+        assertThatThrownBy(() -> service.upload(ticket.getId(), file))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("non autorisé");
+    }
+
+    @Test
+    void upload_usesDetectedType_notClientProvided() throws IOException {
+        User uploader = adminUser();
+        Ticket ticket = ticket(project(), uploader);
+        // Le client déclare text/html mais Tika détecte image/png
+        MultipartFile file = new MockMultipartFile("file", "image.png", "text/html", new byte[]{1});
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(tika.detect(any(byte[].class), anyString())).thenReturn("image/png");
+        when(currentUserService.getCurrentUser()).thenReturn(uploader);
+        when(attachmentRepository.save(any())).thenAnswer(inv -> {
+            Attachment a = inv.getArgument(0);
+            return Attachment.builder().id(UUID.randomUUID())
+                    .ticket(a.getTicket()).fileName(a.getFileName())
+                    .storedName(a.getStoredName()).contentType(a.getContentType())
+                    .size(a.getSize()).uploadedBy(a.getUploadedBy()).build();
+        });
+
+        AttachmentResponse response = service.upload(ticket.getId(), file);
+
+        assertThat(response.contentType()).isEqualTo("image/png");
+        verify(storageService).store(any(), any(), anyLong(), eq("image/png"));
     }
 
     // ── download ──────────────────────────────────────────────────────────────

@@ -134,3 +134,18 @@ quand un user n'est pas rattaché à une organisation, quelque soit la page (url
 
 je souhaiterai avoir un proxy traefik devant tous les containers afin de répartir des requetes http, et plus tard de pouvoir faire du https sur un nom de domaine unique avec des sous domaine par container exposé  
 
+on va faire un peu de front, je souhaite qu'un utilisateur puisse passer l'applciation et tous les écrans en darkmode (ou clai), et que le choix soit stocké en bdd avec le user afin qu'il retrouve son choix meme sur un autre terminal
+
+qu'elle serait la complexité de mettre un petit framework d'internationnalisation pour avoir l'application en Francais et en anglais (et d'autres plus tard) avec la langue configurée par utilisateur
+
+petite evolution, les données des tables de parametrage : Status, Priorités, Types, Types de lien et Roles projet, sont en fr, peut on avoir saisir les valeur pour les langues autorisées dans l'apllication (fr, en et bg) et que le listes soient alimentées avec la langue de l'utilsateur. 
+
+et t as eu la flemme de me proposer les UPDATE sql pour que cel marche a chaque redemarrage de l'ensemble. 
+
+petite evolution, les données des tables de parametrage : Status, Priorités, Types, Types de lien et Roles projet, possèdent un champs "couleur" celui-ci n'est pas configurable a la création ni modifiable dans les formulaire dédiés
+
+aucun des ecrans de saisie ou de modification de configuration n'a le color picker 
+
+Peux tu ajouter un petit bouton (ou url) "me l'affecter" vers la combo de la personne assignée, qui assigne rapidment le ticket  a soit même
+
+peux tu patcher la vuln P2-M1  

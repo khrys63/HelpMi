@@ -13,13 +13,16 @@ import com.helpmi.repository.TicketRepository;
 import com.helpmi.security.CurrentUserService;
 import com.helpmi.storage.StorageService;
 import lombok.RequiredArgsConstructor;
+import org.apache.tika.Tika;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -27,11 +30,24 @@ import java.util.UUID;
 @Transactional
 public class AttachmentService {
 
+    private static final Set<String> ALLOWED_TYPES = Set.of(
+            "image/jpeg", "image/png", "image/gif", "image/webp",
+            "application/pdf", "text/plain", "text/csv",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/zip"
+    );
+
     private final AttachmentRepository attachmentRepository;
     private final TicketRepository ticketRepository;
     private final CurrentUserService currentUserService;
     private final StorageService storageService;
     private final ProjectService projectService;
+    private final Tika tika;
 
     public AttachmentResponse upload(UUID ticketId, MultipartFile file) throws IOException {
         Ticket ticket = ticketRepository.findById(ticketId)
@@ -44,16 +60,21 @@ public class AttachmentService {
             extension = originalName.substring(originalName.lastIndexOf("."));
         }
         String storedName = UUID.randomUUID() + extension;
-        String contentType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
 
-        storageService.store(storedName, file.getInputStream(), file.getSize(), contentType);
+        byte[] bytes = file.getBytes();
+        String detectedType = tika.detect(bytes, originalName != null ? originalName : "");
+        if (!ALLOWED_TYPES.contains(detectedType)) {
+            throw new IllegalArgumentException("Type de fichier non autorisé");
+        }
+
+        storageService.store(storedName, new ByteArrayInputStream(bytes), (long) bytes.length, detectedType);
 
         Attachment attachment = Attachment.builder()
                 .ticket(ticket)
                 .fileName(originalName != null ? originalName : storedName)
                 .storedName(storedName)
-                .contentType(file.getContentType())
-                .size(file.getSize())
+                .contentType(detectedType)
+                .size((long) bytes.length)
                 .uploadedBy(currentUserService.getCurrentUser())
                 .build();
 
