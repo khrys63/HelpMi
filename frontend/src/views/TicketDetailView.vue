@@ -276,6 +276,10 @@
               <option value="">{{ $t('tickets.field_assignee_none') }}</option>
               <option v-for="u in users" :key="u.id" :value="u.id">{{ u.firstName }} {{ u.lastName }}</option>
             </select>
+            <button v-if="canAssignToSelf" @click="assignToSelf"
+              class="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:underline">
+              {{ $t('tickets.assign_to_me') }}
+            </button>
           </div>
 
           <!-- Clients -->
@@ -524,6 +528,16 @@ async function applyTransition(newStatus) {
   }
 }
 
+const canAssignToSelf = computed(() =>
+  auth.user && assigneeId.value !== auth.user.id &&
+  users.value.some(u => u.id === auth.user.id)
+)
+
+async function assignToSelf() {
+  assigneeId.value = auth.user.id
+  await reassign()
+}
+
 async function reassign() {
   const { data } = await ticketsApi.setAssignee(projectId, ticketId, assigneeId.value || null)
   ticket.value.assignee = data.assignee
@@ -544,10 +558,16 @@ async function uploadFile(e) {
   const file = e.target.files[0]
   if (!file) return
   uploading.value = true
-  const { data } = await attachmentsApi.upload(ticketId, file)
-  ticket.value.attachments.push(data)
-  uploading.value = false
-  e.target.value = ''
+  try {
+    const { data } = await attachmentsApi.upload(ticketId, file)
+    ticket.value.attachments.push(data)
+  } catch (err) {
+    const msg = err?.response?.data?.detail || err?.response?.data?.message || 'Erreur lors de l\'envoi du fichier'
+    toast.add(msg, 'error')
+  } finally {
+    uploading.value = false
+    e.target.value = ''
+  }
 }
 
 function onLinkSearch() {

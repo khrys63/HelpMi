@@ -54,6 +54,7 @@
     "field_priority": "Приоритет",
     "field_assignee": "Отговорник",
     "field_assignee_none": "Няма назначен",
+    "assign_to_me": "Назначи на мен",
     "field_description": "Описание",
     "field_description_placeholder": "Стъпки за възпроизвеждане, очаквано поведение…",
     "field_due_date": "Краен срок",

@@ -54,6 +54,7 @@
     "field_priority": "Priority",
     "field_assignee": "Assignee",
     "field_assignee_none": "Unassigned",
+    "assign_to_me": "Assign to me",
     "field_description": "Description",
     "field_description_placeholder": "Steps to reproduce, expected behaviour…",
     "field_due_date": "Due date",
