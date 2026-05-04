@@ -175,7 +175,7 @@ onMounted(async () => {
     usersApi.list()
   ])
   allProjects.value = projects
-  allUsers.value = users.filter(u => u.role !== 'ADMIN')
+  allUsers.value = users
   loading.value = false
 })
 
@@ -267,7 +267,7 @@ async function removeProject(projectId) {
 async function addUser() {
   if (!selectedUserId.value) return
   try {
-    const { data } = await organizationsApi.assignUser(managing.value.id, selectedUserId.value)
+    const { data } = await organizationsApi.addUser(managing.value.id, selectedUserId.value)
     managing.value = data
     replaceOrg(data)
     selectedUserId.value = ''

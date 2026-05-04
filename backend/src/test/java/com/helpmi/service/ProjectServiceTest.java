@@ -41,22 +41,36 @@ class ProjectServiceTest {
     // --- getAllProjects ---
 
     @Test
-    void getAllProjects_admin_returnsAll() {
-        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
+    void getAllProjects_admin_withOrg_returnsOnlyMemberProjects() {
+        User admin = adminUser();
+        admin.getOrganizations().add(organization());
+        when(currentUserService.getCurrentUser()).thenReturn(admin);
         Project p = project();
-        when(projectRepository.findByActiveTrueOrderByCreatedAtDesc()).thenReturn(List.of(p));
+        when(projectRepository.findActiveByUserId(admin.getId())).thenReturn(List.of(p));
 
         List<ProjectResponse> result = service.getAllProjects();
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).name()).isEqualTo("Test Project");
+        verify(projectRepository, never()).findByActiveTrueOrderByCreatedAtDesc();
+    }
+
+    @Test
+    void getAllProjects_admin_withoutOrg_returnsEmpty() {
+        User admin = adminUser();
+        when(currentUserService.getCurrentUser()).thenReturn(admin);
+        when(projectRepository.findActiveByUserId(admin.getId())).thenReturn(List.of());
+
+        List<ProjectResponse> result = service.getAllProjects();
+
+        assertThat(result).isEmpty();
     }
 
     @Test
     void getAllProjects_nonAdminWithOrg_returnsOrgProjects() {
         User agent = agentUser();
         Organization org = organization();
-        agent.setOrganization(org);
+        agent.getOrganizations().add(org);
         when(currentUserService.getCurrentUser()).thenReturn(agent);
         Project p = project();
         when(projectRepository.findActiveByUserId(agent.getId())).thenReturn(List.of(p));
@@ -68,30 +82,57 @@ class ProjectServiceTest {
 
     @Test
     void getAllProjects_nonAdminWithoutOrg_returnsEmpty() {
-        when(currentUserService.getCurrentUser()).thenReturn(clientUser());
+        User agent = clientUser();
+        when(currentUserService.getCurrentUser()).thenReturn(agent);
+        when(projectRepository.findActiveByUserId(agent.getId())).thenReturn(List.of());
 
         List<ProjectResponse> result = service.getAllProjects();
 
         assertThat(result).isEmpty();
-        verifyNoInteractions(projectRepository);
     }
 
     // --- getProject ---
 
     @Test
-    void getProject_admin_canAccessAnyProject() {
+    void getProject_admin_memberOfProject_succeeds() {
+        User admin = adminUser();
+        admin.getOrganizations().add(organization());
+        when(currentUserService.getCurrentUser()).thenReturn(admin);
+        Project p = project();
+        when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
+        when(projectRepository.isProjectAccessibleToUser(p.getId(), admin.getId())).thenReturn(true);
+
+        assertThatCode(() -> service.getProject(p.getId())).doesNotThrowAnyException();
+    }
+
+    @Test
+    void getProject_admin_notMemberOfProject_throwsForbidden() {
+        User admin = adminUser();
+        admin.getOrganizations().add(organization());
+        when(currentUserService.getCurrentUser()).thenReturn(admin);
+        Project p = project();
+        when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
+        when(projectRepository.isProjectAccessibleToUser(p.getId(), admin.getId())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.getProject(p.getId()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void getProject_admin_withoutOrg_throwsForbidden() {
         when(currentUserService.getCurrentUser()).thenReturn(adminUser());
         Project p = project();
         when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
 
-        assertThatCode(() -> service.getProject(p.getId())).doesNotThrowAnyException();
+        assertThatThrownBy(() -> service.getProject(p.getId()))
+                .isInstanceOf(ForbiddenException.class);
     }
 
     @Test
     void getProject_nonAdminWithAccess_succeeds() {
         User agent = agentUser();
         Organization org = organization();
-        agent.setOrganization(org);
+        agent.getOrganizations().add(org);
         when(currentUserService.getCurrentUser()).thenReturn(agent);
         Project p = project();
         when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
@@ -104,7 +145,7 @@ class ProjectServiceTest {
     void getProject_nonAdminWithoutAccess_throws() {
         User client = clientUser();
         Organization org = organization();
-        client.setOrganization(org);
+        client.getOrganizations().add(org);
         when(currentUserService.getCurrentUser()).thenReturn(client);
         Project p = project();
         when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
@@ -265,12 +306,28 @@ class ProjectServiceTest {
     // --- requireProjectAccess (UUID overload) ---
 
     @Test
-    void requireProjectAccess_admin_doesNotThrow() {
+    void requireProjectAccess_admin_memberOfProject_doesNotThrow() {
+        User admin = adminUser();
+        admin.getOrganizations().add(organization());
         Project p = project();
-        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
+        when(currentUserService.getCurrentUser()).thenReturn(admin);
         when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
+        when(projectRepository.isProjectAccessibleToUser(p.getId(), admin.getId())).thenReturn(true);
 
         assertThatCode(() -> service.requireProjectAccess(p.getId())).doesNotThrowAnyException();
+    }
+
+    @Test
+    void requireProjectAccess_admin_notMemberOfProject_throwsForbidden() {
+        User admin = adminUser();
+        admin.getOrganizations().add(organization());
+        Project p = project();
+        when(currentUserService.getCurrentUser()).thenReturn(admin);
+        when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
+        when(projectRepository.isProjectAccessibleToUser(p.getId(), admin.getId())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.requireProjectAccess(p.getId()))
+                .isInstanceOf(ForbiddenException.class);
     }
 
     @Test

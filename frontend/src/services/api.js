@@ -35,8 +35,8 @@ export const ticketsApi = {
   clone: (projectId, ticketId) => api.post(`/projects/${projectId}/tickets/${ticketId}/clone`),
   setDueDate: (projectId, ticketId, dueDate) =>
     api.patch(`/projects/${projectId}/tickets/${ticketId}/due-date`, { dueDate }),
-  setClients: (projectId, ticketId, clientIds) =>
-    api.put(`/projects/${projectId}/tickets/${ticketId}/clients`, { clientIds }),
+  setOrganizations: (projectId, ticketId, organizationIds) =>
+    api.put(`/projects/${projectId}/tickets/${ticketId}/organizations`, { organizationIds }),
   setLabels: (projectId, ticketId, labelIds) =>
     api.put(`/projects/${projectId}/tickets/${ticketId}/labels`, { labelIds }),
   remove: (projectId, ticketId) => api.delete(`/projects/${projectId}/tickets/${ticketId}`),
@@ -78,19 +78,12 @@ export const personalTokensApi = {
   remove: id => api.delete(`/users/me/tokens/${id}`)
 }
 
-// Clients admin
-export const clientsAdminApi = {
-  list: () => api.get('/admin/clients'),
-  create: data => api.post('/admin/clients', data),
-  update: (id, data) => api.put(`/admin/clients/${id}`, data),
-  remove: id => api.delete(`/admin/clients/${id}`)
-}
-
 // Users admin
 export const adminUsersApi = {
   list: () => api.get('/admin/users'),
   update: (id, data) => api.patch(`/admin/users/${id}`, data),
-  assignOrganization: (id, data) => api.put(`/admin/users/${id}/organization`, data),
+  addOrganization: (id, orgId) => api.post(`/admin/users/${id}/organizations/${orgId}`),
+  removeOrganization: (id, orgId) => api.delete(`/admin/users/${id}/organizations/${orgId}`),
   updateProjects: (id, data) => api.put(`/admin/users/${id}/projects`, data)
 }
 
@@ -103,7 +96,7 @@ export const organizationsApi = {
   remove: id => api.delete(`/admin/organizations/${id}`),
   addProject: (orgId, projectId) => api.post(`/admin/organizations/${orgId}/projects/${projectId}`),
   removeProject: (orgId, projectId) => api.delete(`/admin/organizations/${orgId}/projects/${projectId}`),
-  assignUser: (orgId, userId) => api.put(`/admin/organizations/${orgId}/users/${userId}`),
+  addUser: (orgId, userId) => api.post(`/admin/organizations/${orgId}/users/${userId}`),
   removeUser: (orgId, userId) => api.delete(`/admin/organizations/${orgId}/users/${userId}`)
 }
 

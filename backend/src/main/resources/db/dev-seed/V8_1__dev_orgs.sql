@@ -1,7 +1,7 @@
 INSERT IGNORE INTO organizations (id, name, active) VALUES
     ('20000000-0000-0000-0000-000000000001', 'Demo Organisation', true);
 
--- Assign agent and client dev users to the demo org; admin has no org (sees everything)
+-- Assign agent and client dev users to the demo org (admin assigned via V19_1 after multi-org migration)
 UPDATE users SET organization_id = '20000000-0000-0000-0000-000000000001'
 WHERE id IN ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000003');
 

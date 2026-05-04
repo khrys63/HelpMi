@@ -33,10 +33,10 @@
               <span :class="roleBadge(u.role)">{{ u.role }}</span>
             </td>
             <td class="px-4 py-3">
-              <span v-if="u.organizationName" class="text-gray-700 dark:text-gray-300">{{ u.organizationName }}</span>
-              <span v-else-if="u.role !== 'ADMIN'"
-                class="text-amber-600 dark:text-amber-400 text-xs font-medium">{{ $t('admin.users.no_org') }}</span>
-              <span v-else class="text-gray-400 dark:text-gray-500 text-xs">—</span>
+              <span v-if="u.organizations?.length" class="text-gray-700 dark:text-gray-300">
+                {{ u.organizations.map(o => o.name).join(', ') }}
+              </span>
+              <span v-else class="text-amber-600 dark:text-amber-400 text-xs font-medium">{{ $t('admin.users.no_org') }}</span>
             </td>
             <td class="px-4 py-3">
               <span :class="u.active ? 'text-green-600' : 'text-gray-400'">
@@ -78,21 +78,27 @@
             </label>
           </div>
 
-          <!-- Organisation -->
-          <div v-if="form.role !== 'ADMIN'" class="space-y-3">
+          <!-- Organisations -->
+          <div class="space-y-3">
             <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ $t('admin.users.section_org') }}</p>
-            <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.users.field_org') }}</label>
-              <select v-model="form.organizationId" @change="onOrgChange(form.organizationId)"
-                class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100">
-                <option :value="null">{{ $t('admin.users.org_none') }}</option>
-                <option v-for="org in orgs" :key="org.id" :value="org.id">{{ org.name }}</option>
-              </select>
+            <div class="flex flex-wrap gap-1 mb-2">
+              <span v-for="orgId in form.orgIds" :key="orgId"
+                class="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs px-2 py-0.5 rounded-full">
+                {{ orgs.find(o => o.id === orgId)?.name || orgId }}
+                <button type="button" @click="removeOrgFromForm(orgId)"
+                  class="text-blue-400 hover:text-blue-700 leading-none">✕</button>
+              </span>
+              <span v-if="!form.orgIds.length" class="text-xs text-gray-400 dark:text-gray-500 italic">{{ $t('admin.users.org_none') }}</span>
             </div>
+            <select @change="addOrgToForm($event.target.value); $event.target.value = ''"
+              class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100">
+              <option value="">{{ $t('admin.users.add_org') }}</option>
+              <option v-for="org in availableOrgsToAdd" :key="org.id" :value="org.id">{{ org.name }}</option>
+            </select>
           </div>
 
           <!-- Projets -->
-          <div v-if="form.role !== 'ADMIN' && form.organizationId" class="space-y-3">
+          <div v-if="form.role === 'ADMIN' || form.orgIds.length" class="space-y-3">
             <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ $t('admin.users.section_projects') }}</p>
             <div v-if="loadingOrgProjects" class="text-xs text-gray-400">{{ $t('common.loading') }}</div>
             <div v-else-if="orgProjects.length === 0" class="text-xs text-gray-400 dark:text-gray-500 italic">
@@ -139,7 +145,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { adminUsersApi, organizationsApi } from '../services/api.js'
+import { adminUsersApi, organizationsApi, projectsApi } from '../services/api.js'
 import { useAuthStore } from '../stores/auth.js'
 import { useConfigStore } from '../stores/config.js'
 
@@ -167,7 +173,7 @@ onMounted(async () => {
 })
 
 function isPending(u) {
-  return u.role !== 'ADMIN' && !u.organizationId
+  return !u.organizations?.length
 }
 
 function roleBadge(role) {
@@ -183,36 +189,71 @@ const editing = ref(null)
 const form = ref({})
 const editError = ref('')
 const saving = ref(false)
-const orgProjects = ref([])
 const loadingOrgProjects = ref(false)
 
-function openEdit(u) {
+const orgProjectsMap = ref({})
+const allProjects = ref([])
+
+const orgProjects = computed(() => {
+  if (editing.value?.role === 'ADMIN') return allProjects.value
+  const seen = new Set()
+  return form.value.orgIds.flatMap(id => orgProjectsMap.value[id] || []).filter(p => {
+    if (seen.has(p.id)) return false
+    seen.add(p.id)
+    return true
+  })
+})
+
+const availableOrgsToAdd = computed(() =>
+  orgs.value.filter(o => !form.value.orgIds.includes(o.id))
+)
+
+async function openEdit(u) {
   editing.value = u
   form.value = {
     role: u.role,
     active: u.active,
-    organizationId: u.organizationId ?? null,
+    orgIds: (u.organizations || []).map(o => o.id),
     projectEntries: (u.projectRoles || []).map(pr => ({ projectId: pr.projectId, role: pr.role }))
   }
-  orgProjects.value = []
+  orgProjectsMap.value = {}
   editError.value = ''
-  if (u.organizationId) loadOrgProjects(u.organizationId)
+  if (u.role === 'ADMIN') {
+    if (!allProjects.value.length) {
+      loadingOrgProjects.value = true
+      try {
+        const { data } = await projectsApi.list()
+        allProjects.value = data
+      } finally {
+        loadingOrgProjects.value = false
+      }
+    }
+  }
+  for (const o of (u.organizations || [])) loadOrgProjects(o.id)
 }
 
 async function loadOrgProjects(orgId) {
-  if (!orgId) { orgProjects.value = []; return }
+  if (!orgId || orgProjectsMap.value[orgId]) return
   loadingOrgProjects.value = true
   try {
     const { data } = await organizationsApi.get(orgId)
-    orgProjects.value = data.projects || []
+    orgProjectsMap.value = { ...orgProjectsMap.value, [orgId]: data.projects || [] }
   } finally {
     loadingOrgProjects.value = false
   }
 }
 
-function onOrgChange(newOrgId) {
-  form.value.projectEntries = []
-  loadOrgProjects(newOrgId)
+async function addOrgToForm(orgId) {
+  if (!orgId || form.value.orgIds.includes(orgId)) return
+  form.value.orgIds.push(orgId)
+  await loadOrgProjects(orgId)
+}
+
+function removeOrgFromForm(orgId) {
+  form.value.orgIds = form.value.orgIds.filter(id => id !== orgId)
+  form.value.projectEntries = form.value.projectEntries.filter(e =>
+    !(orgProjectsMap.value[orgId] || []).some(p => p.id === e.projectId)
+  )
 }
 
 function isProjectSelected(projectId) {
@@ -249,20 +290,24 @@ async function saveUser() {
       updated = data
     }
 
-    // 2. org
-    const orgChanged = form.value.organizationId !== (editing.value.organizationId ?? null)
-    if (orgChanged && form.value.role !== 'ADMIN') {
-      const { data } = await adminUsersApi.assignOrganization(editing.value.id, {
-        organizationId: form.value.organizationId
-      })
+    // 2. org diff
+    const oldOrgIds = (editing.value.organizations || []).map(o => o.id)
+    const toAdd = form.value.orgIds.filter(id => !oldOrgIds.includes(id))
+    const toRemove = oldOrgIds.filter(id => !form.value.orgIds.includes(id))
+    for (const orgId of toAdd) {
+      const { data } = await adminUsersApi.addOrganization(editing.value.id, orgId)
+      updated = data
+    }
+    for (const orgId of toRemove) {
+      const { data } = await adminUsersApi.removeOrganization(editing.value.id, orgId)
       updated = data
     }
 
     // 3. projects
-    if (form.value.organizationId && form.value.role !== 'ADMIN') {
+    if (form.value.role === 'ADMIN' || form.value.orgIds.length) {
       const origMap = new Map((editing.value.projectRoles || []).map(pr => [pr.projectId, pr.role]))
       const newEntries = form.value.projectEntries || []
-      const projectsChanged = orgChanged ||
+      const projectsChanged =
         origMap.size !== newEntries.length ||
         newEntries.some(e => origMap.get(e.projectId) !== e.role)
       if (projectsChanged) {

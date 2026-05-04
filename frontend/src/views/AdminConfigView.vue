@@ -35,11 +35,6 @@
               <th class="pb-2 pr-4">{{ $t('admin.config.col_active') }}</th>
               <th class="pb-2 pr-4">{{ $t('admin.config.col_position') }}</th>
             </template>
-            <template v-else-if="isClientTab">
-              <th class="pb-2 pr-4">{{ $t('admin.config.col_name') }}</th>
-              <th class="pb-2 pr-4">{{ $t('admin.config.col_email') }}</th>
-              <th class="pb-2 pr-4">{{ $t('admin.config.col_active') }}</th>
-            </template>
             <template v-else-if="isLabelTab">
               <th class="pb-2 pr-4">{{ $t('admin.config.col_name') }}</th>
               <th class="pb-2 pr-4">{{ $t('admin.config.col_color') }}</th>
@@ -62,14 +57,7 @@
               </td>
               <td class="py-2.5 pr-4 text-gray-500">{{ item.position }}</td>
             </template>
-            <template v-else-if="isClientTab">
-              <td class="py-2.5 pr-4 font-medium text-gray-800 dark:text-gray-200">{{ item.name }}</td>
-              <td class="py-2.5 pr-4 text-gray-500 dark:text-gray-400">{{ item.contactEmail || '—' }}</td>
-              <td class="py-2.5 pr-4">
-                <span :class="item.active ? 'text-green-600' : 'text-gray-400'">{{ item.active ? $t('common.yes') : $t('common.no') }}</span>
-              </td>
-            </template>
-            <template v-else-if="isLabelTab">
+          <template v-else-if="isLabelTab">
               <td class="py-2.5 pr-4 font-medium text-gray-800 dark:text-gray-200">{{ item.name }}</td>
               <td class="py-2.5 pr-4">
                 <span v-if="item.color" :class="['inline-block w-4 h-4 rounded-full mr-1', dotClass(item.color)]"></span>
@@ -82,7 +70,7 @@
             </td>
           </tr>
           <tr v-if="displayItems.length === 0">
-            <td :colspan="isLinkTypeTab ? 7 : isConfigTab ? 6 : 4" class="py-6 text-center text-gray-400 dark:text-gray-500 italic">{{ $t('admin.config.no_values') }}</td>
+            <td :colspan="isLinkTypeTab ? 7 : isConfigTab ? 6 : 3" class="py-6 text-center text-gray-400 dark:text-gray-500 italic">{{ $t('admin.config.no_values') }}</td>
           </tr>
         </tbody>
       </table>
@@ -157,23 +145,6 @@
                 class="w-16 border rounded px-2 py-1 text-sm" />
             </div>
           </div>
-        </div>
-
-        <!-- Formulaire client -->
-        <div v-else-if="isClientTab" class="space-y-3">
-          <div>
-            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_client_name') }}</label>
-            <input v-model="form.name" :placeholder="$t('admin.config.field_client_name_placeholder')"
-              class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('admin.config.field_client_email') }}</label>
-            <input v-model="form.contactEmail" type="email" :placeholder="$t('admin.config.field_client_email_placeholder')"
-              class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
-          </div>
-          <label class="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="checkbox" v-model="form.active" class="rounded" /> {{ $t('admin.config.field_active') }}
-          </label>
         </div>
 
         <!-- Formulaire étiquette -->
@@ -251,29 +222,22 @@ const ColorPicker = {
 
 const config = useConfigStore()
 
-const tabs = ['STATUS', 'PRIORITY', 'TYPE', 'LINK_TYPE', 'PROJECT_ROLE', 'CLIENT', 'LABEL']
+const tabs = ['STATUS', 'PRIORITY', 'TYPE', 'LINK_TYPE', 'PROJECT_ROLE', 'LABEL']
 const activeTab = ref('STATUS')
 
 const isConfigTab   = computed(() => ['STATUS', 'PRIORITY', 'TYPE', 'LINK_TYPE', 'PROJECT_ROLE'].includes(activeTab.value))
 const isLinkTypeTab = computed(() => activeTab.value === 'LINK_TYPE')
-const isClientTab   = computed(() => activeTab.value === 'CLIENT')
 const isLabelTab    = computed(() => activeTab.value === 'LABEL')
 
-// Local data for CLIENT and LABEL tabs
-const clientItems = ref([])
+// Local data for LABEL tab
 const labelItems  = ref([])
 
-async function loadClients() {
-  const { data } = await api.get('/admin/clients')
-  clientItems.value = data
-}
 async function loadLabels() {
   const { data } = await api.get('/admin/labels')
   labelItems.value = data
 }
 
 const displayItems = computed(() => {
-  if (isClientTab.value) return clientItems.value
   if (isLabelTab.value)  return labelItems.value
   switch (activeTab.value) {
     case 'STATUS':    return config.statuses
@@ -287,8 +251,7 @@ const displayItems = computed(() => {
 
 async function switchTab(key) {
   activeTab.value = key
-  if (key === 'CLIENT' && clientItems.value.length === 0) await loadClients()
-  if (key === 'LABEL'  && labelItems.value.length === 0)  await loadLabels()
+  if (key === 'LABEL' && labelItems.value.length === 0) await loadLabels()
 }
 
 function dotClass(color) {
@@ -309,8 +272,6 @@ function openCreate() {
   formError.value = ''
   if (isConfigTab.value) {
     form.value = { code: '', labels: emptyLabels(), inverseLabels: emptyLabels(), color: 'blue', active: true, position: displayItems.value.length + 1 }
-  } else if (isClientTab.value) {
-    form.value = { name: '', contactEmail: '', active: true }
   } else {
     form.value = { name: '', color: 'blue' }
   }
@@ -329,8 +290,6 @@ function openEdit(item) {
       active: item.active,
       position: item.position
     }
-  } else if (isClientTab.value) {
-    form.value = { name: item.name, contactEmail: item.contactEmail || '', active: item.active }
   } else {
     form.value = { name: item.name, color: item.color || 'blue' }
   }
@@ -370,16 +329,6 @@ async function save() {
         displayItems.value.push(data)
       }
       await config.load()
-    } else if (isClientTab.value) {
-      if (editingItem.value) {
-        const { data } = await api.put(`/admin/clients/${editingItem.value.id}`, form.value)
-        replaceInList(clientItems.value, data)
-        await config.load()
-      } else {
-        const { data } = await api.post('/admin/clients', form.value)
-        clientItems.value.push(data)
-        await config.load()
-      }
     } else {
       if (editingItem.value) {
         const { data } = await api.put(`/admin/labels/${editingItem.value.id}`, form.value)
@@ -413,10 +362,6 @@ async function doDelete() {
   try {
     if (isConfigTab.value) {
       await api.delete(`/admin/config/${activeTab.value}/${deleteTarget.value.id}`)
-      await config.load()
-    } else if (isClientTab.value) {
-      await api.delete(`/admin/clients/${deleteTarget.value.id}`)
-      clientItems.value = clientItems.value.filter(c => c.id !== deleteTarget.value.id)
       await config.load()
     } else {
       await api.delete(`/admin/labels/${deleteTarget.value.id}`)

@@ -1,6 +1,7 @@
 package com.helpmi.service;
 
 import com.helpmi.domain.Organization;
+import com.helpmi.domain.Project;
 import com.helpmi.domain.Ticket;
 import com.helpmi.domain.TicketLink;
 import com.helpmi.domain.User;
@@ -84,8 +85,9 @@ class TicketLinkServiceTest {
     }
 
     @Test
-    void createLink_adminUser_valid_returnsOutgoingResponse() {
+    void createLink_adminUser_memberOfTargetProject_returnsOutgoingResponse() {
         User admin = adminUser();
+        admin.getOrganizations().add(organization());
         Ticket source = ticket(project(), admin);
         source.setReference("TEST-1");
         Ticket target = ticket(project(), admin);
@@ -95,6 +97,8 @@ class TicketLinkServiceTest {
         when(ticketRepository.findById(target.getId())).thenReturn(Optional.of(target));
         when(linkRepository.existsBySourceTicketIdAndTargetTicketIdAndLinkType(
                 source.getId(), target.getId(), "DEPENDS_ON")).thenReturn(false);
+        when(projectRepository.isProjectAccessibleToUser(target.getProject().getId(), admin.getId()))
+                .thenReturn(true);
         TicketLink saved = buildLink(source, target, "DEPENDS_ON");
         when(linkRepository.save(any())).thenReturn(saved);
 
@@ -103,6 +107,25 @@ class TicketLinkServiceTest {
 
         assertThat(result.direction()).isEqualTo("OUTGOING");
         assertThat(result.linkType()).isEqualTo("DEPENDS_ON");
+    }
+
+    @Test
+    void createLink_adminUser_notMemberOfTargetProject_throwsForbidden() {
+        User admin = adminUser();
+        admin.getOrganizations().add(organization());
+        Ticket source = ticket(project(), admin);
+        Ticket target = ticket(project(), admin);
+        when(currentUserService.getCurrentUser()).thenReturn(admin);
+        when(ticketRepository.findById(source.getId())).thenReturn(Optional.of(source));
+        when(ticketRepository.findById(target.getId())).thenReturn(Optional.of(target));
+        when(linkRepository.existsBySourceTicketIdAndTargetTicketIdAndLinkType(any(), any(), any()))
+                .thenReturn(false);
+        when(projectRepository.isProjectAccessibleToUser(target.getProject().getId(), admin.getId()))
+                .thenReturn(false);
+
+        assertThatThrownBy(() -> service.createLink(source.getId(),
+                new CreateTicketLinkRequest(target.getId(), "DEPENDS_ON")))
+                .isInstanceOf(ForbiddenException.class);
     }
 
     @Test
@@ -283,19 +306,24 @@ class TicketLinkServiceTest {
     }
 
     @Test
-    void search_admin_seesAllTickets_excludesCurrentTicket() {
+    void search_admin_filtersByProjectMembership_excludesCurrentTicket() {
         User admin = adminUser();
-        Ticket t1 = ticket(project(), admin);
-        Ticket t2 = ticket(project(), admin);
+        admin.getOrganizations().add(organization());
+        Project p = project();
+        Ticket t1 = ticket(p, admin);
+        Ticket t2 = ticket(p, admin);
         UUID excludeId = t1.getId();
+        List<UUID> projectIds = List.of(p.getId());
         when(currentUserService.getCurrentUser()).thenReturn(admin);
-        when(ticketRepository.searchByQuery(any(), any())).thenReturn(List.of(t1, t2));
+        when(projectRepository.findIdsByUserId(admin.getId())).thenReturn(projectIds);
+        when(ticketRepository.searchByQueryInProjects(any(), eq(projectIds), any()))
+                .thenReturn(List.of(t1, t2));
 
         List<TicketSummary> result = service.search("TEST", excludeId);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).id()).isEqualTo(t2.getId());
-        verifyNoInteractions(projectRepository);
+        verify(ticketRepository, never()).searchByQuery(any(), any());
     }
 
     @Test
@@ -315,14 +343,15 @@ class TicketLinkServiceTest {
     }
 
     @Test
-    void search_nonAdminWithoutOrg_returnsEmpty() {
+    void search_noProjectMembership_returnsEmpty() {
         User agent = agentUser();
         when(currentUserService.getCurrentUser()).thenReturn(agent);
+        when(projectRepository.findIdsByUserId(agent.getId())).thenReturn(List.of());
 
         List<TicketSummary> result = service.search("TEST", UUID.randomUUID());
 
         assertThat(result).isEmpty();
-        verifyNoInteractions(ticketRepository, projectRepository);
+        verifyNoInteractions(ticketRepository);
     }
 
     @Test

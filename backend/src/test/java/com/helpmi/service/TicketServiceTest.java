@@ -1,17 +1,17 @@
 package com.helpmi.service;
 
 import com.helpmi.domain.Attachment;
-import com.helpmi.domain.Client;
 import com.helpmi.domain.Comment;
 import com.helpmi.domain.Label;
+import com.helpmi.domain.Organization;
 import com.helpmi.domain.Project;
 import com.helpmi.domain.Ticket;
 import com.helpmi.domain.User;
 import com.helpmi.dto.request.CreateTicketRequest;
 import com.helpmi.dto.request.UpdateTicketRequest;
 import com.helpmi.dto.response.ChangeStatusResponse;
-import com.helpmi.dto.response.ClientResponse;
 import com.helpmi.dto.response.LabelResponse;
+import com.helpmi.dto.response.OrganizationSummary;
 import com.helpmi.dto.response.TicketDetailResponse;
 import com.helpmi.dto.response.TicketResponse;
 import com.helpmi.exception.ForbiddenException;
@@ -47,7 +47,7 @@ class TicketServiceTest {
     @Mock CommentRepository commentRepository;
     @Mock AttachmentRepository attachmentRepository;
     @Mock TicketLinkRepository ticketLinkRepository;
-    @Mock ClientRepository clientRepository;
+    @Mock OrganizationRepository organizationRepository;
     @Mock LabelRepository labelRepository;
     @Mock ProjectService projectService;
     @Mock CurrentUserService currentUserService;
@@ -122,7 +122,7 @@ class TicketServiceTest {
         assertThat(result.reference()).isEqualTo("TEST-1");
         assertThat(result.title()).isEqualTo("Test Ticket");
         assertThat(result.projectId()).isEqualTo(project.getId());
-        assertThat(result.clients()).isEmpty();
+        assertThat(result.organizations()).isEmpty();
         assertThat(result.labels()).isEmpty();
         assertThat(result.links()).isEmpty();
     }
@@ -304,10 +304,10 @@ class TicketServiceTest {
     @Test
     void cloneTicket_copiesFieldsWithoutLinks() {
         Label label = label("bug");
-        Client client = client("Acme");
+        Organization org = organization();
         LocalDate dueDate = LocalDate.of(2025, 6, 1);
         ticket.getLabels().add(label);
-        ticket.getClients().add(client);
+        ticket.getOrganizations().add(org);
         ticket.setDueDate(dueDate);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(currentUserService.getCurrentUser()).thenReturn(reporter);
@@ -324,7 +324,7 @@ class TicketServiceTest {
                 t.getType().equals("TASK") &&
                 dueDate.equals(t.getDueDate()) &&
                 t.getLabels().contains(label) &&
-                t.getClients().contains(client)));
+                t.getOrganizations().contains(org)));
     }
 
     @Test
@@ -504,45 +504,42 @@ class TicketServiceTest {
         verify(projectService, never()).generateTicketReference(any());
     }
 
-    // ── setClients ────────────────────────────────────────────────────────────
+    // ── setOrganizations ──────────────────────────────────────────────────────
 
     @Test
-    void setClients_replacesExistingClients() {
-        Client c1 = client("Acme");
-        Client c2 = client("Beta");
-        ticket.getClients().add(c1);
+    void setOrganizations_replacesExistingOrgs() {
+        Organization o1 = organization();
+        Organization o2 = organization();
+        ticket.getOrganizations().add(o1);
         when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
-        when(clientRepository.findAllById(List.of(c2.getId()))).thenReturn(List.of(c2));
+        when(organizationRepository.findAllById(List.of(o2.getId()))).thenReturn(List.of(o2));
 
-        List<ClientResponse> result = service.setClients(project.getId(), ticket.getId(), List.of(c2.getId()));
+        List<OrganizationSummary> result = service.setOrganizations(project.getId(), ticket.getId(), List.of(o2.getId()));
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).name()).isEqualTo("Beta");
-        assertThat(ticket.getClients()).containsExactly(c2);
+        assertThat(ticket.getOrganizations()).containsExactly(o2);
     }
 
     @Test
-    void setClients_emptyList_clearsClients() {
-        Client c = client("Acme");
-        ticket.getClients().add(c);
+    void setOrganizations_emptyList_clearsOrgs() {
+        ticket.getOrganizations().add(organization());
         when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
 
-        List<ClientResponse> result = service.setClients(project.getId(), ticket.getId(), List.of());
+        List<OrganizationSummary> result = service.setOrganizations(project.getId(), ticket.getId(), List.of());
 
         assertThat(result).isEmpty();
-        assertThat(ticket.getClients()).isEmpty();
+        assertThat(ticket.getOrganizations()).isEmpty();
     }
 
     @Test
-    void setClients_nullList_clearsClients() {
-        Client c = client("Acme");
-        ticket.getClients().add(c);
+    void setOrganizations_nullList_clearsOrgs() {
+        ticket.getOrganizations().add(organization());
         when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
 
-        List<ClientResponse> result = service.setClients(project.getId(), ticket.getId(), null);
+        List<OrganizationSummary> result = service.setOrganizations(project.getId(), ticket.getId(), null);
 
         assertThat(result).isEmpty();
     }
@@ -610,11 +607,11 @@ class TicketServiceTest {
     }
 
     @Test
-    void setClients_unauthorizedClient_throwsForbidden() {
+    void setOrganizations_unauthorizedUser_throwsForbidden() {
         when(currentUserService.getCurrentUser()).thenReturn(clientUser());
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
 
-        assertThatThrownBy(() -> service.setClients(project.getId(), ticket.getId(), List.of()))
+        assertThatThrownBy(() -> service.setOrganizations(project.getId(), ticket.getId(), List.of()))
                 .isInstanceOf(ForbiddenException.class);
     }
 

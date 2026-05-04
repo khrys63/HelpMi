@@ -7,8 +7,8 @@ import com.helpmi.dto.request.MoveTicketRequest;
 import com.helpmi.dto.request.SetAssigneeRequest;
 import com.helpmi.dto.request.UpdateTicketRequest;
 import com.helpmi.dto.response.ChangeStatusResponse;
-import com.helpmi.dto.response.ClientResponse;
 import com.helpmi.dto.response.LabelResponse;
+import com.helpmi.dto.response.OrganizationSummary;
 import com.helpmi.dto.response.TicketDetailResponse;
 import com.helpmi.dto.response.TicketHistoryResponse;
 import com.helpmi.dto.response.TicketResponse;
@@ -81,10 +81,10 @@ public class TicketController {
         return ticketService.setDueDate(projectId, ticketId, req.dueDate());
     }
 
-    @PutMapping("/{ticketId}/clients")
-    public List<ClientResponse> setClients(@PathVariable UUID projectId, @PathVariable UUID ticketId,
+    @PutMapping("/{ticketId}/organizations")
+    public List<OrganizationSummary> setOrganizations(@PathVariable UUID projectId, @PathVariable UUID ticketId,
             @RequestBody Map<String, List<UUID>> body) {
-        return ticketService.setClients(projectId, ticketId, body.get("clientIds"));
+        return ticketService.setOrganizations(projectId, ticketId, body.get("organizationIds"));
     }
 
     @PutMapping("/{ticketId}/labels")

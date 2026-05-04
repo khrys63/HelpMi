@@ -1,6 +1,5 @@
 package com.helpmi.controller;
 
-import com.helpmi.dto.request.AssignOrganizationRequest;
 import com.helpmi.dto.request.UpdateUserProjectsRequest;
 import com.helpmi.dto.request.UpdateUserRequest;
 import com.helpmi.dto.response.UserResponse;
@@ -28,10 +27,14 @@ public class AdminUserController {
         return userService.updateUser(id, req);
     }
 
-    @PutMapping("/{id}/organization")
-    public UserResponse assignOrganization(@PathVariable UUID id,
-                                           @RequestBody AssignOrganizationRequest req) {
-        return userService.assignOrganization(id, req);
+    @PostMapping("/{id}/organizations/{orgId}")
+    public UserResponse addOrganization(@PathVariable UUID id, @PathVariable UUID orgId) {
+        return userService.addOrganization(id, orgId);
+    }
+
+    @DeleteMapping("/{id}/organizations/{orgId}")
+    public UserResponse removeOrganization(@PathVariable UUID id, @PathVariable UUID orgId) {
+        return userService.removeOrganization(id, orgId);
     }
 
     @PutMapping("/{id}/projects")

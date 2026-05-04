@@ -4,7 +4,6 @@ import com.helpmi.domain.Organization;
 import com.helpmi.domain.User;
 import com.helpmi.domain.UserProject;
 import com.helpmi.domain.enums.UserRole;
-import com.helpmi.dto.request.AssignOrganizationRequest;
 import com.helpmi.dto.request.UpdateLocaleRequest;
 import com.helpmi.dto.request.UpdateThemeRequest;
 import com.helpmi.dto.request.UpdateUserProjectsRequest;
@@ -23,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -60,25 +60,26 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse assignOrganization(UUID id, AssignOrganizationRequest req) {
+    public UserResponse addOrganization(UUID id, UUID orgId) {
         requireAdmin();
         User user = findUser(id);
-        if (user.getRole() == UserRole.ADMIN) {
-            throw new IllegalArgumentException("Les administrateurs n'ont pas d'organisation");
+        Organization org = organizationRepository.findById(orgId)
+                .filter(Organization::isActive)
+                .orElseThrow(() -> new NotFoundException("Organisation introuvable"));
+        user.getOrganizations().add(org);
+        return UserResponse.from(userRepository.save(user));
+    }
+
+    @Transactional
+    public UserResponse removeOrganization(UUID id, UUID orgId) {
+        requireAdmin();
+        User user = findUser(id);
+        boolean removed = user.getOrganizations().removeIf(o -> o.getId().equals(orgId));
+        if (!removed) {
+            throw new IllegalArgumentException("Cet utilisateur n'appartient pas à cette organisation");
         }
-        if (req.organizationId() == null) {
-            user.setOrganization(null);
-            user.getUserProjects().clear();
-        } else {
-            Organization org = organizationRepository.findById(req.organizationId())
-                    .filter(Organization::isActive)
-                    .orElseThrow(() -> new NotFoundException("Organisation introuvable"));
-            UUID currentOrgId = user.getOrganization() != null ? user.getOrganization().getId() : null;
-            if (!req.organizationId().equals(currentOrgId)) {
-                user.getUserProjects().clear();
-            }
-            user.setOrganization(org);
-        }
+        Set<UUID> orgProjectIds = new java.util.HashSet<>(projectRepository.findIdsByOrganizationId(orgId));
+        user.getUserProjects().removeIf(up -> orgProjectIds.contains(up.getProject().getId()));
         return UserResponse.from(userRepository.save(user));
     }
 
@@ -86,16 +87,19 @@ public class UserService {
     public UserResponse updateUserProjects(UUID id, UpdateUserProjectsRequest req) {
         requireAdmin();
         User user = findUser(id);
-        if (user.getOrganization() == null) {
-            throw new IllegalArgumentException("L'utilisateur n'a pas d'organisation");
-        }
-        Set<UUID> allowed = Set.copyOf(
-                projectRepository.findIdsByOrganizationId(user.getOrganization().getId()));
         List<UpdateUserProjectsRequest.ProjectRoleEntry> entries =
                 req.entries() == null ? List.of() : req.entries();
-        for (var entry : entries) {
-            if (!allowed.contains(entry.projectId())) {
-                throw new IllegalArgumentException("Projet non autorisé pour cette organisation");
+        if (user.getRole() != UserRole.ADMIN) {
+            if (user.getOrganizations().isEmpty()) {
+                throw new IllegalArgumentException("L'utilisateur n'a pas d'organisation");
+            }
+            Set<UUID> allowed = user.getOrganizations().stream()
+                    .flatMap(org -> projectRepository.findIdsByOrganizationId(org.getId()).stream())
+                    .collect(Collectors.toSet());
+            for (var entry : entries) {
+                if (!allowed.contains(entry.projectId())) {
+                    throw new IllegalArgumentException("Projet non autorisé pour cette organisation");
+                }
             }
         }
         user.getUserProjects().clear();

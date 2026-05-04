@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -87,19 +88,12 @@ public class OrganizationService {
         return toResponse(organizationRepository.save(org));
     }
 
-    public OrganizationResponse setUserOrganization(UUID orgId, UUID userId) {
+    public OrganizationResponse addUserToOrganization(UUID orgId, UUID userId) {
         requireAdmin();
         Organization org = findOrgWithProjects(orgId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
-        if (user.getRole() == UserRole.ADMIN) {
-            throw new IllegalArgumentException("Les administrateurs n'ont pas d'organisation");
-        }
-        UUID currentOrgId = user.getOrganization() != null ? user.getOrganization().getId() : null;
-        if (!orgId.equals(currentOrgId)) {
-            user.getUserProjects().clear();
-        }
-        user.setOrganization(org);
+        user.getOrganizations().add(org);
         userRepository.save(user);
         return toResponse(org);
     }
@@ -109,11 +103,13 @@ public class OrganizationService {
         Organization org = findOrgWithProjects(orgId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
-        if (!orgId.equals(user.getOrganization() != null ? user.getOrganization().getId() : null)) {
+        boolean removed = user.getOrganizations().removeIf(o -> o.getId().equals(orgId));
+        if (!removed) {
             throw new IllegalArgumentException("Cet utilisateur n'appartient pas à cette organisation");
         }
-        user.setOrganization(null);
-        user.getUserProjects().clear();
+        Set<UUID> orgProjectIds = new java.util.HashSet<>(
+                projectRepository.findIdsByOrganizationId(orgId));
+        user.getUserProjects().removeIf(up -> orgProjectIds.contains(up.getProject().getId()));
         userRepository.save(user);
         return toResponse(org);
     }

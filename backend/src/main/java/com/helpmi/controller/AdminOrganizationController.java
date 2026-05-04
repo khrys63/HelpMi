@@ -56,9 +56,9 @@ public class AdminOrganizationController {
         return organizationService.removeProject(orgId, projectId);
     }
 
-    @PutMapping("/{orgId}/users/{userId}")
-    public OrganizationResponse assignUser(@PathVariable UUID orgId, @PathVariable UUID userId) {
-        return organizationService.setUserOrganization(orgId, userId);
+    @PostMapping("/{orgId}/users/{userId}")
+    public OrganizationResponse addUser(@PathVariable UUID orgId, @PathVariable UUID userId) {
+        return organizationService.addUserToOrganization(orgId, userId);
     }
 
     @DeleteMapping("/{orgId}/users/{userId}")

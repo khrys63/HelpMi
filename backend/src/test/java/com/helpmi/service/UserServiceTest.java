@@ -5,7 +5,6 @@ import com.helpmi.domain.Project;
 import com.helpmi.domain.User;
 import com.helpmi.domain.UserProject;
 import com.helpmi.domain.enums.UserRole;
-import com.helpmi.dto.request.AssignOrganizationRequest;
 import com.helpmi.dto.request.UpdateUserProjectsRequest;
 import com.helpmi.dto.request.UpdateUserRequest;
 import com.helpmi.dto.response.UserResponse;
@@ -82,8 +81,7 @@ class UserServiceTest {
 
         UserResponse result = service.getCurrentUser();
 
-        assertThat(result.organizationId()).isNull();
-        assertThat(result.organizationName()).isNull();
+        assertThat(result.organizations()).isEmpty();
     }
 
     // --- getAllUsersForAdmin ---
@@ -172,70 +170,43 @@ class UserServiceTest {
         assertThat(target.isActive()).isFalse();
     }
 
-    // --- assignOrganization ---
+    // --- addOrganization ---
 
     @Test
-    void assignOrganization_notAdmin_throws() {
+    void addOrganization_notAdmin_throws() {
         when(currentUserService.getCurrentUser()).thenReturn(agentUser());
 
-        assertThatThrownBy(() -> service.assignOrganization(UUID.randomUUID(), new AssignOrganizationRequest(null)))
+        assertThatThrownBy(() -> service.addOrganization(UUID.randomUUID(), UUID.randomUUID()))
                 .isInstanceOf(ForbiddenException.class);
     }
 
     @Test
-    void assignOrganization_adminTarget_throws() {
+    void addOrganization_adminTarget_succeeds() {
         when(currentUserService.getCurrentUser()).thenReturn(adminUser());
         User target = adminUser();
+        Organization org = organization();
         when(userRepository.findById(target.getId())).thenReturn(Optional.of(target));
+        when(organizationRepository.findById(org.getId())).thenReturn(Optional.of(org));
+        when(userRepository.save(target)).thenReturn(target);
 
-        assertThatThrownBy(() -> service.assignOrganization(target.getId(), new AssignOrganizationRequest(null)))
-                .isInstanceOf(IllegalArgumentException.class);
+        UserResponse result = service.addOrganization(target.getId(), org.getId());
+
+        assertThat(target.getOrganizations()).contains(org);
     }
 
     @Test
-    void assignOrganization_orgNotFound_throws() {
+    void addOrganization_orgNotFound_throws() {
         when(currentUserService.getCurrentUser()).thenReturn(adminUser());
         User target = clientUser();
         when(userRepository.findById(target.getId())).thenReturn(Optional.of(target));
         when(organizationRepository.findById(any())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.assignOrganization(target.getId(), new AssignOrganizationRequest(UUID.randomUUID())))
+        assertThatThrownBy(() -> service.addOrganization(target.getId(), UUID.randomUUID()))
                 .isInstanceOf(NotFoundException.class);
     }
 
     @Test
-    void assignOrganization_nullOrgId_removesOrg() {
-        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
-        User target = clientUser();
-        Organization org = organization();
-        target.setOrganization(org);
-        when(userRepository.findById(target.getId())).thenReturn(Optional.of(target));
-        when(userRepository.save(target)).thenReturn(target);
-
-        service.assignOrganization(target.getId(), new AssignOrganizationRequest(null));
-
-        assertThat(target.getOrganization()).isNull();
-    }
-
-    @Test
-    void assignOrganization_nullOrg_clearsProjects() {
-        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
-        Organization org = organization();
-        User target = clientUser();
-        target.setOrganization(org);
-        target.getUserProjects().add(UserProject.builder()
-                .id(UUID.randomUUID()).user(target).project(project()).role("MEMBER").build());
-        when(userRepository.findById(target.getId())).thenReturn(Optional.of(target));
-        when(userRepository.save(target)).thenReturn(target);
-
-        service.assignOrganization(target.getId(), new AssignOrganizationRequest(null));
-
-        assertThat(target.getOrganization()).isNull();
-        assertThat(target.getUserProjects()).isEmpty();
-    }
-
-    @Test
-    void assignOrganization_withOrgId_setsOrg() {
+    void addOrganization_addsOrgToSet() {
         when(currentUserService.getCurrentUser()).thenReturn(adminUser());
         User target = clientUser();
         Organization org = organization();
@@ -243,45 +214,47 @@ class UserServiceTest {
         when(organizationRepository.findById(org.getId())).thenReturn(Optional.of(org));
         when(userRepository.save(target)).thenReturn(target);
 
-        service.assignOrganization(target.getId(), new AssignOrganizationRequest(org.getId()));
+        service.addOrganization(target.getId(), org.getId());
 
-        assertThat(target.getOrganization()).isEqualTo(org);
+        assertThat(target.getOrganizations()).contains(org);
+    }
+
+    // --- removeOrganization ---
+
+    @Test
+    void removeOrganization_notAdmin_throws() {
+        when(currentUserService.getCurrentUser()).thenReturn(agentUser());
+
+        assertThatThrownBy(() -> service.removeOrganization(UUID.randomUUID(), UUID.randomUUID()))
+                .isInstanceOf(ForbiddenException.class);
     }
 
     @Test
-    void assignOrganization_orgChanges_clearsProjects() {
+    void removeOrganization_userNotInOrg_throws() {
         when(currentUserService.getCurrentUser()).thenReturn(adminUser());
-        Organization currentOrg = organization();
-        Organization newOrg = organization();
-        User target = clientUser();
-        target.setOrganization(currentOrg);
-        target.getUserProjects().add(UserProject.builder()
-                .id(UUID.randomUUID()).user(target).project(project()).role("MEMBER").build());
+        User target = clientUser(); // no orgs
         when(userRepository.findById(target.getId())).thenReturn(Optional.of(target));
-        when(organizationRepository.findById(newOrg.getId())).thenReturn(Optional.of(newOrg));
-        when(userRepository.save(target)).thenReturn(target);
 
-        service.assignOrganization(target.getId(), new AssignOrganizationRequest(newOrg.getId()));
-
-        assertThat(target.getOrganization()).isEqualTo(newOrg);
-        assertThat(target.getUserProjects()).isEmpty();
+        assertThatThrownBy(() -> service.removeOrganization(target.getId(), UUID.randomUUID()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void assignOrganization_sameOrg_keepsProjects() {
+    void removeOrganization_removesOrgAndOrgProjects() {
         when(currentUserService.getCurrentUser()).thenReturn(adminUser());
         Organization org = organization();
-        User target = clientUser();
-        target.setOrganization(org);
+        User target = agentUserWithOrg(org);
+        Project p = project();
         target.getUserProjects().add(UserProject.builder()
-                .id(UUID.randomUUID()).user(target).project(project()).role("MEMBER").build());
+                .id(UUID.randomUUID()).user(target).project(p).role("MEMBER").build());
         when(userRepository.findById(target.getId())).thenReturn(Optional.of(target));
-        when(organizationRepository.findById(org.getId())).thenReturn(Optional.of(org));
+        when(projectRepository.findIdsByOrganizationId(org.getId())).thenReturn(List.of(p.getId()));
         when(userRepository.save(target)).thenReturn(target);
 
-        service.assignOrganization(target.getId(), new AssignOrganizationRequest(org.getId()));
+        service.removeOrganization(target.getId(), org.getId());
 
-        assertThat(target.getUserProjects()).hasSize(1);
+        assertThat(target.getOrganizations()).doesNotContain(org);
+        assertThat(target.getUserProjects()).isEmpty();
     }
 
     // --- updateUserProjects ---

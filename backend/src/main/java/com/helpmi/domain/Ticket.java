@@ -71,12 +71,13 @@ public class Ticket {
     private LocalDateTime closedAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "ticket_clients",
+    @JoinTable(name = "ticket_organizations",
         joinColumns = @JoinColumn(name = "ticket_id"),
-        inverseJoinColumns = @JoinColumn(name = "client_id"))
+        inverseJoinColumns = @JoinColumn(name = "organization_id"))
     @Builder.Default
     @ToString.Exclude
-    private Set<Client> clients = new HashSet<>();
+    @EqualsAndHashCode.Exclude
+    private Set<Organization> organizations = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "ticket_labels",

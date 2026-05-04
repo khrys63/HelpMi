@@ -7,9 +7,9 @@ import com.helpmi.dto.request.CreateTicketRequest;
 import com.helpmi.dto.request.UpdateTicketRequest;
 import com.helpmi.dto.response.AttachmentResponse;
 import com.helpmi.dto.response.ChangeStatusResponse;
-import com.helpmi.dto.response.ClientResponse;
 import com.helpmi.dto.response.CommentResponse;
 import com.helpmi.dto.response.LabelResponse;
+import com.helpmi.dto.response.OrganizationSummary;
 import com.helpmi.dto.response.TicketDetailResponse;
 import com.helpmi.dto.response.TicketLinkResponse;
 import com.helpmi.dto.response.TicketResponse;
@@ -18,8 +18,8 @@ import com.helpmi.dto.response.UserSummary;
 import com.helpmi.exception.ForbiddenException;
 import com.helpmi.exception.NotFoundException;
 import com.helpmi.repository.AttachmentRepository;
-import com.helpmi.repository.ClientRepository;
 import com.helpmi.repository.CommentRepository;
+import com.helpmi.repository.OrganizationRepository;
 import com.helpmi.repository.LabelRepository;
 import com.helpmi.repository.TicketLinkRepository;
 import com.helpmi.repository.TicketRepository;
@@ -50,7 +50,7 @@ public class TicketService {
     private final CommentRepository commentRepository;
     private final AttachmentRepository attachmentRepository;
     private final TicketLinkRepository ticketLinkRepository;
-    private final ClientRepository clientRepository;
+    private final OrganizationRepository organizationRepository;
     private final LabelRepository labelRepository;
     private final ProjectService projectService;
     private final CurrentUserService currentUserService;
@@ -102,9 +102,9 @@ public class TicketService {
                 .toList();
         var links = new ArrayList<TicketLinkResponse>(outgoing);
         links.addAll(incoming);
-        var clients = ticket.getClients().stream()
-                .map(ClientResponse::from)
-                .sorted(Comparator.comparing(ClientResponse::name))
+        var organizations = ticket.getOrganizations().stream()
+                .map(OrganizationSummary::from)
+                .sorted(Comparator.comparing(OrganizationSummary::name))
                 .toList();
         var labels = ticket.getLabels().stream()
                 .map(LabelResponse::from)
@@ -122,7 +122,7 @@ public class TicketService {
                 ticket.getDueDate(),
                 ticket.getProject().getId(), ticket.getProject().getName(), ticket.getProject().getKey(),
                 UserSummary.from(ticket.getReporter()), UserSummary.from(ticket.getAssignee()),
-                comments, attachments, links, clients, labels,
+                comments, attachments, links, organizations, labels,
                 ticket.getCreatedAt(), ticket.getUpdatedAt(), ticket.getClosedAt(), canAssign, canClone);
     }
 
@@ -226,7 +226,7 @@ public class TicketService {
                 .reporter(source.getReporter())
                 .assignee(source.getAssignee())
                 .build();
-        clone.getClients().addAll(source.getClients());
+        clone.getOrganizations().addAll(source.getOrganizations());
         clone.getLabels().addAll(source.getLabels());
         return ticketRepository.save(clone);
     }
@@ -247,7 +247,7 @@ public class TicketService {
                 .reporter(currentUser)
                 .assignee(source.getAssignee())
                 .build();
-        clone.getClients().addAll(source.getClients());
+        clone.getOrganizations().addAll(source.getOrganizations());
         clone.getLabels().addAll(source.getLabels());
         return toResponse(ticketRepository.save(clone));
     }
@@ -286,23 +286,23 @@ public class TicketService {
         ticketRepository.delete(findTicket(projectId, ticketId));
     }
 
-    public List<ClientResponse> setClients(UUID projectId, UUID ticketId, List<UUID> clientIds) {
+    public List<OrganizationSummary> setOrganizations(UUID projectId, UUID ticketId, List<UUID> orgIds) {
         Ticket ticket = findTicket(projectId, ticketId);
         requireCanModify(currentUserService.getCurrentUser(), ticket);
-        String oldClients = collectionNames(ticket.getClients().stream()
-                .map(c -> c.getName()).sorted().toList());
-        var newClients = clientIds == null || clientIds.isEmpty()
-                ? new HashSet<com.helpmi.domain.Client>()
-                : new HashSet<>(clientRepository.findAllById(clientIds));
-        ticket.getClients().clear();
-        ticket.getClients().addAll(newClients);
+        String oldOrgs = collectionNames(ticket.getOrganizations().stream()
+                .map(o -> o.getName()).sorted().toList());
+        var newOrgs = orgIds == null || orgIds.isEmpty()
+                ? new HashSet<com.helpmi.domain.Organization>()
+                : new HashSet<>(organizationRepository.findAllById(orgIds));
+        ticket.getOrganizations().clear();
+        ticket.getOrganizations().addAll(newOrgs);
         ticketRepository.save(ticket);
-        String newClientsStr = collectionNames(ticket.getClients().stream()
-                .map(c -> c.getName()).sorted().toList());
-        ticketHistoryService.record(ticket, "clients", oldClients, newClientsStr);
-        return ticket.getClients().stream()
-                .map(ClientResponse::from)
-                .sorted(Comparator.comparing(ClientResponse::name))
+        String newOrgsStr = collectionNames(ticket.getOrganizations().stream()
+                .map(o -> o.getName()).sorted().toList());
+        ticketHistoryService.record(ticket, "organizations", oldOrgs, newOrgsStr);
+        return ticket.getOrganizations().stream()
+                .map(OrganizationSummary::from)
+                .sorted(Comparator.comparing(OrganizationSummary::name))
                 .toList();
     }
 

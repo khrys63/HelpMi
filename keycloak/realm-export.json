@@ -8,8 +8,14 @@
   "duplicateEmailsAllowed": false,
   "roles": {
     "realm": [
-      { "name": "ADMIN", "composite": false },
-      { "name": "USER", "composite": false }
+      {
+        "name": "ADMIN",
+        "composite": false
+      },
+      {
+        "name": "USER",
+        "composite": false
+      }
     ]
   },
   "clients": [
@@ -25,7 +31,9 @@
         "http://localhost:3000/*",
         "http://app.localhost/*"
       ],
-      "webOrigins": ["+"],
+      "webOrigins": [
+        "+"
+      ],
       "protocol": "openid-connect",
       "attributes": {
         "pkce.code.challenge.method": "S256"
@@ -40,8 +48,16 @@
       "lastName": "Dev",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }],
-      "realmRoles": ["ADMIN"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN"
+      ]
     },
     {
       "username": "user1",
@@ -50,8 +66,16 @@
       "lastName": "One",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "user123", "temporary": false }],
-      "realmRoles": ["USER"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "USER"
+      ]
     },
     {
       "username": "user2",
@@ -60,8 +84,34 @@
       "lastName": "Two",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "user123", "temporary": false }],
-      "realmRoles": ["USER"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "USER"
+      ]
+    },
+    {
+      "username": "admin2",
+      "email": "admin2@helpmi.local",
+      "firstName": "Admin",
+      "lastName": "Two",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN"
+      ]
     }
   ]
 }

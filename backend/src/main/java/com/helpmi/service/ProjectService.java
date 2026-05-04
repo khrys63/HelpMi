@@ -2,6 +2,7 @@ package com.helpmi.service;
 
 import com.helpmi.domain.Project;
 import com.helpmi.domain.User;
+import com.helpmi.domain.UserProject;
 import com.helpmi.domain.enums.UserRole;
 import com.helpmi.dto.request.CreateProjectRequest;
 import com.helpmi.dto.request.UpdateProjectRequest;
@@ -32,11 +33,6 @@ public class ProjectService {
     @Transactional(readOnly = true)
     public List<ProjectResponse> getAllProjects() {
         User user = currentUserService.getCurrentUser();
-        if (user.getRole() == UserRole.ADMIN) {
-            return projectRepository.findByActiveTrueOrderByCreatedAtDesc()
-                    .stream().map(p -> toResponse(p, user)).toList();
-        }
-        if (user.getOrganization() == null) return List.of();
         return projectRepository.findActiveByUserId(user.getId())
                 .stream().map(p -> toResponse(p, user)).toList();
     }
@@ -61,7 +57,13 @@ public class ProjectService {
                 .description(req.description())
                 .createdBy(admin)
                 .build();
-        return toResponse(projectRepository.save(project), admin);
+        Project saved = projectRepository.save(project);
+        userProjectRepository.save(UserProject.builder()
+                .user(admin)
+                .project(saved)
+                .role("MEMBER")
+                .build());
+        return toResponse(saved, admin);
     }
 
     public ProjectResponse updateProject(UUID id, UpdateProjectRequest req) {
@@ -112,17 +114,14 @@ public class ProjectService {
 
     private void requireProjectAccess(Project project) {
         User user = currentUserService.getCurrentUser();
-        if (user.getRole() == UserRole.ADMIN) return;
-        if (user.getOrganization() == null ||
-                !projectRepository.isProjectAccessibleToUser(project.getId(), user.getId())) {
+        if (!projectRepository.isProjectAccessibleToUser(project.getId(), user.getId())) {
             throw new ForbiddenException("Accès refusé à ce projet");
         }
     }
 
     private ProjectResponse toResponse(Project p, User currentUser) {
         long ticketCount = ticketRepository.countByProjectId(p.getId());
-        boolean canAssign = currentUser.getRole() == UserRole.ADMIN
-                || isGestionnaire(currentUser.getId(), p.getId());
+        boolean canAssign = isGestionnaire(currentUser.getId(), p.getId());
         return new ProjectResponse(p.getId(), p.getName(), p.getKey(), p.getDescription(),
                 p.getTicketSequence(), ticketCount, p.getCreatedAt(), canAssign);
     }

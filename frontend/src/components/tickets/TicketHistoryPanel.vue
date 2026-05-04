@@ -134,7 +134,7 @@ const FIELD_COLORS = {
   title:       'bg-gray-500',
   description: 'bg-gray-400',
   dueDate:     'bg-red-400',
-  clients:     'bg-emerald-500',
+  organizations: 'bg-emerald-500',
   labels:      'bg-indigo-400',
   project:     'bg-pink-500',
 }

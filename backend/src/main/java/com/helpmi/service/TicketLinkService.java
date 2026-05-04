@@ -46,12 +46,9 @@ public class TicketLinkService {
         }
 
         User user = currentUserService.getCurrentUser();
-        if (user.getRole() != UserRole.ADMIN) {
-            UUID targetProjectId = target.getProject().getId();
-            if (user.getOrganization() == null
-                    || !projectRepository.isProjectAccessibleToUser(targetProjectId, user.getId())) {
-                throw new ForbiddenException("Accès refusé au projet du ticket cible");
-            }
+        UUID targetProjectId = target.getProject().getId();
+        if (!projectRepository.isProjectAccessibleToUser(targetProjectId, user.getId())) {
+            throw new ForbiddenException("Accès refusé au projet du ticket cible");
         }
 
         TicketLink link = TicketLink.builder()
@@ -86,16 +83,9 @@ public class TicketLinkService {
         String pattern = "%" + q.toUpperCase() + "%";
         User user = currentUserService.getCurrentUser();
 
-        List<Ticket> results;
-        if (user.getRole() == UserRole.ADMIN) {
-            results = ticketRepository.searchByQuery(pattern, Pageable.ofSize(10));
-        } else if (user.getOrganization() == null) {
-            return List.of();
-        } else {
-            List<UUID> projectIds = projectRepository.findIdsByUserId(user.getId());
-            if (projectIds.isEmpty()) return List.of();
-            results = ticketRepository.searchByQueryInProjects(pattern, projectIds, Pageable.ofSize(10));
-        }
+        List<UUID> projectIds = projectRepository.findIdsByUserId(user.getId());
+        if (projectIds.isEmpty()) return List.of();
+        List<Ticket> results = ticketRepository.searchByQueryInProjects(pattern, projectIds, Pageable.ofSize(10));
         return results.stream()
                 .filter(t -> excludeId == null || !t.getId().equals(excludeId))
                 .map(TicketSummary::from)

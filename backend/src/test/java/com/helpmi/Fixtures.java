@@ -42,15 +42,16 @@ public final class Fixtures {
     }
 
     public static User agentUserWithOrg(Organization org) {
-        return User.builder()
+        User user = User.builder()
                 .id(UUID.randomUUID())
                 .email("agent@test.com")
                 .firstName("Agent")
                 .lastName("User")
                 .role(UserRole.USER)
                 .active(true)
-                .organization(org)
                 .build();
+        user.getOrganizations().add(org);
+        return user;
     }
 
     public static User clientUser() {
@@ -97,15 +98,6 @@ public final class Fixtures {
                 .color("blue")
                 .active(true)
                 .position(1)
-                .build();
-    }
-
-    public static Client client(String name) {
-        return Client.builder()
-                .id(UUID.randomUUID())
-                .name(name)
-                .contactEmail(name.toLowerCase().replace(" ", "") + "@test.com")
-                .active(true)
                 .build();
     }
 

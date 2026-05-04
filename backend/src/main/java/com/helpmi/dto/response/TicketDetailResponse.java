@@ -22,7 +22,7 @@ public record TicketDetailResponse(
         List<CommentResponse> comments,
         List<AttachmentResponse> attachments,
         List<TicketLinkResponse> links,
-        List<ClientResponse> clients,
+        List<OrganizationSummary> organizations,
         List<LabelResponse> labels,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,

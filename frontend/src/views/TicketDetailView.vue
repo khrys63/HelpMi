@@ -295,22 +295,22 @@
             </p>
           </div>
 
-          <!-- Clients -->
+          <!-- Organisations -->
           <div class="pt-2 border-t dark:border-gray-700">
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.clients_label') }}</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.organizations_label') }}</p>
             <div class="flex flex-wrap gap-1 mb-2">
-              <span v-for="c in ticket.clients" :key="c.id"
+              <span v-for="o in ticket.organizations" :key="o.id"
                 class="inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs px-2 py-0.5 rounded-full">
-                {{ c.name }}
-                <button @click="removeClient(c.id)" class="text-indigo-400 hover:text-indigo-700 leading-none">✕</button>
+                {{ o.name }}
+                <button @click="removeOrganization(o.id)" class="text-indigo-400 hover:text-indigo-700 leading-none">✕</button>
               </span>
-              <span v-if="!ticket.clients?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">{{ $t('tickets.clients_none') }}</span>
+              <span v-if="!ticket.organizations?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">{{ $t('tickets.organizations_none') }}</span>
             </div>
             <div class="relative">
-              <select @change="addClient($event.target.value); $event.target.value = ''"
+              <select @change="addOrganization($event.target.value); $event.target.value = ''"
                 class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 dark:bg-gray-700">
-                <option value="">{{ $t('tickets.add_client') }}</option>
-                <option v-for="c in availableClients" :key="c.id" :value="c.id">{{ c.name }}</option>
+                <option value="">{{ $t('tickets.add_organization') }}</option>
+                <option v-for="o in availableOrganizations" :key="o.id" :value="o.id">{{ o.name }}</option>
               </select>
             </div>
           </div>
@@ -677,22 +677,23 @@ async function deleteTicket() {
   router.push(`/projects/${projectId}`)
 }
 
-// --- Clients ---
-const availableClients = computed(() =>
-  config.clients.filter(c => c.active && !ticket.value.clients?.some(tc => tc.id === c.id))
-)
+// --- Organisations ---
+const availableOrganizations = computed(() => {
+  const userOrgs = auth.user?.organizations || []
+  return userOrgs.filter(o => !ticket.value.organizations?.some(to => to.id === o.id))
+})
 
-async function addClient(clientId) {
-  if (!clientId) return
-  const ids = [...(ticket.value.clients || []).map(c => c.id), clientId]
-  const { data } = await ticketsApi.setClients(projectId, ticketId, ids)
-  ticket.value.clients = data
+async function addOrganization(orgId) {
+  if (!orgId) return
+  const ids = [...(ticket.value.organizations || []).map(o => o.id), orgId]
+  const { data } = await ticketsApi.setOrganizations(projectId, ticketId, ids)
+  ticket.value.organizations = data
 }
 
-async function removeClient(clientId) {
-  const ids = ticket.value.clients.map(c => c.id).filter(id => id !== clientId)
-  const { data } = await ticketsApi.setClients(projectId, ticketId, ids)
-  ticket.value.clients = data
+async function removeOrganization(orgId) {
+  const ids = ticket.value.organizations.map(o => o.id).filter(id => id !== orgId)
+  const { data } = await ticketsApi.setOrganizations(projectId, ticketId, ids)
+  ticket.value.organizations = data
 }
 
 // --- Étiquettes ---

@@ -33,7 +33,6 @@ export const useConfigStore = defineStore('config', () => {
   const types        = ref([])
   const linkTypes    = ref([])
   const projectRoles = ref([])
-  const clients      = ref([])
   const loaded       = ref(false)
 
   function localizeAll() {
@@ -45,16 +44,12 @@ export const useConfigStore = defineStore('config', () => {
   }
 
   async function load() {
-    const [{ data: config }, { data: clientList }] = await Promise.all([
-      api.get('/admin/config'),
-      api.get('/admin/clients')
-    ])
+    const { data: config } = await api.get('/admin/config')
     statuses.value     = config.STATUS       || []
     priorities.value   = config.PRIORITY     || []
     types.value        = config.TYPE         || []
     linkTypes.value    = config.LINK_TYPE    || []
     projectRoles.value = config.PROJECT_ROLE || []
-    clients.value      = clientList
     loaded.value = true
     localizeAll()
   }
@@ -64,6 +59,6 @@ export const useConfigStore = defineStore('config', () => {
   function getType(code)     { return types.value.find(t => t.code === code) }
   function getLinkType(code) { return linkTypes.value.find(l => l.code === code) }
 
-  return { statuses, priorities, types, linkTypes, projectRoles, clients, loaded,
+  return { statuses, priorities, types, linkTypes, projectRoles, loaded,
            load, localizeAll, getStatus, getPriority, getType, getLinkType }
 })

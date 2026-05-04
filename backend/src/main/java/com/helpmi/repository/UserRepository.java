@@ -14,8 +14,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByKeycloakId(String keycloakId);
     List<User> findByActiveTrueOrderByFirstNameAscLastNameAsc();
     List<User> findAllByOrderByFirstNameAscLastNameAsc();
-    List<User> findByOrganizationId(UUID organizationId);
-    long countByOrganizationId(UUID organizationId);
+    @Query("SELECT u FROM User u JOIN u.organizations o WHERE o.id = :orgId ORDER BY u.firstName ASC, u.lastName ASC")
+    List<User> findByOrganizationId(@Param("orgId") UUID orgId);
+
+    @Query("SELECT COUNT(u) FROM User u JOIN u.organizations o WHERE o.id = :orgId")
+    long countByOrganizationId(@Param("orgId") UUID orgId);
 
     @Query("""
         SELECT DISTINCT u FROM User u

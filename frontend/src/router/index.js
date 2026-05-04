@@ -62,7 +62,7 @@ router.beforeEach((to) => {
   if (!auth.user) return true
 
   const isAdmin = auth.user.role === 'ADMIN'
-  const hasOrg = !!auth.user.organizationId
+  const hasOrg = auth.user.organizations?.length > 0
 
   if (to.meta.requiresAdmin && !isAdmin) {
     return hasOrg ? { name: 'projects' } : { name: 'pending-org' }
