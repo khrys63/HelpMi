@@ -7,10 +7,10 @@
       </router-link>
       <div class="flex items-center gap-4">
         <router-link to="/projects" class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.projects') }}</router-link>
-        <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/users"
-          class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.users') }}</router-link>
         <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/organizations"
           class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.organizations') }}</router-link>
+        <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/users"
+          class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.users') }}</router-link>
         <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/config"
           class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.config') }}</router-link>
         <div v-if="auth.user" class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">

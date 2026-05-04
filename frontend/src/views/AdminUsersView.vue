@@ -98,7 +98,7 @@
           </div>
 
           <!-- Projets -->
-          <div v-if="form.role === 'ADMIN' || form.orgIds.length" class="space-y-3">
+          <div v-if="form.orgIds.length" class="space-y-3">
             <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{{ $t('admin.users.section_projects') }}</p>
             <div v-if="loadingOrgProjects" class="text-xs text-gray-400">{{ $t('common.loading') }}</div>
             <div v-else-if="orgProjects.length === 0" class="text-xs text-gray-400 dark:text-gray-500 italic">
@@ -145,7 +145,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { adminUsersApi, organizationsApi, projectsApi } from '../services/api.js'
+import { adminUsersApi, organizationsApi } from '../services/api.js'
 import { useAuthStore } from '../stores/auth.js'
 import { useConfigStore } from '../stores/config.js'
 
@@ -192,10 +192,8 @@ const saving = ref(false)
 const loadingOrgProjects = ref(false)
 
 const orgProjectsMap = ref({})
-const allProjects = ref([])
 
 const orgProjects = computed(() => {
-  if (editing.value?.role === 'ADMIN') return allProjects.value
   const seen = new Set()
   return form.value.orgIds.flatMap(id => orgProjectsMap.value[id] || []).filter(p => {
     if (seen.has(p.id)) return false
@@ -218,17 +216,6 @@ async function openEdit(u) {
   }
   orgProjectsMap.value = {}
   editError.value = ''
-  if (u.role === 'ADMIN') {
-    if (!allProjects.value.length) {
-      loadingOrgProjects.value = true
-      try {
-        const { data } = await projectsApi.list()
-        allProjects.value = data
-      } finally {
-        loadingOrgProjects.value = false
-      }
-    }
-  }
   for (const o of (u.organizations || [])) loadOrgProjects(o.id)
 }
 
@@ -304,7 +291,7 @@ async function saveUser() {
     }
 
     // 3. projects
-    if (form.value.role === 'ADMIN' || form.value.orgIds.length) {
+    if (form.value.orgIds.length) {
       const origMap = new Map((editing.value.projectRoles || []).map(pr => [pr.projectId, pr.role]))
       const newEntries = form.value.projectEntries || []
       const projectsChanged =
