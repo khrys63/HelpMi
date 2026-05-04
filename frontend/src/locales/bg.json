@@ -101,7 +101,24 @@
     "delete_ticket": "Изтрий тази задача…",
     "delete_confirm_title": "Изтриване на {ref}?",
     "delete_confirm_body": "Това действие е необратимо. Референцията {ref} няма да бъде използвана отново.",
-    "deleting": "Изтриване…"
+    "deleting": "Изтриване…",
+    "history": "История",
+    "history_title": "История на промените",
+    "history_empty": "Няма записани промени.",
+    "history_just_now": "преди момент",
+    "history_minutes_ago": "преди {n} мин",
+    "history_hours_ago": "преди {n} ч",
+    "history_field_created": "Задача създадена",
+    "history_field_title": "Заглавие променено",
+    "history_field_description": "Описание променено",
+    "history_field_status": "Статус променен",
+    "history_field_priority": "Приоритет променен",
+    "history_field_type": "Тип променен",
+    "history_field_assignee": "Отговорник променен",
+    "history_field_dueDate": "Краен срок променен",
+    "history_field_clients": "Клиенти променени",
+    "history_field_labels": "Етикети променени",
+    "history_field_project": "Проект променен"
   },
   "status": {
     "transitions": {

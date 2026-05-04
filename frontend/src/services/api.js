@@ -39,7 +39,8 @@ export const ticketsApi = {
     api.put(`/projects/${projectId}/tickets/${ticketId}/clients`, { clientIds }),
   setLabels: (projectId, ticketId, labelIds) =>
     api.put(`/projects/${projectId}/tickets/${ticketId}/labels`, { labelIds }),
-  remove: (projectId, ticketId) => api.delete(`/projects/${projectId}/tickets/${ticketId}`)
+  remove: (projectId, ticketId) => api.delete(`/projects/${projectId}/tickets/${ticketId}`),
+  history: (projectId, ticketId) => api.get(`/projects/${projectId}/tickets/${ticketId}/history`)
 }
 
 // Comments

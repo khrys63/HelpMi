@@ -101,7 +101,24 @@
     "delete_ticket": "Supprimer ce ticket…",
     "delete_confirm_title": "Supprimer {ref} ?",
     "delete_confirm_body": "Action irréversible. La référence {ref} ne sera pas réattribuée.",
-    "deleting": "Suppression…"
+    "deleting": "Suppression…",
+    "history": "Historique",
+    "history_title": "Historique des modifications",
+    "history_empty": "Aucune modification enregistrée.",
+    "history_just_now": "à l'instant",
+    "history_minutes_ago": "il y a {n} min",
+    "history_hours_ago": "il y a {n} h",
+    "history_field_created": "Ticket créé",
+    "history_field_title": "Titre modifié",
+    "history_field_description": "Description modifiée",
+    "history_field_status": "Statut modifié",
+    "history_field_priority": "Priorité modifiée",
+    "history_field_type": "Type modifié",
+    "history_field_assignee": "Assigné modifié",
+    "history_field_dueDate": "Échéance modifiée",
+    "history_field_clients": "Clients modifiés",
+    "history_field_labels": "Étiquettes modifiées",
+    "history_field_project": "Projet modifié"
   },
   "status": {
     "transitions": {

@@ -49,6 +49,14 @@
             </svg>
             {{ cloning ? $t('tickets.cloning') : $t('tickets.clone') }}
           </button>
+
+          <button @click="showHistory = true"
+            class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {{ $t('tickets.history') }}
+          </button>
         </div>
       </div>
 
@@ -369,6 +377,13 @@
       </div>
     </div>
   </div>
+
+  <TicketHistoryPanel
+    :open="showHistory"
+    :project-id="projectId"
+    :ticket-id="ticketId"
+    @close="showHistory = false"
+  />
 </template>
 
 <script setup>
@@ -381,6 +396,7 @@ import { useConfigStore, COLORS } from '../stores/config.js'
 import { useToastStore } from '../stores/toast.js'
 import { formatDate } from '../utils/dates.js'
 import StatusBadge from '../components/tickets/StatusBadge.vue'
+import TicketHistoryPanel from '../components/tickets/TicketHistoryPanel.vue'
 
 const { t, locale } = useI18n()
 
@@ -418,6 +434,8 @@ const statusButtonClass = computed(() => {
   const color = config.getStatus(ticket.value.status)?.color
   return STATUS_BUTTON_COLORS[color] ?? STATUS_BUTTON_COLORS.gray
 })
+
+const showHistory = ref(false)
 
 const ticket = ref({})
 const loading = ref(true)

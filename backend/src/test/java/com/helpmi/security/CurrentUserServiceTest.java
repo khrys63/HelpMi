@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -135,6 +136,56 @@ class CurrentUserServiceTest {
         assertThatThrownBy(() -> service.getCurrentUser())
                 .isInstanceOf(ForbiddenException.class)
                 .hasMessageContaining("requise");
+    }
+
+    // ── extractRole — branches ────────────────────────────────────────────────
+
+    @Test
+    void jwtAuth_realmAccessWithAdminRole_createsAdminUser() {
+        Jwt jwt = jwtWithClaims("kc-admin", "admin@test.com", "Admin", "User");
+        Map<String, Object> realmAccess = new java.util.HashMap<>();
+        realmAccess.put("roles", List.of("ADMIN", "user"));
+        when(jwt.getClaim("realm_access")).thenReturn(realmAccess);
+        setJwtAuth(jwt);
+        when(userRepository.findByKeycloakId("kc-admin")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("admin@test.com")).thenReturn(Optional.empty());
+        when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        User result = service.getCurrentUser();
+
+        assertThat(result.getRole()).isEqualTo(UserRole.ADMIN);
+    }
+
+    @Test
+    void jwtAuth_realmAccessWithoutAdminRole_createsRegularUser() {
+        Jwt jwt = jwtWithClaims("kc-user", "user@test.com", "Regular", "User");
+        Map<String, Object> realmAccess = new java.util.HashMap<>();
+        realmAccess.put("roles", List.of("user", "offline_access"));
+        when(jwt.getClaim("realm_access")).thenReturn(realmAccess);
+        setJwtAuth(jwt);
+        when(userRepository.findByKeycloakId("kc-user")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.empty());
+        when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        User result = service.getCurrentUser();
+
+        assertThat(result.getRole()).isEqualTo(UserRole.USER);
+    }
+
+    @Test
+    void jwtAuth_realmAccessRolesNull_createsRegularUser() {
+        Jwt jwt = jwtWithClaims("kc-noroles", "noroles@test.com", "No", "Roles");
+        Map<String, Object> realmAccess = new java.util.HashMap<>();
+        realmAccess.put("roles", null);
+        when(jwt.getClaim("realm_access")).thenReturn(realmAccess);
+        setJwtAuth(jwt);
+        when(userRepository.findByKeycloakId("kc-noroles")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("noroles@test.com")).thenReturn(Optional.empty());
+        when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        User result = service.getCurrentUser();
+
+        assertThat(result.getRole()).isEqualTo(UserRole.USER);
     }
 
     // ── helpers ────────────────────────────────────────────────────────────────

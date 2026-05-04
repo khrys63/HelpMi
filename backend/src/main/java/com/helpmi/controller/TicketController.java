@@ -10,7 +10,9 @@ import com.helpmi.dto.response.ChangeStatusResponse;
 import com.helpmi.dto.response.ClientResponse;
 import com.helpmi.dto.response.LabelResponse;
 import com.helpmi.dto.response.TicketDetailResponse;
+import com.helpmi.dto.response.TicketHistoryResponse;
 import com.helpmi.dto.response.TicketResponse;
+import com.helpmi.service.TicketHistoryService;
 import com.helpmi.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ import java.util.UUID;
 public class TicketController {
 
     private final TicketService ticketService;
+    private final TicketHistoryService ticketHistoryService;
 
     @GetMapping
     public Page<TicketResponse> list(
@@ -100,6 +103,11 @@ public class TicketController {
     @ResponseStatus(HttpStatus.CREATED)
     public TicketResponse clone(@PathVariable UUID projectId, @PathVariable UUID ticketId) {
         return ticketService.cloneTicket(projectId, ticketId);
+    }
+
+    @GetMapping("/{ticketId}/history")
+    public List<TicketHistoryResponse> history(@PathVariable UUID projectId, @PathVariable UUID ticketId) {
+        return ticketHistoryService.getHistory(projectId, ticketId);
     }
 
     @DeleteMapping("/{ticketId}")

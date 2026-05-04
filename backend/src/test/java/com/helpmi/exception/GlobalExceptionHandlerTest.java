@@ -60,6 +60,16 @@ class GlobalExceptionHandlerTest {
         assertThat(pd.getDetail()).isEqualTo("Paramètre invalide");
     }
 
+    // ── TooManyRequestsException ──────────────────────────────────────────────
+
+    @Test
+    void handleTooManyRequests_returns429WithMessage() {
+        ProblemDetail pd = handler.handleTooManyRequests(new TooManyRequestsException("Trop de requêtes"));
+
+        assertThat(pd.getStatus()).isEqualTo(429);
+        assertThat(pd.getDetail()).isEqualTo("Trop de requêtes");
+    }
+
     // ── MethodArgumentNotValidException ───────────────────────────────────────
 
     @Test

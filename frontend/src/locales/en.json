@@ -101,7 +101,24 @@
     "delete_ticket": "Delete this ticket…",
     "delete_confirm_title": "Delete {ref}?",
     "delete_confirm_body": "This action is irreversible. The reference {ref} will not be reassigned.",
-    "deleting": "Deleting…"
+    "deleting": "Deleting…",
+    "history": "History",
+    "history_title": "Change History",
+    "history_empty": "No changes recorded yet.",
+    "history_just_now": "just now",
+    "history_minutes_ago": "{n} min ago",
+    "history_hours_ago": "{n} h ago",
+    "history_field_created": "Ticket created",
+    "history_field_title": "Title changed",
+    "history_field_description": "Description changed",
+    "history_field_status": "Status changed",
+    "history_field_priority": "Priority changed",
+    "history_field_type": "Type changed",
+    "history_field_assignee": "Assignee changed",
+    "history_field_dueDate": "Due date changed",
+    "history_field_clients": "Clients changed",
+    "history_field_labels": "Labels changed",
+    "history_field_project": "Project changed"
   },
   "status": {
     "transitions": {

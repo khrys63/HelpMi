@@ -54,6 +54,7 @@ public class TicketService {
     private final LabelRepository labelRepository;
     private final ProjectService projectService;
     private final CurrentUserService currentUserService;
+    private final TicketHistoryService ticketHistoryService;
 
     @Transactional(readOnly = true)
     public Page<TicketResponse> getTickets(UUID projectId, String status,
@@ -140,12 +141,21 @@ public class TicketService {
                 .reporter(currentUser)
                 .assignee(assignee)
                 .build();
-        return toResponse(ticketRepository.save(ticket));
+        Ticket saved = ticketRepository.save(ticket);
+        ticketHistoryService.record(saved, "created", null, saved.getReference());
+        return toResponse(saved);
     }
 
     public TicketResponse updateTicket(UUID projectId, UUID ticketId, UpdateTicketRequest req) {
         Ticket ticket = findTicket(projectId, ticketId);
         requireCanModify(currentUserService.getCurrentUser(), ticket);
+
+        String oldTitle    = ticket.getTitle();
+        String oldDesc     = ticket.getDescription();
+        String oldPriority = ticket.getPriority();
+        String oldType     = ticket.getType();
+        String oldAssignee = userName(ticket.getAssignee());
+
         if (req.title() != null) ticket.setTitle(req.title());
         if (req.description() != null) ticket.setDescription(req.description());
         if (req.priority() != null) ticket.setPriority(req.priority());
@@ -155,16 +165,26 @@ public class TicketService {
             ticket.setAssignee(userRepository.findById(req.assigneeId())
                     .orElseThrow(() -> new NotFoundException("Assigné introuvable")));
         }
-        return toResponse(ticketRepository.save(ticket));
+
+        Ticket saved = ticketRepository.save(ticket);
+        ticketHistoryService.record(saved, "title",       oldTitle,    saved.getTitle());
+        ticketHistoryService.record(saved, "description", oldDesc,     saved.getDescription());
+        ticketHistoryService.record(saved, "priority",    oldPriority, saved.getPriority());
+        ticketHistoryService.record(saved, "type",        oldType,     saved.getType());
+        ticketHistoryService.record(saved, "assignee",    oldAssignee, userName(saved.getAssignee()));
+        return toResponse(saved);
     }
 
     public ChangeStatusResponse changeStatus(UUID projectId, UUID ticketId, String newStatus) {
         Ticket ticket = findTicket(projectId, ticketId);
         requireCanModify(currentUserService.getCurrentUser(), ticket);
+        String oldStatus = ticket.getStatus();
         ticket.setStatus(newStatus);
         boolean closing = List.of("CLOSED", "RESOLVED", "CANCELLED").contains(newStatus);
         ticket.setClosedAt(closing ? LocalDateTime.now() : null);
-        TicketResponse response = toResponse(ticketRepository.save(ticket));
+        Ticket saved = ticketRepository.save(ticket);
+        ticketHistoryService.record(saved, "status", oldStatus, newStatus);
+        TicketResponse response = toResponse(saved);
         UUID nextTicketId = null;
         String nextTicketReference = null;
         if ("CLOSED".equals(newStatus) && RECURRING_TYPES.contains(ticket.getType())) {
@@ -231,18 +251,25 @@ public class TicketService {
         }
         Ticket ticket = findTicket(projectId, ticketId);
         requireCanModify(currentUserService.getCurrentUser(), ticket);
+        String oldProject = ticket.getProject().getKey();
         var targetProject = projectService.findActive(targetProjectId);
         String newReference = projectService.generateTicketReference(targetProjectId);
         ticket.setProject(targetProject);
         ticket.setReference(newReference);
-        return toResponse(ticketRepository.save(ticket));
+        Ticket saved = ticketRepository.save(ticket);
+        ticketHistoryService.record(saved, "project", oldProject, targetProject.getKey());
+        return toResponse(saved);
     }
 
     public TicketResponse setDueDate(UUID projectId, UUID ticketId, LocalDate dueDate) {
         Ticket ticket = findTicket(projectId, ticketId);
         requireCanModify(currentUserService.getCurrentUser(), ticket);
+        String oldDate = ticket.getDueDate() != null ? ticket.getDueDate().toString() : null;
+        String newDate = dueDate != null ? dueDate.toString() : null;
         ticket.setDueDate(dueDate);
-        return toResponse(ticketRepository.save(ticket));
+        Ticket saved = ticketRepository.save(ticket);
+        ticketHistoryService.record(saved, "dueDate", oldDate, newDate);
+        return toResponse(saved);
     }
 
     public void deleteTicket(UUID projectId, UUID ticketId) {
@@ -255,12 +282,17 @@ public class TicketService {
     public List<ClientResponse> setClients(UUID projectId, UUID ticketId, List<UUID> clientIds) {
         Ticket ticket = findTicket(projectId, ticketId);
         requireCanModify(currentUserService.getCurrentUser(), ticket);
+        String oldClients = collectionNames(ticket.getClients().stream()
+                .map(c -> c.getName()).sorted().toList());
         var newClients = clientIds == null || clientIds.isEmpty()
                 ? new HashSet<com.helpmi.domain.Client>()
                 : new HashSet<>(clientRepository.findAllById(clientIds));
         ticket.getClients().clear();
         ticket.getClients().addAll(newClients);
         ticketRepository.save(ticket);
+        String newClientsStr = collectionNames(ticket.getClients().stream()
+                .map(c -> c.getName()).sorted().toList());
+        ticketHistoryService.record(ticket, "clients", oldClients, newClientsStr);
         return ticket.getClients().stream()
                 .map(ClientResponse::from)
                 .sorted(Comparator.comparing(ClientResponse::name))
@@ -270,12 +302,17 @@ public class TicketService {
     public List<LabelResponse> setLabels(UUID projectId, UUID ticketId, List<UUID> labelIds) {
         Ticket ticket = findTicket(projectId, ticketId);
         requireCanModify(currentUserService.getCurrentUser(), ticket);
+        String oldLabels = collectionNames(ticket.getLabels().stream()
+                .map(l -> l.getName()).sorted().toList());
         var newLabels = labelIds == null || labelIds.isEmpty()
                 ? new HashSet<com.helpmi.domain.Label>()
                 : new HashSet<>(labelRepository.findAllById(labelIds));
         ticket.getLabels().clear();
         ticket.getLabels().addAll(newLabels);
         ticketRepository.save(ticket);
+        String newLabelsStr = collectionNames(ticket.getLabels().stream()
+                .map(l -> l.getName()).sorted().toList());
+        ticketHistoryService.record(ticket, "labels", oldLabels, newLabelsStr);
         return ticket.getLabels().stream()
                 .map(LabelResponse::from)
                 .sorted(Comparator.comparing(LabelResponse::name))
@@ -285,6 +322,7 @@ public class TicketService {
     public TicketResponse setAssignee(UUID projectId, UUID ticketId, UUID assigneeId) {
         Ticket ticket = findTicket(projectId, ticketId);
         requireCanModify(currentUserService.getCurrentUser(), ticket);
+        String oldAssignee = userName(ticket.getAssignee());
         if (assigneeId == null) {
             ticket.setAssignee(null);
         } else {
@@ -292,7 +330,9 @@ public class TicketService {
             ticket.setAssignee(userRepository.findById(assigneeId)
                     .orElseThrow(() -> new NotFoundException("Assigné introuvable")));
         }
-        return toResponse(ticketRepository.save(ticket));
+        Ticket saved = ticketRepository.save(ticket);
+        ticketHistoryService.record(saved, "assignee", oldAssignee, userName(saved.getAssignee()));
+        return toResponse(saved);
     }
 
     private void validateAssignee(UUID assigneeId, UUID projectId) {
@@ -319,6 +359,16 @@ public class TicketService {
             throw new NotFoundException("Ticket introuvable dans ce projet");
         }
         return ticket;
+    }
+
+    private static String userName(User user) {
+        if (user == null) return null;
+        return (user.getFirstName() + " " + user.getLastName()).trim();
+    }
+
+    private static String collectionNames(List<String> names) {
+        if (names == null || names.isEmpty()) return null;
+        return String.join(", ", names);
     }
 
     private TicketResponse toResponse(Ticket t) {

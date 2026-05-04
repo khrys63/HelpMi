@@ -1,6 +1,8 @@
 package com.helpmi.service;
 
+import com.helpmi.domain.Attachment;
 import com.helpmi.domain.Client;
+import com.helpmi.domain.Comment;
 import com.helpmi.domain.Label;
 import com.helpmi.domain.Project;
 import com.helpmi.domain.Ticket;
@@ -49,6 +51,7 @@ class TicketServiceTest {
     @Mock LabelRepository labelRepository;
     @Mock ProjectService projectService;
     @Mock CurrentUserService currentUserService;
+    @Mock TicketHistoryService ticketHistoryService;
 
     @InjectMocks TicketService service;
 
@@ -669,6 +672,108 @@ class TicketServiceTest {
 
         assertThatThrownBy(() -> service.setAssignee(project.getId(), ticket.getId(), other.getId()))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    // ── updateTicket — assignee branch ──────────────────────────────────────
+
+    @Test
+    void updateTicket_withAssignee_loadsAndSetsAssignee() {
+        User assignee = clientUser();
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(userRepository.isAssignableToProject(assignee.getId(), project.getId())).thenReturn(true);
+        when(userRepository.findById(assignee.getId())).thenReturn(Optional.of(assignee));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.updateTicket(project.getId(), ticket.getId(),
+                new UpdateTicketRequest(null, null, null, null, assignee.getId()));
+
+        assertThat(ticket.getAssignee()).isEqualTo(assignee);
+    }
+
+    @Test
+    void updateTicket_assigneeNotFound_throwsNotFoundException() {
+        UUID unknownId = UUID.randomUUID();
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(userRepository.isAssignableToProject(unknownId, project.getId())).thenReturn(true);
+        when(userRepository.findById(unknownId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.updateTicket(project.getId(), ticket.getId(),
+                new UpdateTicketRequest(null, null, null, null, unknownId)))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    // ── setAssignee — assignee not found ─────────────────────────────────────
+
+    @Test
+    void setAssignee_assigneeIdValidButUserMissing_throwsNotFoundException() {
+        UUID ghostId = UUID.randomUUID();
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(userRepository.isAssignableToProject(ghostId, project.getId())).thenReturn(true);
+        when(userRepository.findById(ghostId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.setAssignee(project.getId(), ticket.getId(), ghostId))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    // ── createTicket — assignee not found ────────────────────────────────────
+
+    @Test
+    void createTicket_assigneeNotFound_throwsNotFoundException() {
+        UUID ghostId = UUID.randomUUID();
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(projectService.findActive(project.getId())).thenReturn(project);
+        when(userRepository.isAssignableToProject(ghostId, project.getId())).thenReturn(true);
+        when(userRepository.findById(ghostId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.createTicket(project.getId(),
+                new CreateTicketRequest("T", null, null, null, ghostId, null)))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    // ── getTicket — mapping lambdas ───────────────────────────────────────────
+
+    @Test
+    void getTicket_withCommentsAndAttachments_mapsCorrectly() {
+        User author = agentUser();
+        Comment comment = Comment.builder()
+                .id(UUID.randomUUID()).body("hello").author(author).ticket(ticket).build();
+        Attachment attachment = Attachment.builder()
+                .id(UUID.randomUUID()).fileName("doc.pdf").contentType("application/pdf")
+                .size(100L).uploadedBy(author).ticket(ticket).build();
+
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(commentRepository.findByTicketIdOrderByCreatedAtAsc(ticket.getId()))
+                .thenReturn(List.of(comment));
+        when(attachmentRepository.findByTicketIdOrderByUploadedAtDesc(ticket.getId()))
+                .thenReturn(List.of(attachment));
+        when(ticketLinkRepository.findBySourceTicketId(ticket.getId())).thenReturn(List.of());
+        when(ticketLinkRepository.findByTargetTicketId(ticket.getId())).thenReturn(List.of());
+
+        TicketDetailResponse result = service.getTicket(project.getId(), ticket.getId());
+
+        assertThat(result.comments()).hasSize(1);
+        assertThat(result.comments().get(0).body()).isEqualTo("hello");
+        assertThat(result.attachments()).hasSize(1);
+        assertThat(result.attachments().get(0).fileName()).isEqualTo("doc.pdf");
+    }
+
+    // ── autoCloneRecurring — unknown type → null dueDate ─────────────────────
+
+    @Test
+    void changeStatus_annuelTicket_noDueDate_clonesWithNullDueDate() {
+        ticket.setType("ANNUEL");
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(any())).thenReturn(ticket);
+        when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-2");
+
+        service.changeStatus(project.getId(), ticket.getId(), "CLOSED");
+
+        verify(ticketRepository).save(argThat(t ->
+                "TEST-2".equals(t.getReference()) && t.getDueDate() == null));
     }
 
     // ── H1 — isolation par organisation ──────────────────────────────────────

@@ -8,8 +8,10 @@ import com.helpmi.dto.request.UpdateProjectRequest;
 import com.helpmi.dto.response.ProjectResponse;
 import com.helpmi.exception.ForbiddenException;
 import com.helpmi.exception.NotFoundException;
+import com.helpmi.domain.UserProject;
 import com.helpmi.repository.ProjectRepository;
 import com.helpmi.repository.TicketRepository;
+import com.helpmi.repository.UserProjectRepository;
 import com.helpmi.security.CurrentUserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +33,7 @@ class ProjectServiceTest {
 
     @Mock ProjectRepository projectRepository;
     @Mock TicketRepository ticketRepository;
+    @Mock UserProjectRepository userProjectRepository;
     @Mock CurrentUserService currentUserService;
 
     @InjectMocks ProjectService service;
@@ -223,6 +226,73 @@ class ProjectServiceTest {
 
         assertThatThrownBy(() -> service.findActive(UUID.randomUUID()))
                 .isInstanceOf(NotFoundException.class);
+    }
+
+    // --- isGestionnaire ---
+
+    @Test
+    void isGestionnaire_userIsManager_returnsTrue() {
+        UUID userId = UUID.randomUUID();
+        UUID projectId = UUID.randomUUID();
+        UserProject up = UserProject.builder().id(UUID.randomUUID()).role("MANAGER").build();
+        when(userProjectRepository.findByUserIdAndProjectId(userId, projectId))
+                .thenReturn(Optional.of(up));
+
+        assertThat(service.isGestionnaire(userId, projectId)).isTrue();
+    }
+
+    @Test
+    void isGestionnaire_userIsMember_returnsFalse() {
+        UUID userId = UUID.randomUUID();
+        UUID projectId = UUID.randomUUID();
+        UserProject up = UserProject.builder().id(UUID.randomUUID()).role("MEMBER").build();
+        when(userProjectRepository.findByUserIdAndProjectId(userId, projectId))
+                .thenReturn(Optional.of(up));
+
+        assertThat(service.isGestionnaire(userId, projectId)).isFalse();
+    }
+
+    @Test
+    void isGestionnaire_noRelation_returnsFalse() {
+        UUID userId = UUID.randomUUID();
+        UUID projectId = UUID.randomUUID();
+        when(userProjectRepository.findByUserIdAndProjectId(userId, projectId))
+                .thenReturn(Optional.empty());
+
+        assertThat(service.isGestionnaire(userId, projectId)).isFalse();
+    }
+
+    // --- requireProjectAccess (UUID overload) ---
+
+    @Test
+    void requireProjectAccess_admin_doesNotThrow() {
+        Project p = project();
+        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
+        when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
+
+        assertThatCode(() -> service.requireProjectAccess(p.getId())).doesNotThrowAnyException();
+    }
+
+    @Test
+    void requireProjectAccess_nonAdminWithAccess_doesNotThrow() {
+        Project p = project();
+        User user = agentUserWithOrg(organization());
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
+        when(projectRepository.isProjectAccessibleToUser(p.getId(), user.getId())).thenReturn(true);
+
+        assertThatCode(() -> service.requireProjectAccess(p.getId())).doesNotThrowAnyException();
+    }
+
+    @Test
+    void requireProjectAccess_noOrganization_throwsForbidden() {
+        Project p = project();
+        User user = agentUser();
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(projectRepository.findById(p.getId())).thenReturn(Optional.of(p));
+
+        assertThatThrownBy(() -> service.requireProjectAccess(p.getId()))
+                .isInstanceOf(ForbiddenException.class);
     }
 
     // --- generateTicketReference ---

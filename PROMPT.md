@@ -149,3 +149,7 @@ aucun des ecrans de saisie ou de modification de configuration n'a le color pick
 Peux tu ajouter un petit bouton (ou url) "me l'affecter" vers la combo de la personne assignée, qui assigne rapidment le ticket  a soit même
 
 peux tu patcher la vuln P2-M1  
+
+sur l'écran de gestion des tickets, nous avons la date de création et la date de derniere MAJ. Je souhaite disposer d'un écran (ou un ecran en surimpression) qui permet de voir toutes les modifications faite sur le ticket, toutes. Avec : qui, la date et le champ  modifié ainsi que la valeur avant, et la valeur après. un systeme de suivi complet de la vie du ticket
+
+vérifie la couverture de test et enrichi la si besoin
