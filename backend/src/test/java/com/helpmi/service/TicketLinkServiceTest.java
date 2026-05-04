@@ -84,13 +84,13 @@ class TicketLinkServiceTest {
     }
 
     @Test
-    void createLink_valid_returnsOutgoingResponse() {
-        User user = agentUser();
-        Ticket source = ticket(project(), user);
+    void createLink_adminUser_valid_returnsOutgoingResponse() {
+        User admin = adminUser();
+        Ticket source = ticket(project(), admin);
         source.setReference("TEST-1");
-        Ticket target = ticket(project(), user);
+        Ticket target = ticket(project(), admin);
         target.setReference("TEST-2");
-        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(currentUserService.getCurrentUser()).thenReturn(admin);
         when(ticketRepository.findById(source.getId())).thenReturn(Optional.of(source));
         when(ticketRepository.findById(target.getId())).thenReturn(Optional.of(target));
         when(linkRepository.existsBySourceTicketIdAndTargetTicketIdAndLinkType(
@@ -103,6 +103,63 @@ class TicketLinkServiceTest {
 
         assertThat(result.direction()).isEqualTo("OUTGOING");
         assertThat(result.linkType()).isEqualTo("DEPENDS_ON");
+    }
+
+    @Test
+    void createLink_nonAdminWithAccessToTargetProject_succeeds() {
+        User user = agentUserWithOrg(organization());
+        Ticket source = ticket(project(), user);
+        Ticket target = ticket(project(), user);
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(ticketRepository.findById(source.getId())).thenReturn(Optional.of(source));
+        when(ticketRepository.findById(target.getId())).thenReturn(Optional.of(target));
+        when(linkRepository.existsBySourceTicketIdAndTargetTicketIdAndLinkType(
+                source.getId(), target.getId(), "BLOCKS")).thenReturn(false);
+        when(projectRepository.isProjectAccessibleToUser(target.getProject().getId(), user.getId()))
+                .thenReturn(true);
+        TicketLink saved = buildLink(source, target, "BLOCKS");
+        when(linkRepository.save(any())).thenReturn(saved);
+
+        TicketLinkResponse result = service.createLink(source.getId(),
+                new CreateTicketLinkRequest(target.getId(), "BLOCKS"));
+
+        assertThat(result.direction()).isEqualTo("OUTGOING");
+    }
+
+    @Test
+    void createLink_nonAdminNoAccessToTargetProject_throwsForbidden() {
+        User user = agentUserWithOrg(organization());
+        Ticket source = ticket(project(), user);
+        Ticket target = ticket(project(), user);
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(ticketRepository.findById(source.getId())).thenReturn(Optional.of(source));
+        when(ticketRepository.findById(target.getId())).thenReturn(Optional.of(target));
+        when(linkRepository.existsBySourceTicketIdAndTargetTicketIdAndLinkType(
+                source.getId(), target.getId(), "BLOCKS")).thenReturn(false);
+        when(projectRepository.isProjectAccessibleToUser(target.getProject().getId(), user.getId()))
+                .thenReturn(false);
+
+        assertThatThrownBy(() -> service.createLink(source.getId(),
+                new CreateTicketLinkRequest(target.getId(), "BLOCKS")))
+                .isInstanceOf(ForbiddenException.class);
+        verify(linkRepository, never()).save(any());
+    }
+
+    @Test
+    void createLink_nonAdminWithoutOrg_throwsForbidden() {
+        User user = agentUser();
+        Ticket source = ticket(project(), user);
+        Ticket target = ticket(project(), user);
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(ticketRepository.findById(source.getId())).thenReturn(Optional.of(source));
+        when(ticketRepository.findById(target.getId())).thenReturn(Optional.of(target));
+        when(linkRepository.existsBySourceTicketIdAndTargetTicketIdAndLinkType(
+                source.getId(), target.getId(), "BLOCKS")).thenReturn(false);
+
+        assertThatThrownBy(() -> service.createLink(source.getId(),
+                new CreateTicketLinkRequest(target.getId(), "BLOCKS")))
+                .isInstanceOf(ForbiddenException.class);
+        verify(linkRepository, never()).save(any());
     }
 
     @Test

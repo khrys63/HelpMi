@@ -26,5 +26,7 @@ public record TicketDetailResponse(
         List<LabelResponse> labels,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        LocalDateTime closedAt
+        LocalDateTime closedAt,
+        boolean canAssign,
+        boolean canClone
 ) {}

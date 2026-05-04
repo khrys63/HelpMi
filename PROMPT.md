@@ -153,3 +153,5 @@ peux tu patcher la vuln P2-M1
 sur l'écran de gestion des tickets, nous avons la date de création et la date de derniere MAJ. Je souhaite disposer d'un écran (ou un ecran en surimpression) qui permet de voir toutes les modifications faite sur le ticket, toutes. Avec : qui, la date et le champ  modifié ainsi que la valeur avant, et la valeur après. un systeme de suivi complet de la vie du ticket
 
 vérifie la couverture de test et enrichi la si besoin
+
+2 corrections : quand on crée un ticket en tant que membre, on ne peut pas assigner que l'écran de création. Quand on est membre on ne peut cloner que ses propres tickets, ca c'est ok et ca fonctionne, mais le message doit faire référence a l'action de clonage et non de modification du style "vous n'êtes autorisé à cloner que vos propres ticket" ou alors retirer le bouton (fait le meilleur choix). Pense a sécuriser l'API avec la même regle sur le rôle si ce n'est pas deja fait

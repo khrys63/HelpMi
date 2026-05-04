@@ -71,17 +71,16 @@
 <script setup>
 import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ticketsApi, usersApi } from '../services/api.js'
+import { ticketsApi, usersApi, projectsApi } from '../services/api.js'
 import { useConfigStore } from '../stores/config.js'
-import { useAuthStore } from '../stores/auth.js'
 
 const route = useRoute()
 const router = useRouter()
 const projectId = route.params.projectId
 const config = useConfigStore()
-const auth = useAuthStore()
 
-const canAssign = computed(() => auth.user?.role === 'ADMIN' || auth.user?.role === 'USER')
+const project = ref(null)
+const canAssign = computed(() => project.value?.canAssign ?? false)
 const users = ref([])
 const saving = ref(false)
 const error = ref('')
@@ -90,9 +89,11 @@ const titleInput = ref(null)
 
 onMounted(async () => {
   nextTick(() => titleInput.value?.focus())
+  const { data } = await projectsApi.get(projectId)
+  project.value = data
   if (canAssign.value) {
-    const { data } = await usersApi.assignable(projectId)
-    users.value = data
+    const { data: usersData } = await usersApi.assignable(projectId)
+    users.value = usersData
   }
   const firstType = config.types.find(t => t.active)
   const firstPriority = config.priorities.find(p => p.active)

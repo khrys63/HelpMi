@@ -41,7 +41,7 @@
             </svg>
             {{ $t('tickets.move') }}
           </button>
-          <button @click="cloneTicket" :disabled="cloning"
+          <button v-if="ticket.canClone" @click="cloneTicket" :disabled="cloning"
             class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -280,14 +280,19 @@
           <!-- Assigné -->
           <div>
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">{{ $t('tickets.assignee_label') }}</p>
-            <select v-model="assigneeId" @change="reassign" class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
-              <option value="">{{ $t('tickets.field_assignee_none') }}</option>
-              <option v-for="u in users" :key="u.id" :value="u.id">{{ u.firstName }} {{ u.lastName }}</option>
-            </select>
-            <button v-if="canAssignToSelf" @click="assignToSelf"
-              class="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:underline">
-              {{ $t('tickets.assign_to_me') }}
-            </button>
+            <template v-if="ticket.canAssign">
+              <select v-model="assigneeId" @change="reassign" class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
+                <option value="">{{ $t('tickets.field_assignee_none') }}</option>
+                <option v-for="u in users" :key="u.id" :value="u.id">{{ u.firstName }} {{ u.lastName }}</option>
+              </select>
+              <button v-if="canAssignToSelf" @click="assignToSelf"
+                class="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                {{ $t('tickets.assign_to_me') }}
+              </button>
+            </template>
+            <p v-else class="text-sm text-gray-700 dark:text-gray-300">
+              {{ ticket.assignee ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}` : $t('tickets.field_assignee_none') }}
+            </p>
           </div>
 
           <!-- Clients -->
@@ -653,10 +658,17 @@ async function confirmMove() {
 
 async function cloneTicket() {
   cloning.value = true
-  const sourceRef = ticket.value.reference
-  const { data } = await ticketsApi.clone(projectId, ticketId)
-  toast.add(`Redirigé vers le clone de ${sourceRef} — ${data.reference}`, 'info')
-  router.push(`/projects/${data.projectId}/tickets/${data.id}`)
+  try {
+    const sourceRef = ticket.value.reference
+    const { data } = await ticketsApi.clone(projectId, ticketId)
+    toast.add(`Redirigé vers le clone de ${sourceRef} — ${data.reference}`, 'info')
+    router.push(`/projects/${data.projectId}/tickets/${data.id}`)
+  } catch (err) {
+    const msg = err?.response?.data?.detail || 'Erreur lors du clonage'
+    toast.add(msg, 'error')
+  } finally {
+    cloning.value = false
+  }
 }
 
 async function deleteTicket() {

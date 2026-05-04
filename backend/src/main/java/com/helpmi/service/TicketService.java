@@ -110,13 +110,20 @@ public class TicketService {
                 .map(LabelResponse::from)
                 .sorted(Comparator.comparing(LabelResponse::name))
                 .toList();
+        User currentUser = currentUserService.getCurrentUser();
+        boolean isAdmin = currentUser.getRole() == UserRole.ADMIN;
+        boolean isGestionnaire = projectService.isGestionnaire(currentUser.getId(), projectId);
+        boolean canAssign = isAdmin || isGestionnaire;
+        boolean canClone = isAdmin || isGestionnaire
+                || (ticket.getReporter() != null && ticket.getReporter().getId().equals(currentUser.getId()))
+                || (ticket.getAssignee() != null && ticket.getAssignee().getId().equals(currentUser.getId()));
         return new TicketDetailResponse(ticket.getId(), ticket.getReference(), ticket.getTitle(),
                 ticket.getDescription(), ticket.getStatus(), ticket.getPriority(), ticket.getType(),
                 ticket.getDueDate(),
                 ticket.getProject().getId(), ticket.getProject().getName(), ticket.getProject().getKey(),
                 UserSummary.from(ticket.getReporter()), UserSummary.from(ticket.getAssignee()),
                 comments, attachments, links, clients, labels,
-                ticket.getCreatedAt(), ticket.getUpdatedAt(), ticket.getClosedAt());
+                ticket.getCreatedAt(), ticket.getUpdatedAt(), ticket.getClosedAt(), canAssign, canClone);
     }
 
     public TicketResponse createTicket(UUID projectId, CreateTicketRequest req) {
@@ -227,7 +234,7 @@ public class TicketService {
     public TicketResponse cloneTicket(UUID projectId, UUID ticketId) {
         Ticket source = findTicket(projectId, ticketId);
         User currentUser = currentUserService.getCurrentUser();
-        requireCanModify(currentUser, source);
+        requireCanClone(currentUser, source);
         String reference = projectService.generateTicketReference(projectId);
         Ticket clone = Ticket.builder()
                 .reference(reference)
@@ -342,13 +349,23 @@ public class TicketService {
     }
 
     private void requireCanModify(User user, Ticket ticket) {
-        if (user.getRole() == UserRole.ADMIN) return;
+        if (!canActOnTicket(user, ticket)) {
+            throw new ForbiddenException("Vous n'êtes pas autorisé à modifier ce ticket");
+        }
+    }
+
+    private void requireCanClone(User user, Ticket ticket) {
+        if (!canActOnTicket(user, ticket)) {
+            throw new ForbiddenException("Vous n'êtes pas autorisé à cloner ce ticket");
+        }
+    }
+
+    private boolean canActOnTicket(User user, Ticket ticket) {
+        if (user.getRole() == UserRole.ADMIN) return true;
         boolean isGestionnaire = projectService.isGestionnaire(user.getId(), ticket.getProject().getId());
         boolean isReporter = ticket.getReporter() != null && ticket.getReporter().getId().equals(user.getId());
         boolean isAssignee = ticket.getAssignee() != null && ticket.getAssignee().getId().equals(user.getId());
-        if (!isGestionnaire && !isReporter && !isAssignee) {
-            throw new ForbiddenException("Vous n'êtes pas autorisé à modifier ce ticket");
-        }
+        return isGestionnaire || isReporter || isAssignee;
     }
 
     private Ticket findTicket(UUID projectId, UUID ticketId) {

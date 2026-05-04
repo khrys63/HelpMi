@@ -74,6 +74,7 @@ class TicketServiceTest {
         when(attachmentRepository.findByTicketIdOrderByUploadedAtDesc(ticket.getId())).thenReturn(List.of());
         when(ticketLinkRepository.findBySourceTicketId(ticket.getId())).thenReturn(List.of());
         when(ticketLinkRepository.findByTargetTicketId(ticket.getId())).thenReturn(List.of());
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
     }
 
     // ── getTickets ────────────────────────────────────────────────────────────
@@ -751,6 +752,7 @@ class TicketServiceTest {
                 .thenReturn(List.of(attachment));
         when(ticketLinkRepository.findBySourceTicketId(ticket.getId())).thenReturn(List.of());
         when(ticketLinkRepository.findByTargetTicketId(ticket.getId())).thenReturn(List.of());
+        when(currentUserService.getCurrentUser()).thenReturn(author);
 
         TicketDetailResponse result = service.getTicket(project.getId(), ticket.getId());
 

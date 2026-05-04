@@ -10,5 +10,6 @@ public record ProjectResponse(
         String description,
         int ticketSequence,
         long ticketCount,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        boolean canAssign
 ) {}

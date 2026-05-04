@@ -34,22 +34,23 @@ public class ProjectService {
         User user = currentUserService.getCurrentUser();
         if (user.getRole() == UserRole.ADMIN) {
             return projectRepository.findByActiveTrueOrderByCreatedAtDesc()
-                    .stream().map(this::toResponse).toList();
+                    .stream().map(p -> toResponse(p, user)).toList();
         }
         if (user.getOrganization() == null) return List.of();
         return projectRepository.findActiveByUserId(user.getId())
-                .stream().map(this::toResponse).toList();
+                .stream().map(p -> toResponse(p, user)).toList();
     }
 
     @Transactional(readOnly = true)
     public ProjectResponse getProject(UUID id) {
         Project project = findActive(id);
         requireProjectAccess(project);
-        return toResponse(project);
+        return toResponse(project, currentUserService.getCurrentUser());
     }
 
     public ProjectResponse createProject(CreateProjectRequest req) {
         requireAdmin();
+        User admin = currentUserService.getCurrentUser();
         String key = req.key().toUpperCase();
         if (projectRepository.existsByKey(key)) {
             throw new IllegalArgumentException("La clé de projet existe déjà : " + key);
@@ -58,17 +59,18 @@ public class ProjectService {
                 .name(req.name())
                 .key(key)
                 .description(req.description())
-                .createdBy(currentUserService.getCurrentUser())
+                .createdBy(admin)
                 .build();
-        return toResponse(projectRepository.save(project));
+        return toResponse(projectRepository.save(project), admin);
     }
 
     public ProjectResponse updateProject(UUID id, UpdateProjectRequest req) {
         requireAdmin();
+        User admin = currentUserService.getCurrentUser();
         Project project = findActive(id);
         if (req.name() != null) project.setName(req.name());
         if (req.description() != null) project.setDescription(req.description());
-        return toResponse(projectRepository.save(project));
+        return toResponse(projectRepository.save(project), admin);
     }
 
     public void deleteProject(UUID id) {
@@ -117,8 +119,11 @@ public class ProjectService {
         }
     }
 
-    private ProjectResponse toResponse(Project p) {
+    private ProjectResponse toResponse(Project p, User currentUser) {
         long ticketCount = ticketRepository.countByProjectId(p.getId());
-        return new ProjectResponse(p.getId(), p.getName(), p.getKey(), p.getDescription(), p.getTicketSequence(), ticketCount, p.getCreatedAt());
+        boolean canAssign = currentUser.getRole() == UserRole.ADMIN
+                || isGestionnaire(currentUser.getId(), p.getId());
+        return new ProjectResponse(p.getId(), p.getName(), p.getKey(), p.getDescription(),
+                p.getTicketSequence(), ticketCount, p.getCreatedAt(), canAssign);
     }
 }

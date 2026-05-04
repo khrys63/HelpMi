@@ -45,11 +45,20 @@ public class TicketLinkService {
             throw new IllegalArgumentException("Ce lien existe déjà");
         }
 
+        User user = currentUserService.getCurrentUser();
+        if (user.getRole() != UserRole.ADMIN) {
+            UUID targetProjectId = target.getProject().getId();
+            if (user.getOrganization() == null
+                    || !projectRepository.isProjectAccessibleToUser(targetProjectId, user.getId())) {
+                throw new ForbiddenException("Accès refusé au projet du ticket cible");
+            }
+        }
+
         TicketLink link = TicketLink.builder()
                 .sourceTicket(source)
                 .targetTicket(target)
                 .linkType(req.linkType())
-                .createdBy(currentUserService.getCurrentUser())
+                .createdBy(user)
                 .build();
 
         return toResponse(linkRepository.save(link), sourceTicketId);
