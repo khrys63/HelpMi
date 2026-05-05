@@ -166,7 +166,13 @@
     "pref_theme": "Theme",
     "pref_theme_light": "Light",
     "pref_theme_dark": "Dark",
-    "pref_locale": "Language"
+    "pref_locale": "Language",
+    "notif_title": "Email notifications",
+    "notif_assigned": "Ticket assigned",
+    "notif_comment": "New comment",
+    "notif_status_changed": "Status change",
+    "notif_watcher_added": "Added as watcher",
+    "notif_ticket_created": "New ticket created in project (managers only)"
   },
   "pending_org": {
     "title": "Account pending activation",

@@ -18,3 +18,6 @@ app:
     s3:
       access-key: ${APP_S3_ACCESS_KEY:helpmi}
       secret-key: ${APP_S3_SECRET_KEY:helpmi_minio_pass}
+  mail:
+    from:     noreply@helpmi.local
+    base-url: http://localhost:5173

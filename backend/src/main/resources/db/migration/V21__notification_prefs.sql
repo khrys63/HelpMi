@@ -1,0 +1,5 @@
+ALTER TABLE users
+    ADD COLUMN notif_assigned       BOOLEAN NOT NULL DEFAULT TRUE,
+    ADD COLUMN notif_comment        BOOLEAN NOT NULL DEFAULT TRUE,
+    ADD COLUMN notif_status_changed BOOLEAN NOT NULL DEFAULT TRUE,
+    ADD COLUMN notif_watcher_added  BOOLEAN NOT NULL DEFAULT TRUE;

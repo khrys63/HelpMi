@@ -166,7 +166,13 @@
     "pref_theme": "Тема",
     "pref_theme_light": "Светла",
     "pref_theme_dark": "Тъмна",
-    "pref_locale": "Език"
+    "pref_locale": "Език",
+    "notif_title": "Имейл известия",
+    "notif_assigned": "Назначен тикет",
+    "notif_comment": "Нов коментар",
+    "notif_status_changed": "Промяна на статус",
+    "notif_watcher_added": "Добавен като наблюдател",
+    "notif_ticket_created": "Нов тикет в проекта (само мениджъри)"
   },
   "pending_org": {
     "title": "Акаунтът чака активиране",

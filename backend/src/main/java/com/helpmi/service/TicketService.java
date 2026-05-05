@@ -58,6 +58,7 @@ public class TicketService {
     private final ProjectService projectService;
     private final CurrentUserService currentUserService;
     private final TicketHistoryService ticketHistoryService;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public Page<TicketResponse> getTickets(UUID projectId, String status,
@@ -157,6 +158,8 @@ public class TicketService {
                 .build();
         Ticket saved = ticketRepository.save(ticket);
         ticketHistoryService.record(saved, "created", null, saved.getReference());
+        saved.getProject().getId();
+        notificationService.notifyTicketCreated(projectId, saved, currentUser);
         return toResponse(saved);
     }
 
@@ -195,6 +198,7 @@ public class TicketService {
 
     public ChangeStatusResponse changeStatus(UUID projectId, UUID ticketId, String newStatus) {
         Ticket ticket = findTicket(projectId, ticketId);
+        User actor = currentUserService.getCurrentUser();
         if (!"OPEN".equals(newStatus)) requireEditable(ticket);
         String oldStatus = ticket.getStatus();
         ticket.setStatus(newStatus);
@@ -202,6 +206,11 @@ public class TicketService {
         ticket.setClosedAt(closing ? LocalDateTime.now() : null);
         Ticket saved = ticketRepository.save(ticket);
         ticketHistoryService.record(saved, "status", oldStatus, newStatus);
+        if (saved.getReporter() != null) saved.getReporter().getId();
+        if (saved.getAssignee() != null) saved.getAssignee().getId();
+        saved.getWatchers().size();
+        saved.getProject().getId();
+        notificationService.notifyStatusChanged(saved, oldStatus, newStatus, actor);
         TicketResponse response = toResponse(saved);
         UUID nextTicketId = null;
         String nextTicketReference = null;
@@ -351,6 +360,9 @@ public class TicketService {
     public List<UserSummary> setWatchers(UUID projectId, UUID ticketId, List<UUID> userIds) {
         Ticket ticket = findTicket(projectId, ticketId);
         requireEditable(ticket);
+        User actor = currentUserService.getCurrentUser();
+        Set<UUID> previousWatcherIds = ticket.getWatchers().stream()
+                .map(User::getId).collect(Collectors.toSet());
         String old = collectionNames(ticket.getWatchers().stream()
                 .map(u -> u.getFirstName() + " " + u.getLastName()).sorted().toList());
         Set<User> newWatchers;
@@ -371,6 +383,13 @@ public class TicketService {
         String updated = collectionNames(ticket.getWatchers().stream()
                 .map(u -> u.getFirstName() + " " + u.getLastName()).sorted().toList());
         ticketHistoryService.record(ticket, "watchers", old, updated);
+        Set<User> added = ticket.getWatchers().stream()
+                .filter(u -> !previousWatcherIds.contains(u.getId()))
+                .collect(Collectors.toSet());
+        if (!added.isEmpty()) {
+            ticket.getProject().getId();
+            notificationService.notifyWatcherAdded(ticket, added, actor);
+        }
         return ticket.getWatchers().stream()
                 .sorted(Comparator.comparing(User::getFirstName).thenComparing(User::getLastName))
                 .map(UserSummary::from)
@@ -394,7 +413,8 @@ public class TicketService {
         if (currentUser.getRole() != UserRole.ADMIN && !projectService.isGestionnaire(currentUser.getId(), projectId)) {
             throw new ForbiddenException("Seuls les gestionnaires peuvent modifier l'assigné");
         }
-        String oldAssignee = userName(ticket.getAssignee());
+        User oldAssigneeUser = ticket.getAssignee();
+        String oldAssignee = userName(oldAssigneeUser);
         if (assigneeId == null) {
             ticket.setAssignee(null);
         } else {
@@ -404,6 +424,12 @@ public class TicketService {
         }
         Ticket saved = ticketRepository.save(ticket);
         ticketHistoryService.record(saved, "assignee", oldAssignee, userName(saved.getAssignee()));
+        if (saved.getAssignee() != null
+                && (oldAssigneeUser == null || !oldAssigneeUser.getId().equals(saved.getAssignee().getId()))) {
+            saved.getProject().getId();
+            saved.getWatchers().size();
+            notificationService.notifyAssigned(saved, saved.getAssignee(), currentUser);
+        }
         return toResponse(saved);
     }
 

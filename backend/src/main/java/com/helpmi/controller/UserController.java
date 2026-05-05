@@ -1,6 +1,7 @@
 package com.helpmi.controller;
 
 import com.helpmi.dto.request.UpdateLocaleRequest;
+import com.helpmi.dto.request.UpdateNotificationPrefsRequest;
 import com.helpmi.dto.request.UpdateThemeRequest;
 import com.helpmi.dto.response.UserResponse;
 import com.helpmi.service.UserService;
@@ -35,5 +36,10 @@ public class UserController {
     @PatchMapping("/me/locale")
     public UserResponse updateLocale(@Valid @RequestBody UpdateLocaleRequest req) {
         return userService.updateLocale(req);
+    }
+
+    @PatchMapping("/me/notifications")
+    public UserResponse updateNotificationPrefs(@Valid @RequestBody UpdateNotificationPrefsRequest req) {
+        return userService.updateNotificationPrefs(req);
     }
 }

@@ -39,6 +39,16 @@ services:
       - "traefik.http.routers.pma.entrypoints=web"
       - "traefik.http.services.pma.loadbalancer.server.port=80"
 
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: helpmi_mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # UI web — http://localhost:8025
+    networks:
+      - proxy
+
 networks:
   proxy:
     name: helpmi_proxy

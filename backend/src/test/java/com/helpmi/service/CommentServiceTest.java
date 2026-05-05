@@ -33,6 +33,7 @@ class CommentServiceTest {
     @Mock TicketRepository ticketRepository;
     @Mock CurrentUserService currentUserService;
     @Mock ProjectService projectService;
+    @Mock NotificationService notificationService;
 
     @InjectMocks CommentService service;
 

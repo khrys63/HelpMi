@@ -166,7 +166,13 @@
     "pref_theme": "Thème",
     "pref_theme_light": "Clair",
     "pref_theme_dark": "Sombre",
-    "pref_locale": "Langue"
+    "pref_locale": "Langue",
+    "notif_title": "Notifications par email",
+    "notif_assigned": "Ticket assigné",
+    "notif_comment": "Nouveau commentaire",
+    "notif_status_changed": "Changement de statut",
+    "notif_watcher_added": "Ajouté comme observateur",
+    "notif_ticket_created": "Nouveau ticket créé dans le projet (gestionnaires)"
   },
   "pending_org": {
     "title": "Compte en attente d'activation",

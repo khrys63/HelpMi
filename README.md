@@ -20,6 +20,7 @@ Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces j
 - **Clients** : rattachement de clients à un ticket
 - **Administration** : gestion des valeurs de configuration (statuts, priorités, types, types de liens), clients, labels, organisations
 - **Notifications toast** : retours visuels après les actions clés
+- **Notifications email** : alertes automatiques par email sur 4 événements ; chaque utilisateur contrôle ses préférences depuis son profil
 
 ---
 
@@ -29,29 +30,29 @@ Il existe deux **rôles globaux** (`ADMIN` et `USER`) et deux **rôles par proje
 
 ### Prérequis
 
-Tout utilisateur, y compris ADMIN, doit appartenir à au moins une organisation.  
-Un utilisateur sans organisation est bloqué sur un écran d'attente jusqu'à affectation par un admin.  
-Chaque utilisateur ne voit que les **projets de sa liste personnelle** (configurée individuellement par un admin avec un rôle par projet).
+Tout utilisateur, y compris les Administrateur, doit appartenir à au moins une organisation.  
+Un utilisateur sans organisation est bloqué sur un écran d'attente jusqu'à affectation par un Administrateur.  
+Chaque utilisateur ne voit que les **projets de sa liste personnelle** (configurée individuellement par un Administrateur avec un rôle par projet).
 
 ### Rôles par projet
 
 | Code | Libellé UI | Signification |
 |---|---|---|
-| `MANAGER` | Gestionnaire | Droits étendus : peut modifier l'assigné d'un ticket en plus de tous les droits MEMBER |
+| `MANAGER` | Gestionnaire | Droits étendus : peut modifier l'assigné d'un ticket en plus de tous les droits Membre |
 | `MEMBER` | Membre | Droits standard : lecture, création, modification des champs ticket, changement de statut, commentaires |
 
 ### Projets
 
-| Action | ADMIN | MANAGER | MEMBER |
+| Action | Administrateur | Gestionnaire | Membre |
 |---|---|---|---|
 | Voir la liste | Ses projets uniquement | Ses projets | Ses projets |
 | Créer / modifier / désactiver | ✅ | ✗ | ✗ |
 
-> À la création d'un projet, l'admin est automatiquement ajouté comme MEMBER.
+> À la création d'un projet, l'Administrateur est automatiquement ajouté comme Membre.
 
 ### Tickets
 
-| Action | ADMIN | MANAGER | MEMBER |
+| Action | Administrateur | Gestionnaire | Membre |
 |---|---|---|---|
 | Lire (liste + détail) | ✅ | ✅ | ✅ |
 | Créer | ✅ | ✅ | ✅ |
@@ -64,33 +65,33 @@ Chaque utilisateur ne voit que les **projets de sa liste personnelle** (configur
 
 ### Commentaires
 
-| Action | ADMIN | MANAGER | MEMBER |
+| Action | Administrateur | Gestionnaire | Membre |
 |---|---|---|---|
 | Ajouter | ✅ | ✅ | ✅ |
 | Modifier / Supprimer | ✅ n'importe lequel | ✅ les siens | ✅ les siens |
 
 ### Pièces jointes
 
-| Action | ADMIN | MANAGER | MEMBER |
+| Action | Administrateur | Gestionnaire | Membre |
 |---|---|---|---|
 | Uploader / Télécharger | ✅ | ✅ | ✅ |
 | Supprimer | ✅ n'importe laquelle | ✅ les siennes | ✅ les siennes |
 
 ### Liens entre tickets
 
-| Action | ADMIN | MANAGER | MEMBER |
+| Action | Administrateur | Gestionnaire | Membre |
 |---|---|---|---|
 | Créer un lien | ✅ | ✅ | ✅ |
 | Supprimer un lien | ✅ n'importe lequel | ✅ n'importe lequel | ✅ les siens |
 
 ### Utilisateurs
 
-| Action | ADMIN | MANAGER / MEMBER |
+| Action | Administrateur | Gestionnaire / Membre |
 |---|---|---|
 | Liste des utilisateurs assignables à un projet | ✅ | ✅ |
 | Gestion des comptes (rôle, actif/inactif, organisation, projets) | ✅ | ✗ |
 
-### Administration (réservé ADMIN)
+### Administration (réservé Administrateur)
 
 - Organisations : CRUD, rattachement projets/utilisateurs
 - Labels : CRUD
@@ -144,6 +145,27 @@ La seule action autorisée est la **réouverture** vers `OPEN`.
 ### Tickets récurrents
 
 Pour les types `ANNUEL`, `MENSUEL` et `TRIMESTRIEL`, la fermeture (`OPEN` → `CLOSED`) déclenche automatiquement la création d'un ticket clone avec la date d'échéance décalée d'un an, d'un trimestre ou d'un mois.
+
+---
+
+## Notifications email
+
+### Événements déclencheurs
+
+| Événement | Destinataires |
+|---|---|
+| Ticket assigné à un nouvel utilisateur | Le nouvel assigné uniquement |
+| Commentaire ajouté | Reporter + assigné + watchers du ticket |
+| Statut modifié | Reporter + assigné + watchers du ticket |
+| Utilisateur ajouté comme watcher | Les watchers nouvellement ajoutés uniquement |
+| Ticket créé | Tous les gestionnaires (`MANAGER`) du projet |
+
+### Règles d'envoi
+
+- **Exclusion de l'acteur** : la personne qui effectue l'action ne reçoit jamais d'email pour cette action (pas d'auto-notification).
+- **Compte inactif** : un utilisateur dont le compte est désactivé ne reçoit aucune notification.
+- **Préférences individuelles** : chaque utilisateur peut activer ou désactiver chaque type de notification depuis la page **Profil → Préférences**. Les quatre types sont activés par défaut à la création du compte.
+- **Envoi asynchrone** : les emails sont envoyés dans un thread pool dédié (`mailExecutor`) — une notification ratée (serveur SMTP indisponible, adresse invalide…) ne fait jamais échouer l'action métier.
 
 ---
 
@@ -217,7 +239,7 @@ cp .env.example .env
 **2. Démarrer les services d'infrastructure**
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb keycloak minio phpmyadmin
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb keycloak minio phpmyadmin mailhog
 ```
 
 | Service | URL | Rôle |
@@ -227,10 +249,11 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb key
 | MinIO API | `http://localhost:9000` | Stockage des pièces jointes |
 | MinIO Console | `http://localhost:9001` | Interface d'administration MinIO |
 | phpMyAdmin | `http://localhost:8081` | Interface SQL |
+| Mailhog | http://localhost:8025 | Interface mail local |
 
 > Pour démarrer uniquement les services strictement nécessaires (sans phpMyAdmin) :
 > ```bash
-> docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb keycloak minio
+> docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mariadb keycloak minio mailhog
 > ```
 
 Le realm Keycloak `helpmi` est importé automatiquement au premier démarrage. Trois comptes de test sont disponibles :
@@ -338,6 +361,28 @@ Puis supprimer le service `keycloak` du compose (et les variables `KEYCLOAK_ADMI
 
 > Le realm doit exposer le rôle `ADMIN` dans le claim JWT `realm_access.roles`. Tout token sans ce rôle est traité comme `USER`.
 
+
+### Configuration du serveur SMTP
+
+Les paramètres sont fournis au backend via des **variables d'environnement** (ou surchargés dans `application-dev.yml` pour le développement local).
+
+| Variable | Défaut | Description |
+|---|---|---|
+| `APP_MAIL_HOST` | `localhost` | Hôte SMTP |
+| `APP_MAIL_PORT` | `1025` | Port SMTP |
+| `APP_MAIL_USERNAME` | *(vide)* | Identifiant SMTP (si authentification requise) |
+| `APP_MAIL_PASSWORD` | *(vide)* | Mot de passe SMTP |
+| `APP_MAIL_SMTP_AUTH` | `false` | Activer l'authentification SMTP (`true`/`false`) |
+| `APP_MAIL_STARTTLS` | `false` | Activer STARTTLS (`true`/`false`) |
+| `APP_MAIL_FROM` | `noreply@helpmi.local` | Adresse expéditeur |
+| `APP_BASE_URL` | `http://localhost:5173` | URL de base du frontend (utilisée dans les liens des emails) |
+
+> En développement, un serveur **MailHog** est disponible dans `docker-compose.dev.yml` (SMTP `localhost:1025`, interface web `http://localhost:8025`). Il intercepte tous les emails sans les envoyer réellement.
+>
+> ```bash
+> docker compose -f docker-compose.dev.yml up -d mailhog
+> ```
+
 ### Stockage sur un S3 externe (production)
 
 Par défaut le compose utilise le container MinIO intégré. Pour pointer vers un S3 externe (AWS, Scaleway, OVH…), passer les variables suivantes au service `backend` :
@@ -362,6 +407,30 @@ APP_S3_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 ```
 
 > Avec un vrai AWS S3, supprimer le service `minio` du compose et le volume `minio_data`.
+
+### Notifications email — SMTP (production)
+
+Les variables SMTP sont présentes dans `docker-compose.yml` sous forme de commentaires dans le service `backend`. Décommenter les lignes souhaitées et définir les secrets dans `.env` :
+
+| Variable | Défaut | Description |
+|---|---|---|
+| `APP_MAIL_HOST` | `localhost` | Hôte SMTP |
+| `APP_MAIL_PORT` | `1025` | Port SMTP |
+| `APP_MAIL_USERNAME` | *(vide)* | Identifiant SMTP |
+| `APP_MAIL_PASSWORD` | *(vide)* | Mot de passe SMTP |
+| `APP_MAIL_SMTP_AUTH` | `false` | Activer l'authentification (`true`/`false`) |
+| `APP_MAIL_STARTTLS` | `false` | Activer STARTTLS (`true`/`false`) |
+| `APP_MAIL_FROM` | `noreply@helpmi.local` | Adresse expéditeur |
+| `APP_BASE_URL` | `http://localhost:5173` | URL publique du frontend (liens dans les emails) |
+
+Ajouter dans `.env` :
+
+```env
+APP_MAIL_USERNAME=user@domaine.com
+APP_MAIL_PASSWORD=monmotdepasse
+```
+
+> En développement, MailHog intercepte les emails sans les envoyer (`docker compose -f docker-compose.dev.yml up -d mailhog` — interface web sur `http://localhost:8025`).
 
 ### Backend local — `application-dev.yml`
 

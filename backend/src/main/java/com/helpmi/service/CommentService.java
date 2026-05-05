@@ -28,6 +28,7 @@ public class CommentService {
     private final TicketRepository ticketRepository;
     private final CurrentUserService currentUserService;
     private final ProjectService projectService;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<CommentResponse> getComments(UUID ticketId) {
@@ -40,12 +41,19 @@ public class CommentService {
     public CommentResponse addComment(UUID ticketId, CreateCommentRequest req) {
         Ticket ticket = findTicket(ticketId);
         requireEditable(ticket);
+        User author = currentUserService.getCurrentUser();
         Comment comment = Comment.builder()
                 .ticket(ticket)
-                .author(currentUserService.getCurrentUser())
+                .author(author)
                 .body(req.body())
                 .build();
-        return toResponse(commentRepository.save(comment));
+        Comment saved = commentRepository.save(comment);
+        if (ticket.getReporter() != null) ticket.getReporter().getId();
+        if (ticket.getAssignee() != null) ticket.getAssignee().getId();
+        ticket.getWatchers().size();
+        ticket.getProject().getId();
+        notificationService.notifyComment(ticket, author);
+        return toResponse(saved);
     }
 
     public CommentResponse updateComment(UUID commentId, CreateCommentRequest req) {

@@ -50,6 +50,19 @@
             </button>
           </div>
         </div>
+
+        <!-- Notifications email -->
+        <hr class="border-gray-100 dark:border-gray-700" />
+        <p class="text-sm font-semibold text-gray-600 dark:text-gray-400">{{ $t('profile.notif_title') }}</p>
+        <div v-for="pref in notifPrefs" :key="pref.key" class="flex items-center justify-between">
+          <span class="text-sm text-gray-700 dark:text-gray-300">{{ $t('profile.' + pref.key) }}</span>
+          <button @click="togglePref(pref.key)"
+            :class="['relative inline-flex h-5 w-9 flex-shrink-0 rounded-full transition-colors duration-200',
+                     pref.value ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600']">
+            <span :class="['pointer-events-none absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200',
+                           pref.value ? 'translate-x-4' : 'translate-x-0.5']" />
+          </button>
+        </div>
       </div>
     </div>
 
@@ -151,7 +164,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth.js'
 import { useThemeStore } from '../stores/theme.js'
 import { useLocaleStore } from '../stores/locale.js'
-import { personalTokensApi } from '../services/api.js'
+import { personalTokensApi, usersApi } from '../services/api.js'
 import { formatDateOnly } from '../utils/dates.js'
 
 const auth = useAuthStore()
@@ -166,6 +179,14 @@ const newToken = ref(null)
 const copied = ref(false)
 const form = ref({ name: '', expiresAt: '' })
 
+const notifPrefs = ref([
+  { key: 'notif_ticket_created', value: true },
+  { key: 'notif_assigned',       value: true },
+  { key: 'notif_comment',        value: true },
+  { key: 'notif_status_changed', value: true },
+  { key: 'notif_watcher_added',  value: true },
+])
+
 const initials = computed(() => {
   if (!auth.user) return '?'
   return ((auth.user.firstName?.[0] || '') + (auth.user.lastName?.[0] || '')).toUpperCase()
@@ -175,6 +196,10 @@ onMounted(async () => {
   const { data } = await personalTokensApi.list()
   tokens.value = data
   loading.value = false
+  notifPrefs.value.forEach(p => {
+    const camel = p.key.replace(/_([a-z])/g, (_, c) => c.toUpperCase())
+    p.value = auth.user?.[camel] ?? true
+  })
 })
 
 async function createToken() {
@@ -198,6 +223,18 @@ async function copyToken(token) {
   setTimeout(() => { copied.value = false }, 2000)
 }
 
+
+async function togglePref(key) {
+  const pref = notifPrefs.value.find(p => p.key === key)
+  pref.value = !pref.value
+  await usersApi.updateNotificationPrefs({
+    notifAssigned:      notifPrefs.value.find(p => p.key === 'notif_assigned').value,
+    notifComment:       notifPrefs.value.find(p => p.key === 'notif_comment').value,
+    notifStatusChanged: notifPrefs.value.find(p => p.key === 'notif_status_changed').value,
+    notifWatcherAdded:  notifPrefs.value.find(p => p.key === 'notif_watcher_added').value,
+    notifTicketCreated: notifPrefs.value.find(p => p.key === 'notif_ticket_created').value,
+  })
+}
 
 function isExpired(expiresAt) {
   return expiresAt && new Date(expiresAt) < new Date()

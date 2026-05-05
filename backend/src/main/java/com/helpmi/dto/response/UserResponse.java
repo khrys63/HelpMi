@@ -11,7 +11,10 @@ import java.util.UUID;
 public record UserResponse(UUID id, String email, String firstName, String lastName, UserRole role,
                            List<OrganizationSummary> organizations,
                            List<UserProjectRoleResponse> projectRoles, boolean active, LocalDateTime createdAt,
-                           String theme, String locale) {
+                           String theme, String locale,
+                           boolean notifAssigned, boolean notifComment,
+                           boolean notifStatusChanged, boolean notifWatcherAdded,
+                           boolean notifTicketCreated) {
     public static UserResponse from(User user) {
         List<OrganizationSummary> organizations = user.getOrganizations().stream()
                 .map(OrganizationSummary::from)
@@ -23,6 +26,9 @@ public record UserResponse(UUID id, String email, String firstName, String lastN
                 .toList();
         return new UserResponse(user.getId(), user.getEmail(), user.getFirstName(), user.getLastName(),
                 user.getRole(), organizations, projectRoles, user.isActive(), user.getCreatedAt(),
-                user.getTheme(), user.getLocale());
+                user.getTheme(), user.getLocale(),
+                user.isNotifAssigned(), user.isNotifComment(),
+                user.isNotifStatusChanged(), user.isNotifWatcherAdded(),
+                user.isNotifTicketCreated());
     }
 }

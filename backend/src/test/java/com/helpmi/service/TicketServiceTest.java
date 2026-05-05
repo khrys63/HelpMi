@@ -52,6 +52,7 @@ class TicketServiceTest {
     @Mock ProjectService projectService;
     @Mock CurrentUserService currentUserService;
     @Mock TicketHistoryService ticketHistoryService;
+    @Mock NotificationService notificationService;
 
     @InjectMocks TicketService service;
 
@@ -64,6 +65,7 @@ class TicketServiceTest {
         reporter = agentUser();
         project = project();
         ticket = ticket(project, reporter);
+        lenient().when(currentUserService.getCurrentUser()).thenReturn(reporter);
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────

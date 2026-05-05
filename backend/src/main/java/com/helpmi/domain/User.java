@@ -71,6 +71,26 @@ public class User {
     @Builder.Default
     private String locale = "fr";
 
+    @Column(name = "notif_assigned", nullable = false)
+    @Builder.Default
+    private boolean notifAssigned = true;
+
+    @Column(name = "notif_comment", nullable = false)
+    @Builder.Default
+    private boolean notifComment = true;
+
+    @Column(name = "notif_status_changed", nullable = false)
+    @Builder.Default
+    private boolean notifStatusChanged = true;
+
+    @Column(name = "notif_watcher_added", nullable = false)
+    @Builder.Default
+    private boolean notifWatcherAdded = true;
+
+    @Column(name = "notif_ticket_created", nullable = false)
+    @Builder.Default
+    private boolean notifTicketCreated = true;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;

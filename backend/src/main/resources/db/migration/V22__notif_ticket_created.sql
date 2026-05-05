@@ -1,0 +1,2 @@
+ALTER TABLE users
+    ADD COLUMN notif_ticket_created BOOLEAN NOT NULL DEFAULT TRUE;

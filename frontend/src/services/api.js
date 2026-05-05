@@ -72,7 +72,8 @@ export const usersApi = {
   me: () => api.get('/users/me'),
   assignable: projectId => api.get(`/projects/${projectId}/assignable-users`),
   updateTheme: theme => api.patch('/users/me/theme', { theme }),
-  updateLocale: locale => api.patch('/users/me/locale', { locale })
+  updateLocale: locale => api.patch('/users/me/locale', { locale }),
+  updateNotificationPrefs: prefs => api.patch('/users/me/notifications', prefs)
 }
 
 // Personal tokens

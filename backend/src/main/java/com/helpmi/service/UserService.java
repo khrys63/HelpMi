@@ -5,6 +5,7 @@ import com.helpmi.domain.User;
 import com.helpmi.domain.UserProject;
 import com.helpmi.domain.enums.UserRole;
 import com.helpmi.dto.request.UpdateLocaleRequest;
+import com.helpmi.dto.request.UpdateNotificationPrefsRequest;
 import com.helpmi.dto.request.UpdateThemeRequest;
 import com.helpmi.dto.request.UpdateUserProjectsRequest;
 import com.helpmi.dto.request.UpdateUserRequest;
@@ -138,6 +139,17 @@ public class UserService {
     public UserResponse updateLocale(UpdateLocaleRequest req) {
         User user = currentUserService.getCurrentUser();
         user.setLocale(req.locale());
+        return UserResponse.from(userRepository.save(user));
+    }
+
+    @Transactional
+    public UserResponse updateNotificationPrefs(UpdateNotificationPrefsRequest req) {
+        User user = currentUserService.getCurrentUser();
+        user.setNotifAssigned(req.notifAssigned());
+        user.setNotifComment(req.notifComment());
+        user.setNotifStatusChanged(req.notifStatusChanged());
+        user.setNotifWatcherAdded(req.notifWatcherAdded());
+        user.setNotifTicketCreated(req.notifTicketCreated());
         return UserResponse.from(userRepository.save(user));
     }
 
