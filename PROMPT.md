@@ -155,3 +155,28 @@ sur l'écran de gestion des tickets, nous avons la date de création et la date 
 vérifie la couverture de test et enrichi la si besoin
 
 2 corrections : quand on crée un ticket en tant que membre, on ne peut pas assigner que l'écran de création. Quand on est membre on ne peut cloner que ses propres tickets, ca c'est ok et ca fonctionne, mais le message doit faire référence a l'action de clonage et non de modification du style "vous n'êtes autorisé à cloner que vos propres ticket" ou alors retirer le bouton (fait le meilleur choix). Pense a sécuriser l'API avec la même regle sur le rôle si ce n'est pas deja fait
+
+je souhaite supprimer la notion de client (la table de conf et l'affectation dans un ticket). Sur le ticket je souhaite plutot qu'on puisse selectionner une organisation concernée. La liste ne propose que les organisations pour lesquelles l'utilisateur est rattachées. Autre changement du coup, un utilisateur peut etre rattaché a plusieurs organiations, et avoir des roles dans chaques projets de chacune de ses organisations. cela aura donc un impact sur l'écran de gestion des utilisateurs et leur modification 
+
+on va revoir les droit d'un admin. il doit pouvoir créer et modifier un projet. Il peut supprimer les tickets. il a acces aux configurations. pour le reste il est un utilisateur : il doit etre ajouté aux projets pour les voir (par défaut il est ajouté comme utilisateur quand il en crée un). Un autre admin (ou lui meme) peut le retirer d'un projet, il est donc modifiable.
+
+un compte admin doit appartenir a au moins une organisation et il est modifiable dans la gestion des utilisateur
+
+ajoute un second admin par defaut admin2@helpmi.local, dans la bdd et dans KC
+
+sur l'ecran de gestion d'un ticket, la liste d'affectation ne doit etre composé que des utilisateurs et admins ayant un role dans le projet (et non tous les admin en plus)  
+
+sur l'écran de selection des projets accessibles pour un tilisateur, même en admin, la liste des projets (avec le role) doit dépendre des organisations attaché. bref un admin a le meme écran qu'un user.
+
+En tant que membre d'un projet, on peut modifier le titre, la description, la priorité, le type, la (ou les) organisation concernée, les étiquettes. On peut aussi réouvrir ou annuler. L'assignation et l'échéance restent en lecture seule
+
+ok pour le front, par contre le backed renvoie des 403 sur les modifications sur l'écran de gestion d'un ticket
+
+met le recap des permissions dans le README.md pour une meilleure compréhension du produit
+
+nouvelle feature : sur l'écran de gestion des tickets. un Ticket annulé ou fermé n'est plus modifiable (pour tous ses champs, meme la description et les commentaires). bref, le ticket est figé.
+
+c'est parfait mais tu as trop interprété. il est bien cloturé ou annulé non modifiable, mais on peut le réouvrir dans les 2 cas.
+
+/security-audit   
+

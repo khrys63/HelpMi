@@ -194,6 +194,7 @@ Pour les types `ANNUEL`, `MENSUEL` et `TRIMESTRIEL`, la fermeture (`OPEN` → `C
 ├── keycloak/
 │   └── realm-export.json           # Import du realm Keycloak (3 comptes de test inclus)
 │
+├── .env                            # Configuration file
 ├── docker-compose.yml              # MariaDB + Keycloak + MinIO + Backend + Frontend
 └── docker-compose.dev.yml          # Surcharge dev : console MinIO (port 9001), phpMyAdmin (port 8081)
 ```
