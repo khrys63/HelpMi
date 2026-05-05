@@ -14,12 +14,27 @@
       <div v-for="p in projects" :key="p.id" class="relative group">
         <router-link :to="`/projects/${p.id}`"
           class="block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-bold px-2 py-0.5 rounded">{{ p.key }}</span>
-            <span class="font-semibold text-gray-900 dark:text-gray-100 truncate">{{ p.name }}</span>
+          <div class="flex items-start gap-2 mb-1.5">
+            <span class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-bold px-2 py-0.5 rounded shrink-0">{{ p.key }}</span>
+            <span class="font-semibold text-gray-900 dark:text-gray-100 truncate flex-1">{{ p.name }}</span>
+            <span v-if="p.userRole"
+              :class="['text-xs font-medium px-2 py-0.5 rounded-full shrink-0',
+                       p.userRole === 'MANAGER'
+                         ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300'
+                         : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400']">
+              {{ p.userRole === 'MANAGER' ? $t('projects.role_manager') : $t('projects.role_member') }}
+            </span>
           </div>
           <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">{{ p.description || $t('common.no_description') }}</p>
-          <p class="text-xs text-gray-400 dark:text-gray-500">{{ $t('projects.ticket_count', { count: p.ticketCount }) }}</p>
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex flex-wrap gap-1 min-w-0">
+              <span v-for="org in p.organizations" :key="org"
+                class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded truncate max-w-[120px]">
+                {{ org }}
+              </span>
+            </div>
+            <p class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ $t('projects.ticket_count', { count: p.ticketCount }) }}</p>
+          </div>
         </router-link>
         <button v-if="isAdmin" @click.prevent="openEdit(p)"
           class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-blue-600 text-xs font-medium bg-white dark:bg-gray-700 rounded px-2 py-1 shadow-sm border border-gray-200 dark:border-gray-600">

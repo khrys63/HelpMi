@@ -42,7 +42,9 @@
     "field_description": "Description (optionnelle)",
     "field_name_label": "Nom",
     "field_description_label": "Description",
-    "creating": "Création…"
+    "creating": "Création…",
+    "role_manager": "Gestionnaire",
+    "role_member": "Membre"
   },
   "tickets": {
     "new": "+ Nouveau ticket",
@@ -162,6 +164,9 @@
     "token_expires": "Expire le {date}",
     "token_expired": "Expiré",
     "token_revoke": "Révoquer",
+    "access_title": "Accès",
+    "access_orgs": "Organisations",
+    "access_projects": "Projets",
     "preferences_title": "Préférences",
     "pref_theme": "Thème",
     "pref_theme_light": "Clair",

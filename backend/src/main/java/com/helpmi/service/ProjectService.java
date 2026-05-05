@@ -122,7 +122,14 @@ public class ProjectService {
     private ProjectResponse toResponse(Project p, User currentUser) {
         long ticketCount = ticketRepository.countByProjectId(p.getId());
         boolean canAssign = isGestionnaire(currentUser.getId(), p.getId());
+        List<String> orgs = p.getOrganizations().stream()
+                .map(o -> o.getName())
+                .sorted()
+                .toList();
+        String userRole = userProjectRepository.findByUserIdAndProjectId(currentUser.getId(), p.getId())
+                .map(up -> up.getRole())
+                .orElse(null);
         return new ProjectResponse(p.getId(), p.getName(), p.getKey(), p.getDescription(),
-                p.getTicketSequence(), ticketCount, p.getCreatedAt(), canAssign);
+                p.getTicketSequence(), ticketCount, p.getCreatedAt(), canAssign, orgs, userRole);
     }
 }

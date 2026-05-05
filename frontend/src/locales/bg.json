@@ -42,7 +42,9 @@
     "field_description": "Описание (по избор)",
     "field_name_label": "Име",
     "field_description_label": "Описание",
-    "creating": "Създаване…"
+    "creating": "Създаване…",
+    "role_manager": "Мениджър",
+    "role_member": "Член"
   },
   "tickets": {
     "new": "+ Нова задача",
@@ -162,6 +164,9 @@
     "token_expires": "Изтича на {date}",
     "token_expired": "Изтекъл",
     "token_revoke": "Отмени",
+    "access_title": "Достъп",
+    "access_orgs": "Организации",
+    "access_projects": "Проекти",
     "preferences_title": "Предпочитания",
     "pref_theme": "Тема",
     "pref_theme_light": "Светла",

@@ -182,5 +182,17 @@ c'est parfait mais tu as trop interprété. il est bien cloturé ou annulé non 
 
 un admin semble pouvoir toujours assigner un ticket fermé ou annulé. il ne faut pas, d'ailleur le backend repond bien une 403 comme attendu
 
-Nouvelle feature : on peurt ajouter sur un ticket un ensemble de personne taguées. on ne peux ajouter que des personnes ayant un role dans le projet du ticket ou les organisations rattachées. 
+Nouvelle feature : on peut ajouter sur un ticket un ensemble de personne taguées. on ne peux ajouter que des personnes ayant un role dans le projet du ticket ou les organisations rattachées. 
+
+pense a actualiser la liste des personnes à taguer quand des organisations concernées sont ajoutées ou retirées
+
+je dispose d'un serveur SMTP, je souhaite notifier par mail les utilisateurs de l'outils quand des évènement ont lieu
+
+il faut aussi prévoir une notification quand un ticket est créé pour tous les gestionnaire du projet (avec choix d'etre notifié aussi)
+
+la modification des commentaire ne semble plus possible, peux tu vérifier cela avec les regle metier que l'ona mis et corriger si besoin (Administrateur : tous, Gestionnaire et Membre les leurs)
+
+sur l'écran des projets, peut on avoir la ou les organisations pour chaque projet. ainsi que le role de l'utilsateur courant. en optimisant la place
+
+l'utilisateur peut il avoir dans son profil un recap des organismes auxquels il est rattaché et des projets (avec don rôle). tout ceci n'est pas modifiable a cet endroit
 

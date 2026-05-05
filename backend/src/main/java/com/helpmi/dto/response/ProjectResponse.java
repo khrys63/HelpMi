@@ -1,6 +1,7 @@
 package com.helpmi.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record ProjectResponse(
@@ -11,5 +12,7 @@ public record ProjectResponse(
         int ticketSequence,
         long ticketCount,
         LocalDateTime createdAt,
-        boolean canAssign
+        boolean canAssign,
+        List<String> organizations,
+        String userRole
 ) {}

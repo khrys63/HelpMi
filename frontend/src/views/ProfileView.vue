@@ -16,6 +16,46 @@
       </div>
     </div>
 
+    <!-- Organisations & Projets -->
+    <div class="mb-8">
+      <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">{{ $t('profile.access_title') }}</h2>
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-4">
+
+        <!-- Organisations -->
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('profile.access_orgs') }}</p>
+          <div v-if="auth.user?.organizations?.length" class="flex flex-wrap gap-1.5">
+            <span v-for="org in auth.user.organizations" :key="org.id"
+              class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2.5 py-1 rounded-full">
+              {{ org.name }}
+            </span>
+          </div>
+          <p v-else class="text-sm text-gray-400 dark:text-gray-500">—</p>
+        </div>
+
+        <hr class="border-gray-100 dark:border-gray-700" />
+
+        <!-- Projets -->
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('profile.access_projects') }}</p>
+          <div v-if="auth.user?.projectRoles?.length" class="space-y-1.5">
+            <div v-for="pr in auth.user.projectRoles" :key="pr.projectId"
+              class="flex items-center justify-between gap-2">
+              <span class="text-sm text-gray-700 dark:text-gray-300 truncate">{{ pr.projectName }}</span>
+              <span :class="['text-xs font-medium px-2 py-0.5 rounded-full shrink-0',
+                             pr.role === 'MANAGER'
+                               ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300'
+                               : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400']">
+                {{ pr.role === 'MANAGER' ? $t('projects.role_manager') : $t('projects.role_member') }}
+              </span>
+            </div>
+          </div>
+          <p v-else class="text-sm text-gray-400 dark:text-gray-500">—</p>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Préférences -->
     <div class="mb-8">
       <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">{{ $t('profile.preferences_title') }}</h2>
