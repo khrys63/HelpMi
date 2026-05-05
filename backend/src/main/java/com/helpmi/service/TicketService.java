@@ -155,7 +155,7 @@ public class TicketService {
 
     public TicketResponse updateTicket(UUID projectId, UUID ticketId, UpdateTicketRequest req) {
         Ticket ticket = findTicket(projectId, ticketId);
-        requireCanModify(currentUserService.getCurrentUser(), ticket);
+        User currentUser = currentUserService.getCurrentUser();
 
         String oldTitle    = ticket.getTitle();
         String oldDesc     = ticket.getDescription();
@@ -168,6 +168,9 @@ public class TicketService {
         if (req.priority() != null) ticket.setPriority(req.priority());
         if (req.type() != null) ticket.setType(req.type());
         if (req.assigneeId() != null) {
+            if (currentUser.getRole() != UserRole.ADMIN && !projectService.isGestionnaire(currentUser.getId(), projectId)) {
+                throw new ForbiddenException("Seuls les gestionnaires peuvent modifier l'assigné");
+            }
             validateAssignee(req.assigneeId(), projectId);
             ticket.setAssignee(userRepository.findById(req.assigneeId())
                     .orElseThrow(() -> new NotFoundException("Assigné introuvable")));
@@ -184,7 +187,6 @@ public class TicketService {
 
     public ChangeStatusResponse changeStatus(UUID projectId, UUID ticketId, String newStatus) {
         Ticket ticket = findTicket(projectId, ticketId);
-        requireCanModify(currentUserService.getCurrentUser(), ticket);
         String oldStatus = ticket.getStatus();
         ticket.setStatus(newStatus);
         boolean closing = List.of("CLOSED", "RESOLVED", "CANCELLED").contains(newStatus);
@@ -270,7 +272,6 @@ public class TicketService {
 
     public TicketResponse setDueDate(UUID projectId, UUID ticketId, LocalDate dueDate) {
         Ticket ticket = findTicket(projectId, ticketId);
-        requireCanModify(currentUserService.getCurrentUser(), ticket);
         String oldDate = ticket.getDueDate() != null ? ticket.getDueDate().toString() : null;
         String newDate = dueDate != null ? dueDate.toString() : null;
         ticket.setDueDate(dueDate);
@@ -288,7 +289,6 @@ public class TicketService {
 
     public List<OrganizationSummary> setOrganizations(UUID projectId, UUID ticketId, List<UUID> orgIds) {
         Ticket ticket = findTicket(projectId, ticketId);
-        requireCanModify(currentUserService.getCurrentUser(), ticket);
         String oldOrgs = collectionNames(ticket.getOrganizations().stream()
                 .map(o -> o.getName()).sorted().toList());
         var newOrgs = orgIds == null || orgIds.isEmpty()
@@ -308,7 +308,6 @@ public class TicketService {
 
     public List<LabelResponse> setLabels(UUID projectId, UUID ticketId, List<UUID> labelIds) {
         Ticket ticket = findTicket(projectId, ticketId);
-        requireCanModify(currentUserService.getCurrentUser(), ticket);
         String oldLabels = collectionNames(ticket.getLabels().stream()
                 .map(l -> l.getName()).sorted().toList());
         var newLabels = labelIds == null || labelIds.isEmpty()
@@ -328,7 +327,10 @@ public class TicketService {
 
     public TicketResponse setAssignee(UUID projectId, UUID ticketId, UUID assigneeId) {
         Ticket ticket = findTicket(projectId, ticketId);
-        requireCanModify(currentUserService.getCurrentUser(), ticket);
+        User currentUser = currentUserService.getCurrentUser();
+        if (currentUser.getRole() != UserRole.ADMIN && !projectService.isGestionnaire(currentUser.getId(), projectId)) {
+            throw new ForbiddenException("Seuls les gestionnaires peuvent modifier l'assigné");
+        }
         String oldAssignee = userName(ticket.getAssignee());
         if (assigneeId == null) {
             ticket.setAssignee(null);

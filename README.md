@@ -27,24 +27,27 @@ Outil de ticketing interne. Gestion de projets, tickets, commentaires, pièces j
 
 Il existe deux **rôles globaux** (`ADMIN` et `USER`) et deux **rôles par projet** (`MANAGER` et `MEMBER`).
 
-### Prérequis (non-ADMIN)
+### Prérequis
 
-Un utilisateur sans organisation est bloqué sur l'écran d'attente jusqu'à affectation par un admin.  
-Un utilisateur avec organisation ne voit que les **projets de sa liste personnelle** (configurée individuellement par l'admin avec un rôle par projet).
+Tout utilisateur, y compris ADMIN, doit appartenir à au moins une organisation.  
+Un utilisateur sans organisation est bloqué sur un écran d'attente jusqu'à affectation par un admin.  
+Chaque utilisateur ne voit que les **projets de sa liste personnelle** (configurée individuellement par un admin avec un rôle par projet).
 
 ### Rôles par projet
 
 | Code | Libellé UI | Signification |
 |---|---|---|
-| `MANAGER` | Gestionnaire | Droits complets sur les tickets du projet (créer, modifier tout ticket, changer statut, supprimer les liens) |
-| `MEMBER` | Membre | Droits restreints : peut créer des tickets, modifier/fermer uniquement ses propres tickets (reporter ou assigné) |
+| `MANAGER` | Gestionnaire | Droits étendus : peut modifier l'assigné d'un ticket en plus de tous les droits MEMBER |
+| `MEMBER` | Membre | Droits standard : lecture, création, modification des champs ticket, changement de statut, commentaires |
 
 ### Projets
 
 | Action | ADMIN | MANAGER | MEMBER |
 |---|---|---|---|
-| Voir la liste | Tous les projets actifs | Ses projets | Ses projets |
+| Voir la liste | Ses projets uniquement | Ses projets | Ses projets |
 | Créer / modifier / désactiver | ✅ | ✗ | ✗ |
+
+> À la création d'un projet, l'admin est automatiquement ajouté comme MEMBER.
 
 ### Tickets
 
@@ -52,9 +55,11 @@ Un utilisateur avec organisation ne voit que les **projets de sa liste personnel
 |---|---|---|---|
 | Lire (liste + détail) | ✅ | ✅ | ✅ |
 | Créer | ✅ | ✅ | ✅ |
-| Modifier (titre, description, priorité, type, date, assigné, clients, labels) | ✅ tous | ✅ tous | ✅ si reporter ou assigné |
-| Changer le statut | ✅ tous | ✅ tous | ✅ si reporter ou assigné |
-| Cloner / déplacer | ✅ tous | ✅ tous | ✅ si reporter ou assigné |
+| Modifier titre, description, priorité, type, date d'échéance | ✅ | ✅ | ✅ |
+| Modifier les organisations et les étiquettes | ✅ | ✅ | ✅ |
+| Changer le statut (réouvrir, annuler, clôturer…) | ✅ | ✅ | ✅ |
+| Modifier l'assigné | ✅ | ✅ | ✗ (lecture seule) |
+| Cloner / déplacer | ✅ | ✅ | ✅ si reporter ou assigné |
 | Supprimer | ✅ | ✗ | ✗ |
 
 ### Commentaires
@@ -80,15 +85,14 @@ Un utilisateur avec organisation ne voit que les **projets de sa liste personnel
 
 ### Utilisateurs
 
-| Action | ADMIN | USER (tout rôle projet) |
+| Action | ADMIN | MANAGER / MEMBER |
 |---|---|---|
-| Liste des utilisateurs actifs (pour assignation) | ✅ | ✅ |
+| Liste des utilisateurs assignables à un projet | ✅ | ✅ |
 | Gestion des comptes (rôle, actif/inactif, organisation, projets) | ✅ | ✗ |
 
 ### Administration (réservé ADMIN)
 
 - Organisations : CRUD, rattachement projets/utilisateurs
-- Clients : CRUD
 - Labels : CRUD
 - Valeurs de configuration (statuts, priorités, types, types de liens, rôles projet) : CRUD
 
@@ -184,8 +188,9 @@ Le realm Keycloak `helpmi` est importé automatiquement au premier démarrage. T
 | Utilisateur | Email | Mot de passe | Rôle |
 |---|---|---|---|
 | admin | `admin@helpmi.local` | `admin123` | ADMIN |
-| agent | `agent@helpmi.local` | `agent123` | USER |
-| client | `client@helpmi.local` | `client123` | USER |
+| admin2 | `admin2@helpmi.local` | `admin123` | ADMIN |
+| user1 | `user1@helpmi.local` | `user123` | USER |
+| user2 | `user2@helpmi.local` | `user123` | USER |
 
 **3. Démarrer le backend**
 
@@ -355,8 +360,9 @@ Le fichier contient trois comptes de démonstration importés automatiquement au
 | Email | Mot de passe | Rôle |
 |---|---|---|
 | `admin@helpmi.local` | `admin123` | ADMIN |
-| `agent@helpmi.local` | `agent123` | USER |
-| `client@helpmi.local` | `client123` | USER |
+| `admin2@helpmi.local` | `admin123` | ADMIN |
+| `user1@helpmi.local` | `user123` | USER |
+| `user2@helpmi.local` | `user123` | USER |
 
 Ces comptes correspondent aux utilisateurs pré-seedés en base (profil `dev`). À la première connexion, le backend les retrouve par email et met à jour leur `keycloakId`.
 
@@ -376,20 +382,20 @@ Le rapport HTML de couverture est généré dans `backend/target/site/jacoco/ind
 
 ### Couverture actuelle
 
-232 tests unitaires Mockito (sans base de données ni contexte Spring).
-
-Ajouts récents (refonte rôles) : `updateUserProjects` entièrement couvert (6 cas), comportement clearProjects sur changement d'organisation (UserService + OrganizationService), catégorie `PROJECT_ROLE` validée dans AdminConfigService.
+267 tests unitaires Mockito (sans base de données ni contexte Spring).
 
 | Service / Composant | Tests |
 |---|---|
-| `TicketService` | 54 |
-| `UserService` | 26 |
-| `OrganizationService` | 21 |
-| `ProjectService`, `PersonalTokenService` | 18 chacun |
+| `TicketService` | 57 |
+| `ProjectService` | 28 |
+| `UserService` | 25 |
+| `OrganizationService` | 19 |
+| `PersonalTokenService` | 18 |
+| `TicketLinkService` | 19 |
 | `AdminConfigService` | 14 |
-| `TicketLinkService` | 15 |
-| `CommentService`, `LabelService`, `AttachmentService` | 10–12 chacun |
-| `ClientService`, `GlobalExceptionHandler` | 8 chacun |
-| `PersonalTokenFilter`, `RateLimiterService` | 7, 5 |
+| `AttachmentService` | 16 |
+| `CommentService`, `LabelService` | 10–12 chacun |
+| `PersonalTokenFilter`, `CurrentUserService` | 7, 12 |
+| `GlobalExceptionHandler`, `RateLimiterService` | 9, 5 |
 
 Les controllers ne sont pas couverts (pas de tests d'intégration `@SpringBootTest`).

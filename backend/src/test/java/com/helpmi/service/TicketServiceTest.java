@@ -185,13 +185,14 @@ class TicketServiceTest {
     }
 
     @Test
-    void updateTicket_notAuthorized_throws() {
-        User other = clientUser();
-        when(currentUserService.getCurrentUser()).thenReturn(other);
+    void updateTicket_nonGestionnaire_cannotSetAssignee_throws() {
+        User assignee = clientUser();
+        when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(projectService.isGestionnaire(reporter.getId(), project.getId())).thenReturn(false);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
 
         assertThatThrownBy(() -> service.updateTicket(project.getId(), ticket.getId(),
-                new UpdateTicketRequest("t", null, null, null, null)))
+                new UpdateTicketRequest(null, null, null, null, assignee.getId())))
                 .isInstanceOf(ForbiddenException.class);
     }
 
@@ -225,7 +226,6 @@ class TicketServiceTest {
     @Test
     void changeStatus_toOpen_clearsClosedAt() {
         ticket.setStatus("CLOSED");
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
@@ -236,7 +236,6 @@ class TicketServiceTest {
 
     @Test
     void changeStatus_toClosed_setsClosedAt() {
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
@@ -247,7 +246,6 @@ class TicketServiceTest {
 
     @Test
     void changeStatus_toResolved_setsClosedAt() {
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
@@ -258,7 +256,6 @@ class TicketServiceTest {
 
     @Test
     void changeStatus_toCancelled_setsClosedAt() {
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
@@ -342,7 +339,6 @@ class TicketServiceTest {
         ticket.setType("ANNUEL");
         LocalDate origDueDate = LocalDate.of(2025, 3, 10);
         ticket.setDueDate(origDueDate);
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-2");
@@ -359,7 +355,6 @@ class TicketServiceTest {
     @Test
     void changeStatus_recurringTicket_noDueDate_autoCreatesWithNullDueDate() {
         ticket.setType("ANNUEL");
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-2");
@@ -372,7 +367,6 @@ class TicketServiceTest {
 
     @Test
     void changeStatus_nonPeriodic_closed_doesNotAutoCreate() {
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
 
@@ -385,7 +379,6 @@ class TicketServiceTest {
     @Test
     void changeStatus_recurringTicket_resolved_doesNotAutoCreate() {
         ticket.setType("ANNUEL");
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
 
@@ -398,7 +391,6 @@ class TicketServiceTest {
     @Test
     void changeStatus_recurringTicket_cancelled_doesNotAutoCreate() {
         ticket.setType("ANNUEL");
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
 
@@ -411,7 +403,6 @@ class TicketServiceTest {
     @Test
     void changeStatus_recurringTicket_closed_responseIncludesNextReference() {
         ticket.setType("ANNUEL");
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenAnswer(inv -> {
             Ticket t = inv.getArgument(0);
@@ -428,7 +419,6 @@ class TicketServiceTest {
 
     @Test
     void changeStatus_nonRecurring_closed_responseHasNullNextTicket() {
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
 
@@ -442,7 +432,6 @@ class TicketServiceTest {
     void changeStatus_mensuelTicket_closed_autoCreatesNextMonth() {
         ticket.setType("MENSUEL");
         ticket.setDueDate(LocalDate.of(2025, 1, 31));
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-2");
@@ -458,7 +447,6 @@ class TicketServiceTest {
     void changeStatus_trimestrielTicket_closed_autoCreatesNextQuarter() {
         ticket.setType("TRIMESTRIEL");
         ticket.setDueDate(LocalDate.of(2025, 1, 15));
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-2");
@@ -511,7 +499,6 @@ class TicketServiceTest {
         Organization o1 = organization();
         Organization o2 = organization();
         ticket.getOrganizations().add(o1);
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(organizationRepository.findAllById(List.of(o2.getId()))).thenReturn(List.of(o2));
 
@@ -524,7 +511,6 @@ class TicketServiceTest {
     @Test
     void setOrganizations_emptyList_clearsOrgs() {
         ticket.getOrganizations().add(organization());
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
 
         List<OrganizationSummary> result = service.setOrganizations(project.getId(), ticket.getId(), List.of());
@@ -536,7 +522,6 @@ class TicketServiceTest {
     @Test
     void setOrganizations_nullList_clearsOrgs() {
         ticket.getOrganizations().add(organization());
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
 
         List<OrganizationSummary> result = service.setOrganizations(project.getId(), ticket.getId(), null);
@@ -551,7 +536,6 @@ class TicketServiceTest {
         Label l1 = label("urgent");
         Label l2 = label("bug");
         ticket.getLabels().add(l1);
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(labelRepository.findAllById(List.of(l2.getId()))).thenReturn(List.of(l2));
 
@@ -565,7 +549,6 @@ class TicketServiceTest {
     @Test
     void setLabels_emptyList_clearsLabels() {
         ticket.getLabels().add(label("urgent"));
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
 
         List<LabelResponse> result = service.setLabels(project.getId(), ticket.getId(), List.of());
@@ -586,9 +569,8 @@ class TicketServiceTest {
     }
 
     @Test
-    void setDueDate_authorizedReporter_updatesDueDate() {
+    void setDueDate_member_updatesDueDate() {
         LocalDate newDate = LocalDate.of(2025, 12, 31);
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
 
@@ -597,32 +579,6 @@ class TicketServiceTest {
         assertThat(ticket.getDueDate()).isEqualTo(newDate);
     }
 
-    @Test
-    void setDueDate_unauthorizedClient_throwsForbidden() {
-        when(currentUserService.getCurrentUser()).thenReturn(clientUser());
-        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
-
-        assertThatThrownBy(() -> service.setDueDate(project.getId(), ticket.getId(), LocalDate.now()))
-                .isInstanceOf(ForbiddenException.class);
-    }
-
-    @Test
-    void setOrganizations_unauthorizedUser_throwsForbidden() {
-        when(currentUserService.getCurrentUser()).thenReturn(clientUser());
-        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
-
-        assertThatThrownBy(() -> service.setOrganizations(project.getId(), ticket.getId(), List.of()))
-                .isInstanceOf(ForbiddenException.class);
-    }
-
-    @Test
-    void setLabels_unauthorizedClient_throwsForbidden() {
-        when(currentUserService.getCurrentUser()).thenReturn(clientUser());
-        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
-
-        assertThatThrownBy(() -> service.setLabels(project.getId(), ticket.getId(), List.of()))
-                .isInstanceOf(ForbiddenException.class);
-    }
 
     @Test
     void cloneTicket_unauthorizedClient_throwsForbidden() {
@@ -639,6 +595,7 @@ class TicketServiceTest {
     void setAssignee_validUser_setsAssignee() {
         User assignee = clientUser();
         when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(projectService.isGestionnaire(reporter.getId(), project.getId())).thenReturn(true);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(userRepository.isAssignableToProject(assignee.getId(), project.getId())).thenReturn(true);
         when(userRepository.findById(assignee.getId())).thenReturn(Optional.of(assignee));
@@ -653,6 +610,7 @@ class TicketServiceTest {
     void setAssignee_nullId_clearsAssignee() {
         ticket.setAssignee(agentUser());
         when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(projectService.isGestionnaire(reporter.getId(), project.getId())).thenReturn(true);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
@@ -665,6 +623,7 @@ class TicketServiceTest {
     void setAssignee_notAssignable_throws() {
         User other = clientUser();
         when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(projectService.isGestionnaire(reporter.getId(), project.getId())).thenReturn(true);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(userRepository.isAssignableToProject(other.getId(), project.getId())).thenReturn(false);
 
@@ -678,6 +637,7 @@ class TicketServiceTest {
     void updateTicket_withAssignee_loadsAndSetsAssignee() {
         User assignee = clientUser();
         when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(projectService.isGestionnaire(reporter.getId(), project.getId())).thenReturn(true);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(userRepository.isAssignableToProject(assignee.getId(), project.getId())).thenReturn(true);
         when(userRepository.findById(assignee.getId())).thenReturn(Optional.of(assignee));
@@ -693,6 +653,7 @@ class TicketServiceTest {
     void updateTicket_assigneeNotFound_throwsNotFoundException() {
         UUID unknownId = UUID.randomUUID();
         when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(projectService.isGestionnaire(reporter.getId(), project.getId())).thenReturn(true);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(userRepository.isAssignableToProject(unknownId, project.getId())).thenReturn(true);
         when(userRepository.findById(unknownId)).thenReturn(Optional.empty());
@@ -708,6 +669,7 @@ class TicketServiceTest {
     void setAssignee_assigneeIdValidButUserMissing_throwsNotFoundException() {
         UUID ghostId = UUID.randomUUID();
         when(currentUserService.getCurrentUser()).thenReturn(reporter);
+        when(projectService.isGestionnaire(reporter.getId(), project.getId())).thenReturn(true);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(userRepository.isAssignableToProject(ghostId, project.getId())).thenReturn(true);
         when(userRepository.findById(ghostId)).thenReturn(Optional.empty());
@@ -764,7 +726,6 @@ class TicketServiceTest {
     @Test
     void changeStatus_annuelTicket_noDueDate_clonesWithNullDueDate() {
         ticket.setType("ANNUEL");
-        when(currentUserService.getCurrentUser()).thenReturn(reporter);
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-2");
