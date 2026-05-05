@@ -10,6 +10,7 @@ import com.helpmi.dto.response.ChangeStatusResponse;
 import com.helpmi.dto.response.LabelResponse;
 import com.helpmi.dto.response.OrganizationSummary;
 import com.helpmi.dto.response.TicketDetailResponse;
+import com.helpmi.dto.response.UserSummary;
 import com.helpmi.dto.response.TicketHistoryResponse;
 import com.helpmi.dto.response.TicketResponse;
 import com.helpmi.service.TicketHistoryService;
@@ -91,6 +92,17 @@ public class TicketController {
     public List<LabelResponse> setLabels(@PathVariable UUID projectId, @PathVariable UUID ticketId,
             @RequestBody Map<String, List<UUID>> body) {
         return ticketService.setLabels(projectId, ticketId, body.get("labelIds"));
+    }
+
+    @GetMapping("/{ticketId}/eligible-watchers")
+    public List<UserSummary> eligibleWatchers(@PathVariable UUID projectId, @PathVariable UUID ticketId) {
+        return ticketService.getEligibleWatchers(projectId, ticketId);
+    }
+
+    @PutMapping("/{ticketId}/watchers")
+    public List<UserSummary> setWatchers(@PathVariable UUID projectId, @PathVariable UUID ticketId,
+            @RequestBody Map<String, List<UUID>> body) {
+        return ticketService.setWatchers(projectId, ticketId, body.get("userIds"));
     }
 
     @PostMapping("/{ticketId}/move")

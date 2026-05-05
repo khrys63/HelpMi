@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,4 +39,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
           )
     """)
     boolean isAssignableToProject(@Param("userId") UUID userId, @Param("projectId") UUID projectId);
+
+    @Query("""
+        SELECT DISTINCT u FROM User u JOIN u.organizations o
+        WHERE u.active = true AND o.id IN :orgIds
+        ORDER BY u.firstName ASC, u.lastName ASC
+    """)
+    List<User> findByOrganizationIds(@Param("orgIds") Collection<UUID> orgIds);
 }

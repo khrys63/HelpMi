@@ -1,4 +1,4 @@
-# Rapport d'audit de sécurité — JiraLike
+# Rapport d'audit de sécurité — HelpMi
 *Date : 2026-05-05 — Modèle : Claude Sonnet 4.6*
 
 ---

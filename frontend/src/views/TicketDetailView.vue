@@ -328,6 +328,26 @@
             </div>
           </div>
 
+          <!-- Personnes taguées -->
+          <div class="pt-2 border-t dark:border-gray-700">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.watchers_label') }}</p>
+            <div class="flex flex-wrap gap-1 mb-2">
+              <span v-for="w in ticket.watchers" :key="w.id"
+                class="inline-flex items-center gap-1 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 text-xs px-2 py-0.5 rounded-full">
+                {{ w.firstName }} {{ w.lastName }}
+                <button v-if="!isFrozen" @click="removeWatcher(w.id)" class="text-teal-400 hover:text-teal-700 leading-none">✕</button>
+              </span>
+              <span v-if="!ticket.watchers?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">{{ $t('tickets.watchers_none') }}</span>
+            </div>
+            <div v-if="!isFrozen && availableWatchers.length" class="relative">
+              <select @change="addWatcher($event.target.value); $event.target.value = ''"
+                class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 dark:bg-gray-700">
+                <option value="">{{ $t('tickets.add_watcher') }}</option>
+                <option v-for="u in availableWatchers" :key="u.id" :value="u.id">{{ u.firstName }} {{ u.lastName }}</option>
+              </select>
+            </div>
+          </div>
+
           <!-- Étiquettes -->
           <div class="pt-2 border-t dark:border-gray-700">
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.labels_label') }}</p>
@@ -459,6 +479,7 @@ const showHistory = ref(false)
 const ticket = ref({})
 const loading = ref(true)
 const users = ref([])
+const eligibleWatchers = ref([])
 const assigneeId = ref('')
 const newComment = ref('')
 const commentSaving = ref(false)
@@ -499,12 +520,14 @@ const editDescription = ref('')
 const descriptionInput = ref(null)
 
 onMounted(async () => {
-  const [{ data: t }, { data: u }] = await Promise.all([
+  const [{ data: t }, { data: u }, { data: ew }] = await Promise.all([
     ticketsApi.get(projectId, ticketId),
-    usersApi.assignable(projectId)
+    usersApi.assignable(projectId),
+    ticketsApi.eligibleWatchers(projectId, ticketId)
   ])
   ticket.value = t
   users.value = u
+  eligibleWatchers.value = ew
   assigneeId.value = t.assignee?.id || ''
   dueDateInput.value = t.dueDate || ''
   loading.value = false
@@ -702,12 +725,35 @@ async function addOrganization(orgId) {
   const ids = [...(ticket.value.organizations || []).map(o => o.id), orgId]
   const { data } = await ticketsApi.setOrganizations(projectId, ticketId, ids)
   ticket.value.organizations = data
+  const { data: ew } = await ticketsApi.eligibleWatchers(projectId, ticketId)
+  eligibleWatchers.value = ew
 }
 
 async function removeOrganization(orgId) {
   const ids = ticket.value.organizations.map(o => o.id).filter(id => id !== orgId)
   const { data } = await ticketsApi.setOrganizations(projectId, ticketId, ids)
   ticket.value.organizations = data
+  const { data: ew } = await ticketsApi.eligibleWatchers(projectId, ticketId)
+  eligibleWatchers.value = ew
+}
+
+// --- Personnes taguées ---
+const availableWatchers = computed(() => {
+  const current = ticket.value.watchers || []
+  return eligibleWatchers.value.filter(u => !current.some(w => w.id === u.id))
+})
+
+async function addWatcher(userId) {
+  if (!userId) return
+  const ids = [...(ticket.value.watchers || []).map(w => w.id), userId]
+  const { data } = await ticketsApi.setWatchers(projectId, ticketId, ids)
+  ticket.value.watchers = data
+}
+
+async function removeWatcher(userId) {
+  const ids = ticket.value.watchers.map(w => w.id).filter(id => id !== userId)
+  const { data } = await ticketsApi.setWatchers(projectId, ticketId, ids)
+  ticket.value.watchers = data
 }
 
 // --- Étiquettes ---

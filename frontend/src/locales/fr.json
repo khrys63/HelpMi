@@ -91,6 +91,9 @@
     "organizations_label": "Organisations concernées",
     "organizations_none": "Aucune",
     "add_organization": "+ Ajouter une organisation…",
+    "watchers_label": "Personnes taguées",
+    "watchers_none": "Aucune",
+    "add_watcher": "+ Taguer une personne…",
     "labels_label": "Étiquettes",
     "labels_none": "Aucune",
     "label_search_placeholder": "Rechercher ou créer…",
@@ -119,6 +122,7 @@
     "history_field_dueDate": "Échéance modifiée",
     "history_field_organizations": "Organisations modifiées",
     "history_field_labels": "Étiquettes modifiées",
+    "history_field_watchers": "Personnes taguées modifiées",
     "history_field_project": "Projet modifié"
   },
   "status": {

@@ -86,4 +86,13 @@ public class Ticket {
     @Builder.Default
     @ToString.Exclude
     private Set<Label> labels = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "ticket_watchers",
+        joinColumns = @JoinColumn(name = "ticket_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<User> watchers = new HashSet<>();
 }

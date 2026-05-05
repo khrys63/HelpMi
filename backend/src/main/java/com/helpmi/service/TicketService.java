@@ -37,8 +37,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -110,6 +113,10 @@ public class TicketService {
                 .map(LabelResponse::from)
                 .sorted(Comparator.comparing(LabelResponse::name))
                 .toList();
+        var watchers = ticket.getWatchers().stream()
+                .sorted(Comparator.comparing(User::getFirstName).thenComparing(User::getLastName))
+                .map(UserSummary::from)
+                .toList();
         User currentUser = currentUserService.getCurrentUser();
         boolean isAdmin = currentUser.getRole() == UserRole.ADMIN;
         boolean isGestionnaire = projectService.isGestionnaire(currentUser.getId(), projectId);
@@ -122,7 +129,7 @@ public class TicketService {
                 ticket.getDueDate(),
                 ticket.getProject().getId(), ticket.getProject().getName(), ticket.getProject().getKey(),
                 UserSummary.from(ticket.getReporter()), UserSummary.from(ticket.getAssignee()),
-                comments, attachments, links, organizations, labels,
+                comments, attachments, links, organizations, labels, watchers,
                 ticket.getCreatedAt(), ticket.getUpdatedAt(), ticket.getClosedAt(), canAssign, canClone);
     }
 
@@ -330,6 +337,54 @@ public class TicketService {
                 .map(LabelResponse::from)
                 .sorted(Comparator.comparing(LabelResponse::name))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserSummary> getEligibleWatchers(UUID projectId, UUID ticketId) {
+        Ticket ticket = findTicket(projectId, ticketId);
+        return eligibleWatcherUsers(ticket, projectId).stream()
+                .sorted(Comparator.comparing(User::getFirstName).thenComparing(User::getLastName))
+                .map(UserSummary::from)
+                .toList();
+    }
+
+    public List<UserSummary> setWatchers(UUID projectId, UUID ticketId, List<UUID> userIds) {
+        Ticket ticket = findTicket(projectId, ticketId);
+        requireEditable(ticket);
+        String old = collectionNames(ticket.getWatchers().stream()
+                .map(u -> u.getFirstName() + " " + u.getLastName()).sorted().toList());
+        Set<User> newWatchers;
+        if (userIds == null || userIds.isEmpty()) {
+            newWatchers = new HashSet<>();
+        } else {
+            Set<UUID> eligibleIds = eligibleWatcherUsers(ticket, projectId).stream()
+                    .map(User::getId).collect(Collectors.toSet());
+            boolean anyIneligible = userIds.stream().anyMatch(id -> !eligibleIds.contains(id));
+            if (anyIneligible) {
+                throw new ForbiddenException("Certains utilisateurs ne sont pas éligibles pour ce ticket");
+            }
+            newWatchers = new HashSet<>(userRepository.findAllById(userIds));
+        }
+        ticket.getWatchers().clear();
+        ticket.getWatchers().addAll(newWatchers);
+        ticketRepository.save(ticket);
+        String updated = collectionNames(ticket.getWatchers().stream()
+                .map(u -> u.getFirstName() + " " + u.getLastName()).sorted().toList());
+        ticketHistoryService.record(ticket, "watchers", old, updated);
+        return ticket.getWatchers().stream()
+                .sorted(Comparator.comparing(User::getFirstName).thenComparing(User::getLastName))
+                .map(UserSummary::from)
+                .toList();
+    }
+
+    private Set<User> eligibleWatcherUsers(Ticket ticket, UUID projectId) {
+        Set<User> eligible = new LinkedHashSet<>(userRepository.findAssignableByProjectId(projectId));
+        Set<UUID> orgIds = ticket.getOrganizations().stream()
+                .map(o -> o.getId()).collect(Collectors.toSet());
+        if (!orgIds.isEmpty()) {
+            eligible.addAll(userRepository.findByOrganizationIds(orgIds));
+        }
+        return eligible;
     }
 
     public TicketResponse setAssignee(UUID projectId, UUID ticketId, UUID assigneeId) {

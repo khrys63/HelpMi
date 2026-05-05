@@ -91,6 +91,9 @@
     "organizations_label": "Related organizations",
     "organizations_none": "None",
     "add_organization": "+ Add an organization…",
+    "watchers_label": "Tagged people",
+    "watchers_none": "None",
+    "add_watcher": "+ Tag someone…",
     "labels_label": "Labels",
     "labels_none": "None",
     "label_search_placeholder": "Search or create…",
@@ -119,6 +122,7 @@
     "history_field_dueDate": "Due date changed",
     "history_field_organizations": "Organizations changed",
     "history_field_labels": "Labels changed",
+    "history_field_watchers": "Tagged people changed",
     "history_field_project": "Project changed"
   },
   "status": {

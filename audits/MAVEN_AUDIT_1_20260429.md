@@ -1,4 +1,4 @@
-# Rapport d'audit des dépendances Maven — JiraLike
+# Rapport d'audit des dépendances Maven — HelpMi
 *Date : 2026-04-29 — Spring Boot 3.3.5 / Java 21*
 
 ---

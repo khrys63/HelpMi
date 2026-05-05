@@ -91,6 +91,9 @@
     "organizations_label": "Свързани организации",
     "organizations_none": "Няма",
     "add_organization": "+ Добави организация…",
+    "watchers_label": "Отбелязани хора",
+    "watchers_none": "Няма",
+    "add_watcher": "+ Отбележи човек…",
     "labels_label": "Етикети",
     "labels_none": "Няма",
     "label_search_placeholder": "Търси или създай…",
@@ -119,6 +122,7 @@
     "history_field_dueDate": "Краен срок променен",
     "history_field_organizations": "Организации променени",
     "history_field_labels": "Етикети променени",
+    "history_field_watchers": "Отбелязани хора променени",
     "history_field_project": "Проект променен"
   },
   "status": {

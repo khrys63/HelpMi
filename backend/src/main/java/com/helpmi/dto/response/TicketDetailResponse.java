@@ -24,6 +24,7 @@ public record TicketDetailResponse(
         List<TicketLinkResponse> links,
         List<OrganizationSummary> organizations,
         List<LabelResponse> labels,
+        List<UserSummary> watchers,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         LocalDateTime closedAt,

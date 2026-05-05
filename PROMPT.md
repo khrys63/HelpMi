@@ -1,7 +1,7 @@
-Je souhaite developper un outils de ticketing de type jira, zammad ou mantisBG. qui me permet (moi ou mes clients ) de créeer des ticket, de les categoriser, puis de les suivre, traiter acquiter ... feature simple dans un premier temps. une authent simple avec un keycloak deja en place (debrayable en dev), en java avec du vuejs 
+Je souhaite developper un outils de ticketing de type jira, zammad ou mantisBT... qui me permet (moi ou mes clients ) de créer des ticket, de les categoriser, puis de les suivre, traiter acquiter ... feature simple dans un premier temps. une authent simple avec un keycloak deja en place (debrayable en dev), en java avec du vuejs 
 
 build mvn failure :(
-
+s
 je veux pouvoir changer la priorité et le type. je veux pouvoir editer le titre et le contenu. 
 
 je veux pouvoir supprimer un ticket, avec un msg de warning. la sequence de n° ne change pas, il y a bien un trou 
@@ -179,4 +179,8 @@ nouvelle feature : sur l'écran de gestion des tickets. un Ticket annulé ou fer
 c'est parfait mais tu as trop interprété. il est bien cloturé ou annulé non modifiable, mais on peut le réouvrir dans les 2 cas.
 
 /security-audit   
+
+un admin semble pouvoir toujours assigner un ticket fermé ou annulé. il ne faut pas, d'ailleur le backend repond bien une 403 comme attendu
+
+Nouvelle feature : on peurt ajouter sur un ticket un ensemble de personne taguées. on ne peux ajouter que des personnes ayant un role dans le projet du ticket ou les organisations rattachées. 
 

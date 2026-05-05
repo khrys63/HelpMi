@@ -39,6 +39,10 @@ export const ticketsApi = {
     api.put(`/projects/${projectId}/tickets/${ticketId}/organizations`, { organizationIds }),
   setLabels: (projectId, ticketId, labelIds) =>
     api.put(`/projects/${projectId}/tickets/${ticketId}/labels`, { labelIds }),
+  eligibleWatchers: (projectId, ticketId) =>
+    api.get(`/projects/${projectId}/tickets/${ticketId}/eligible-watchers`),
+  setWatchers: (projectId, ticketId, userIds) =>
+    api.put(`/projects/${projectId}/tickets/${ticketId}/watchers`, { userIds }),
   remove: (projectId, ticketId) => api.delete(`/projects/${projectId}/tickets/${ticketId}`),
   history: (projectId, ticketId) => api.get(`/projects/${projectId}/tickets/${ticketId}/history`)
 }
