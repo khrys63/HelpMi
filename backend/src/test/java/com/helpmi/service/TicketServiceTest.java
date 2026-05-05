@@ -224,14 +224,25 @@ class TicketServiceTest {
     // ── changeStatus ─────────────────────────────────────────────────────────
 
     @Test
-    void changeStatus_toOpen_clearsClosedAt() {
+    void changeStatus_closedTicket_toOpen_allowed() {
         ticket.setStatus("CLOSED");
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
         service.changeStatus(project.getId(), ticket.getId(), "OPEN");
 
-        assertThat(ticket.getClosedAt()).isNull();
+        assertThat(ticket.getStatus()).isEqualTo("OPEN");
+    }
+
+    @Test
+    void changeStatus_cancelledTicket_toOpen_allowed() {
+        ticket.setStatus("CANCELLED");
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.changeStatus(project.getId(), ticket.getId(), "OPEN");
+
+        assertThat(ticket.getStatus()).isEqualTo("OPEN");
     }
 
     @Test

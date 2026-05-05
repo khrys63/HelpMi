@@ -98,6 +98,7 @@
     "dates_created": "Créé le {date}",
     "dates_updated": "Modifié le {date}",
     "dates_closed": "Clôturé le {date}",
+    "frozen_notice": "Ce ticket est clôturé et ne peut plus être modifié.",
     "delete_ticket": "Supprimer ce ticket…",
     "delete_confirm_title": "Supprimer {ref} ?",
     "delete_confirm_body": "Action irréversible. La référence {ref} ne sera pas réattribuée.",

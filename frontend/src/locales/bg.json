@@ -98,6 +98,7 @@
     "dates_created": "Създадено на {date}",
     "dates_updated": "Обновено на {date}",
     "dates_closed": "Затворено на {date}",
+    "frozen_notice": "Тази задача е затворена и не може да бъде променяна.",
     "delete_ticket": "Изтрий тази задача…",
     "delete_confirm_title": "Изтриване на {ref}?",
     "delete_confirm_body": "Това действие е необратимо. Референцията {ref} няма да бъде използвана отново.",

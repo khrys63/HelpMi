@@ -52,6 +52,7 @@ public class AttachmentService {
     public AttachmentResponse upload(UUID ticketId, MultipartFile file) throws IOException {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new NotFoundException("Ticket introuvable"));
+        requireEditable(ticket);
         projectService.requireProjectAccess(ticket.getProject().getId());
 
         String originalName = file.getOriginalFilename();
@@ -98,12 +99,19 @@ public class AttachmentService {
     public void delete(UUID attachmentId) throws IOException {
         Attachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new NotFoundException("Pièce jointe introuvable"));
+        requireEditable(attachment.getTicket());
         User currentUser = currentUserService.getCurrentUser();
         if (!attachment.getUploadedBy().getId().equals(currentUser.getId()) && currentUser.getRole() != UserRole.ADMIN) {
             throw new ForbiddenException("Vous ne pouvez supprimer que vos propres pièces jointes");
         }
         storageService.delete(attachment.getStoredName());
         attachmentRepository.delete(attachment);
+    }
+
+    private static void requireEditable(Ticket ticket) {
+        if ("CLOSED".equals(ticket.getStatus()) || "CANCELLED".equals(ticket.getStatus())) {
+            throw new ForbiddenException("Ce ticket est clôturé et ne peut plus être modifié");
+        }
     }
 
     private AttachmentResponse toResponse(Attachment a) {

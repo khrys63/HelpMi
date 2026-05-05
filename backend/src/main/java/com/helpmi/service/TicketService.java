@@ -155,6 +155,7 @@ public class TicketService {
 
     public TicketResponse updateTicket(UUID projectId, UUID ticketId, UpdateTicketRequest req) {
         Ticket ticket = findTicket(projectId, ticketId);
+        requireEditable(ticket);
         User currentUser = currentUserService.getCurrentUser();
 
         String oldTitle    = ticket.getTitle();
@@ -187,6 +188,7 @@ public class TicketService {
 
     public ChangeStatusResponse changeStatus(UUID projectId, UUID ticketId, String newStatus) {
         Ticket ticket = findTicket(projectId, ticketId);
+        if (!"OPEN".equals(newStatus)) requireEditable(ticket);
         String oldStatus = ticket.getStatus();
         ticket.setStatus(newStatus);
         boolean closing = List.of("CLOSED", "RESOLVED", "CANCELLED").contains(newStatus);
@@ -259,6 +261,7 @@ public class TicketService {
             throw new IllegalArgumentException("Le ticket est déjà dans ce projet");
         }
         Ticket ticket = findTicket(projectId, ticketId);
+        requireEditable(ticket);
         requireCanModify(currentUserService.getCurrentUser(), ticket);
         String oldProject = ticket.getProject().getKey();
         var targetProject = projectService.findActive(targetProjectId);
@@ -272,6 +275,7 @@ public class TicketService {
 
     public TicketResponse setDueDate(UUID projectId, UUID ticketId, LocalDate dueDate) {
         Ticket ticket = findTicket(projectId, ticketId);
+        requireEditable(ticket);
         String oldDate = ticket.getDueDate() != null ? ticket.getDueDate().toString() : null;
         String newDate = dueDate != null ? dueDate.toString() : null;
         ticket.setDueDate(dueDate);
@@ -289,6 +293,7 @@ public class TicketService {
 
     public List<OrganizationSummary> setOrganizations(UUID projectId, UUID ticketId, List<UUID> orgIds) {
         Ticket ticket = findTicket(projectId, ticketId);
+        requireEditable(ticket);
         String oldOrgs = collectionNames(ticket.getOrganizations().stream()
                 .map(o -> o.getName()).sorted().toList());
         var newOrgs = orgIds == null || orgIds.isEmpty()
@@ -308,6 +313,7 @@ public class TicketService {
 
     public List<LabelResponse> setLabels(UUID projectId, UUID ticketId, List<UUID> labelIds) {
         Ticket ticket = findTicket(projectId, ticketId);
+        requireEditable(ticket);
         String oldLabels = collectionNames(ticket.getLabels().stream()
                 .map(l -> l.getName()).sorted().toList());
         var newLabels = labelIds == null || labelIds.isEmpty()
@@ -327,6 +333,7 @@ public class TicketService {
 
     public TicketResponse setAssignee(UUID projectId, UUID ticketId, UUID assigneeId) {
         Ticket ticket = findTicket(projectId, ticketId);
+        requireEditable(ticket);
         User currentUser = currentUserService.getCurrentUser();
         if (currentUser.getRole() != UserRole.ADMIN && !projectService.isGestionnaire(currentUser.getId(), projectId)) {
             throw new ForbiddenException("Seuls les gestionnaires peuvent modifier l'assigné");
@@ -347,6 +354,12 @@ public class TicketService {
     private void validateAssignee(UUID assigneeId, UUID projectId) {
         if (!userRepository.isAssignableToProject(assigneeId, projectId)) {
             throw new IllegalArgumentException("Cet utilisateur n'est pas assignable à ce projet");
+        }
+    }
+
+    private static void requireEditable(Ticket ticket) {
+        if ("CLOSED".equals(ticket.getStatus()) || "CANCELLED".equals(ticket.getStatus())) {
+            throw new ForbiddenException("Ce ticket est clôturé et ne peut plus être modifié");
         }
     }
 

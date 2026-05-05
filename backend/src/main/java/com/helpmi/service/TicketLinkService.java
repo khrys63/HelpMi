@@ -35,6 +35,7 @@ public class TicketLinkService {
 
     public TicketLinkResponse createLink(UUID sourceTicketId, CreateTicketLinkRequest req) {
         Ticket source = findTicket(sourceTicketId);
+        requireEditable(source);
         Ticket target = findTicket(req.targetTicketId());
 
         if (source.getId().equals(target.getId())) {
@@ -64,6 +65,7 @@ public class TicketLinkService {
     public void deleteLink(UUID linkId) {
         TicketLink link = linkRepository.findById(linkId)
                 .orElseThrow(() -> new NotFoundException("Lien introuvable"));
+        requireEditable(link.getSourceTicket());
         User user = currentUserService.getCurrentUser();
         boolean isAdmin = user.getRole() == UserRole.ADMIN;
         boolean isGestionnaire = !isAdmin && userProjectRepository
@@ -95,6 +97,12 @@ public class TicketLinkService {
     private Ticket findTicket(UUID id) {
         return ticketRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Ticket introuvable"));
+    }
+
+    private static void requireEditable(Ticket ticket) {
+        if ("CLOSED".equals(ticket.getStatus()) || "CANCELLED".equals(ticket.getStatus())) {
+            throw new ForbiddenException("Ce ticket est clôturé et ne peut plus être modifié");
+        }
     }
 
     private TicketLinkResponse toResponse(TicketLink link, UUID sourceTicketId) {

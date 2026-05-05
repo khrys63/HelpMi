@@ -34,7 +34,7 @@
             </div>
           </div>
 
-          <button @click="openMoveForm"
+          <button v-if="!isFrozen" @click="openMoveForm"
             class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0-4-4m4 4-4 4m0 6H4m0 0 4 4m-4-4 4-4"/>
@@ -74,6 +74,14 @@
       </div>
     </div>
 
+    <!-- Bannière ticket figé -->
+    <div v-if="isFrozen" class="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-2.5 text-sm text-amber-800 dark:text-amber-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+      {{ $t('tickets.frozen_notice') }}
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Contenu principal -->
       <div class="lg:col-span-2 space-y-5">
@@ -81,8 +89,8 @@
 
           <!-- Titre éditable -->
           <div class="mb-4 group">
-            <div v-if="!editingTitle" @click="startEditTitle"
-              class="text-xl font-bold text-gray-900 dark:text-gray-100 cursor-text rounded px-1 -mx-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+            <div v-if="!editingTitle" @click="!isFrozen && startEditTitle()"
+              :class="['text-xl font-bold text-gray-900 dark:text-gray-100 rounded px-1 -mx-1 transition-colors', isFrozen ? 'cursor-default' : 'cursor-text hover:bg-gray-50 dark:hover:bg-gray-700/50']">
               {{ ticket.title }}
             </div>
             <div v-else class="space-y-2">
@@ -101,8 +109,8 @@
 
           <!-- Description éditable -->
           <div class="group">
-            <div v-if="!editingDescription" @click="startEditDescription"
-              class="cursor-text rounded px-1 -mx-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors min-h-[2rem]">
+            <div v-if="!editingDescription" @click="!isFrozen && startEditDescription()"
+              :class="['rounded px-1 -mx-1 transition-colors min-h-[2rem]', isFrozen ? 'cursor-default' : 'cursor-text hover:bg-gray-50 dark:hover:bg-gray-700/50']">
               <p v-if="ticket.description" class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">{{ ticket.description }}</p>
               <p v-else class="text-gray-400 dark:text-gray-500 text-sm italic">{{ $t('tickets.click_to_add_desc') }}</p>
             </div>
@@ -131,7 +139,7 @@
               <span class="text-gray-400 dark:text-gray-500 text-xs shrink-0 ml-2">{{ formatSize(a.size) }}</span>
             </li>
           </ul>
-          <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+          <label v-if="!isFrozen" class="cursor-pointer inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
             <input type="file" class="hidden" @change="uploadFile" :disabled="uploading" />
             {{ uploading ? $t('tickets.uploading') : $t('tickets.add_file') }}
           </label>
@@ -141,7 +149,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div class="flex items-center justify-between mb-4">
             <h2 class="font-semibold text-gray-800 dark:text-gray-200">{{ $t('tickets.links', { count: ticket.links?.length || 0 }) }}</h2>
-            <button @click="showLinkForm = !showLinkForm"
+            <button v-if="!isFrozen" @click="showLinkForm = !showLinkForm"
               class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
               {{ showLinkForm ? $t('common.cancel') : $t('tickets.add_link') }}
             </button>
@@ -196,7 +204,7 @@
                 <span class="font-mono text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ link.linkedTicket.reference }}</span>
                 <span class="truncate">{{ link.linkedTicket.title }}</span>
               </router-link>
-              <button @click="removeLink(link.id)"
+              <button v-if="!isFrozen" @click="removeLink(link.id)"
                 class="text-gray-300 dark:text-gray-600 hover:text-red-500 text-base leading-none shrink-0">✕</button>
             </div>
           </div>
@@ -221,7 +229,7 @@
               </div>
             </div>
           </div>
-          <div class="flex gap-3">
+          <div v-if="!isFrozen" class="flex gap-3">
             <textarea v-model="newComment" rows="2" :placeholder="$t('tickets.comment_placeholder')"
               class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400" />
             <button @click="addComment" :disabled="!newComment.trim() || commentSaving"
@@ -245,30 +253,35 @@
           <!-- Priorité -->
           <div>
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.priority_label') }}</p>
-            <select v-model="ticket.priority" @change="updateField('priority', ticket.priority)"
+            <select v-if="!isFrozen" v-model="ticket.priority" @change="updateField('priority', ticket.priority)"
               class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
               <option v-for="p in config.priorities" :key="p.code" :value="p.code">{{ p.label }}</option>
             </select>
+            <p v-else class="text-sm text-gray-700 dark:text-gray-300">{{ config.getPriority(ticket.priority)?.label ?? ticket.priority }}</p>
           </div>
 
           <!-- Type -->
           <div>
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.type_label') }}</p>
-            <select v-model="ticket.type" @change="updateField('type', ticket.type)"
+            <select v-if="!isFrozen" v-model="ticket.type" @change="updateField('type', ticket.type)"
               class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
               <option v-for="t in config.types" :key="t.code" :value="t.code">{{ t.label }}</option>
             </select>
+            <p v-else class="text-sm text-gray-700 dark:text-gray-300">{{ config.getType(ticket.type)?.label ?? ticket.type }}</p>
           </div>
 
           <!-- Échéance -->
           <div>
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">{{ $t('tickets.due_date_label') }}</p>
-            <div class="flex items-center gap-1">
-              <input type="date" v-model="dueDateInput" @change="saveDueDate"
-                class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100" />
-              <button v-if="dueDateInput" @click="clearDueDate"
-                class="text-gray-300 dark:text-gray-600 hover:text-red-500 text-base leading-none shrink-0 px-1">✕</button>
-            </div>
+            <template v-if="!isFrozen">
+              <div class="flex items-center gap-1">
+                <input type="date" v-model="dueDateInput" @change="saveDueDate"
+                  class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100" />
+                <button v-if="dueDateInput" @click="clearDueDate"
+                  class="text-gray-300 dark:text-gray-600 hover:text-red-500 text-base leading-none shrink-0 px-1">✕</button>
+              </div>
+            </template>
+            <p v-else class="text-sm text-gray-700 dark:text-gray-300">{{ dueDateInput || '—' }}</p>
           </div>
 
           <!-- Reporter -->
@@ -302,11 +315,11 @@
               <span v-for="o in ticket.organizations" :key="o.id"
                 class="inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs px-2 py-0.5 rounded-full">
                 {{ o.name }}
-                <button @click="removeOrganization(o.id)" class="text-indigo-400 hover:text-indigo-700 leading-none">✕</button>
+                <button v-if="!isFrozen" @click="removeOrganization(o.id)" class="text-indigo-400 hover:text-indigo-700 leading-none">✕</button>
               </span>
               <span v-if="!ticket.organizations?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">{{ $t('tickets.organizations_none') }}</span>
             </div>
-            <div class="relative">
+            <div v-if="!isFrozen" class="relative">
               <select @change="addOrganization($event.target.value); $event.target.value = ''"
                 class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 dark:bg-gray-700">
                 <option value="">{{ $t('tickets.add_organization') }}</option>
@@ -322,11 +335,11 @@
               <span v-for="l in ticket.labels" :key="l.id"
                 :class="['inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full', labelBadgeClass(l.color)]">
                 {{ l.name }}
-                <button @click="removeLabel(l.id)" class="opacity-60 hover:opacity-100 leading-none">✕</button>
+                <button v-if="!isFrozen" @click="removeLabel(l.id)" class="opacity-60 hover:opacity-100 leading-none">✕</button>
               </span>
               <span v-if="!ticket.labels?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">{{ $t('tickets.labels_none') }}</span>
             </div>
-            <div class="relative">
+            <div v-if="!isFrozen" class="relative">
               <input v-model="labelInput" @input="onLabelInput" @keydown.enter.prevent="confirmLabelInput"
                 @blur="hideSuggestionsDelayed"
                 :placeholder="$t('tickets.label_search_placeholder')"
@@ -431,6 +444,7 @@ const { projectId, ticketId } = route.params
 
 const toast = useToastStore()
 const isAdmin = computed(() => auth.user?.role === 'ADMIN')
+const isFrozen = computed(() => ticket.value.status === 'CLOSED' || ticket.value.status === 'CANCELLED')
 
 const showStatusMenu = ref(false)
 const availableTransitions = computed(() => TRANSITIONS.value[ticket.value.status] ?? [])

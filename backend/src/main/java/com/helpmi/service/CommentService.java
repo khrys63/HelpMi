@@ -36,6 +36,7 @@ public class CommentService {
 
     public CommentResponse addComment(UUID ticketId, CreateCommentRequest req) {
         Ticket ticket = findTicket(ticketId);
+        requireEditable(ticket);
         Comment comment = Comment.builder()
                 .ticket(ticket)
                 .author(currentUserService.getCurrentUser())
@@ -46,6 +47,7 @@ public class CommentService {
 
     public CommentResponse updateComment(UUID commentId, CreateCommentRequest req) {
         Comment comment = findComment(commentId);
+        requireEditable(comment.getTicket());
         User currentUser = currentUserService.getCurrentUser();
         if (!comment.getAuthor().getId().equals(currentUser.getId()) && currentUser.getRole() != UserRole.ADMIN) {
             throw new ForbiddenException("Vous ne pouvez modifier que vos propres commentaires");
@@ -57,6 +59,7 @@ public class CommentService {
 
     public void deleteComment(UUID commentId) {
         Comment comment = findComment(commentId);
+        requireEditable(comment.getTicket());
         User currentUser = currentUserService.getCurrentUser();
         if (!comment.getAuthor().getId().equals(currentUser.getId()) && currentUser.getRole() != UserRole.ADMIN) {
             throw new ForbiddenException("Vous ne pouvez supprimer que vos propres commentaires");
@@ -66,6 +69,12 @@ public class CommentService {
 
     private Ticket findTicket(UUID id) {
         return ticketRepository.findById(id).orElseThrow(() -> new NotFoundException("Ticket introuvable"));
+    }
+
+    private static void requireEditable(Ticket ticket) {
+        if ("CLOSED".equals(ticket.getStatus()) || "CANCELLED".equals(ticket.getStatus())) {
+            throw new ForbiddenException("Ce ticket est clôturé et ne peut plus être modifié");
+        }
     }
 
     private Comment findComment(UUID id) {

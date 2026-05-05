@@ -98,6 +98,55 @@ Chaque utilisateur ne voit que les **projets de sa liste personnelle** (configur
 
 ---
 
+## Cycle de vie des tickets
+
+### Statuts
+
+| Code | Libellé | Description |
+|---|---|---|
+| `OPEN` | Ouvert | État initial à la création |
+| `IN_PROGRESS` | En cours | Pris en charge |
+| `STAND_BY` | En attente | Bloqué ou mis en pause |
+| `RESOLVED` | Résolu | Traitement terminé, en attente de validation |
+| `CLOSED` | Clôturé | Validé et archivé — **ticket figé** |
+| `CANCELLED` | Annulé | Abandonné — **ticket figé** |
+
+### Transitions autorisées
+
+```
+OPEN ──────────────────────────────────────────┐
+  │                                            │
+  ├──► IN_PROGRESS ──► STAND_BY ──► OPEN       │
+  │         │               │                  ▼
+  │         │               └──► IN_PROGRESS  CANCELLED (figé)
+  │         │                                  │
+  │         └──► RESOLVED ──► OPEN             │
+  │                   │                        │
+  ├──► STAND_BY        └──► CLOSED (figé)       │
+  │                              │              │
+  └──► CANCELLED                 └──────────────┴──► OPEN
+```
+
+| Depuis \ Vers | OPEN | IN_PROGRESS | STAND_BY | RESOLVED | CLOSED | CANCELLED |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **OPEN** | — | ✅ | ✅ | | | ✅ |
+| **IN_PROGRESS** | | — | ✅ | ✅ | | ✅ |
+| **STAND_BY** | ✅ | ✅ | — | | | ✅ |
+| **RESOLVED** | ✅ | | | — | ✅ | |
+| **CLOSED** *(figé)* | ✅ | | | | — | |
+| **CANCELLED** *(figé)* | ✅ | | | | | — |
+
+### Tickets figés (CLOSED et CANCELLED)
+
+Un ticket clôturé ou annulé est **figé** : tous ses champs sont en lecture seule (titre, description, priorité, type, date d'échéance, organisations, étiquettes, commentaires, pièces jointes, liens).  
+La seule action autorisée est la **réouverture** vers `OPEN`.
+
+### Tickets récurrents
+
+Pour les types `ANNUEL`, `MENSUEL` et `TRIMESTRIEL`, la fermeture (`OPEN` → `CLOSED`) déclenche automatiquement la création d'un ticket clone avec la date d'échéance décalée d'un an, d'un trimestre ou d'un mois.
+
+---
+
 ## Stack technique
 
 | Couche | Technologie |
