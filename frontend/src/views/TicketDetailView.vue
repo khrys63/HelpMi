@@ -293,7 +293,7 @@
           <!-- Assigné -->
           <div>
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">{{ $t('tickets.assignee_label') }}</p>
-            <template v-if="ticket.canAssign">
+            <template v-if="ticket.canAssign && !isFrozen">
               <select v-model="assigneeId" @change="reassign" class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
                 <option value="">{{ $t('tickets.field_assignee_none') }}</option>
                 <option v-for="u in users" :key="u.id" :value="u.id">{{ u.firstName }} {{ u.lastName }}</option>
