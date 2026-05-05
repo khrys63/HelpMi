@@ -122,9 +122,9 @@ OPEN ─────────────────────────
   │         │                                  │
   │         └──► RESOLVED ──► OPEN             │
   │                   │                        │
-  ├──► STAND_BY        └──► CLOSED (figé)       │
-  │                              │              │
-  └──► CANCELLED                 └──────────────┴──► OPEN
+  ├──► STAND_BY       └──► CLOSED (figé)       │
+  │                              │             │
+  └──► CANCELLED                 └─────────────┴──► OPEN
 ```
 
 | Depuis \ Vers | OPEN | IN_PROGRESS | STAND_BY | RESOLVED | CLOSED | CANCELLED |
