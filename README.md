@@ -288,30 +288,6 @@ Le realm Keycloak `helpmi` est importé automatiquement au premier démarrage. M
 
 ---
 
-## Migrations de base de données
-
-Les migrations sont gérées par Flyway et s'appliquent automatiquement au démarrage.
-
-| Fichier | Contenu |
-|---|---|
-| `V1__init.sql` | Schéma initial (users, projects, tickets, comments, attachments) |
-| `V2__ticket_links.sql` | Liens entre tickets |
-| `V3__config_values.sql` | Valeurs de configuration (statuts, priorités, types, …) |
-| `V4__clients_labels.sql` | Clients et labels |
-| `V5__due_date.sql` | Date d'échéance sur les tickets |
-| `V6__recurring_types.sql` | Types récurrents (ANNUEL, MENSUEL, TRIMESTRIEL) |
-| `V7__personal_tokens.sql` | Tokens d'accès personnels (PAT) |
-| `V8__organizations.sql` | Organisations : table `organizations`, FK sur `users`, table de jointure `organization_projects` |
-| `V9__stand_by_status.sql` | Statut STAND_BY (entre EN_COURS et RÉSOLU) |
-| `V10__link_type_inverse_label.sql` | Colonne `inverse_label` sur les types de liens |
-| `V11__user_org_role_and_projects.sql` | Table `user_projects` avec PK composite, colonne `organization_role` sur les utilisateurs |
-| `V12__project_roles.sql` | Refonte des rôles : `user_projects` avec PK UUID et colonne `role` (GESTIONNAIRE/UTILISATEUR), suppression `organization_role`, migration `AGENT`/`CLIENT` → `USER`, catégorie `PROJECT_ROLE` |
-| `V13__rename_project_roles.sql` | Renommage des codes rôles projet : `GESTIONNAIRE` → `MANAGER`, `UTILISATEUR` → `MEMBER` (dans `user_projects` et `config_values`) |
-
-Les fichiers dans `db/dev-seed/` ne sont chargés qu'avec le profil `dev`.
-
----
-
 ## Variables à personnaliser
 
 ### Fichier `.env` (Docker Compose)
