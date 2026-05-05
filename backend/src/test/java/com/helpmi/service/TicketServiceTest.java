@@ -27,9 +27,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import com.helpmi.dto.response.UserSummary;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.helpmi.Fixtures.*;
@@ -820,6 +822,96 @@ class TicketServiceTest {
         assertThatThrownBy(() -> service.getTickets(project.getId(), tooMany, null, null, null, Pageable.unpaged()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("max 20");
+    }
+
+    // ── getEligibleWatchers ───────────────────────────────────────────────────
+
+    @Test
+    void getEligibleWatchers_noOrgs_returnsProjectMembersOnly() {
+        User member = agentUser();
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(userRepository.findAssignableByProjectId(project.getId())).thenReturn(List.of(member));
+
+        List<UserSummary> result = service.getEligibleWatchers(project.getId(), ticket.getId());
+
+        assertThat(result).hasSize(1);
+        verify(userRepository, never()).findByOrganizationIds(any());
+    }
+
+    @Test
+    void getEligibleWatchers_withOrg_includesOrgUsers() {
+        Organization org = organization();
+        ticket.getOrganizations().add(org);
+        User projectMember = agentUser();
+        User orgUser = agentUser();
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(userRepository.findAssignableByProjectId(project.getId())).thenReturn(List.of(projectMember));
+        when(userRepository.findByOrganizationIds(any())).thenReturn(List.of(orgUser));
+
+        List<UserSummary> result = service.getEligibleWatchers(project.getId(), ticket.getId());
+
+        assertThat(result).hasSize(2);
+    }
+
+    // ── setWatchers ───────────────────────────────────────────────────────────
+
+    @Test
+    void setWatchers_frozenTicket_throws() {
+        ticket.setStatus("CLOSED");
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(() -> service.setWatchers(project.getId(), ticket.getId(), List.of()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void setWatchers_emptyList_clearsWatchers() {
+        ticket.getWatchers().add(agentUser());
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        List<UserSummary> result = service.setWatchers(project.getId(), ticket.getId(), List.of());
+
+        assertThat(result).isEmpty();
+        assertThat(ticket.getWatchers()).isEmpty();
+        verify(notificationService, never()).notifyWatcherAdded(any(), any(), any());
+    }
+
+    @Test
+    void setWatchers_ineligibleUser_throws() {
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(userRepository.findAssignableByProjectId(project.getId())).thenReturn(List.of());
+
+        assertThatThrownBy(() -> service.setWatchers(project.getId(), ticket.getId(), List.of(UUID.randomUUID())))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void setWatchers_happyPath_setsWatchersAndNotifies() {
+        User watcher = agentUser();
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(userRepository.findAssignableByProjectId(project.getId())).thenReturn(List.of(watcher));
+        when(userRepository.findAllById(List.of(watcher.getId()))).thenReturn(List.of(watcher));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        List<UserSummary> result = service.setWatchers(project.getId(), ticket.getId(), List.of(watcher.getId()));
+
+        assertThat(result).hasSize(1);
+        verify(notificationService).notifyWatcherAdded(eq(ticket), any(Set.class), eq(reporter));
+    }
+
+    @Test
+    void setWatchers_sameWatcherReAdded_noNotification() {
+        User existing = agentUser();
+        ticket.getWatchers().add(existing);
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(userRepository.findAssignableByProjectId(project.getId())).thenReturn(List.of(existing));
+        when(userRepository.findAllById(List.of(existing.getId()))).thenReturn(List.of(existing));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.setWatchers(project.getId(), ticket.getId(), List.of(existing.getId()));
+
+        verify(notificationService, never()).notifyWatcherAdded(any(), any(), any());
     }
 
     @Test

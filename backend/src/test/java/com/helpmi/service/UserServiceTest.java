@@ -5,6 +5,9 @@ import com.helpmi.domain.Project;
 import com.helpmi.domain.User;
 import com.helpmi.domain.UserProject;
 import com.helpmi.domain.enums.UserRole;
+import com.helpmi.dto.request.UpdateLocaleRequest;
+import com.helpmi.dto.request.UpdateNotificationPrefsRequest;
+import com.helpmi.dto.request.UpdateThemeRequest;
 import com.helpmi.dto.request.UpdateUserProjectsRequest;
 import com.helpmi.dto.request.UpdateUserRequest;
 import com.helpmi.dto.response.UserResponse;
@@ -331,6 +334,62 @@ class UserServiceTest {
         UserResponse result = service.updateUserProjects(user.getId(), new UpdateUserProjectsRequest(entries));
 
         assertThat(result.projectRoles().get(0).role()).isEqualTo("MEMBER");
+    }
+
+    // --- updateTheme / updateLocale / updateNotificationPrefs ---
+
+    @Test
+    void updateTheme_persistsTheme() {
+        User user = clientUser();
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(userRepository.save(user)).thenReturn(user);
+
+        service.updateTheme(new UpdateThemeRequest("dark"));
+
+        assertThat(user.getTheme()).isEqualTo("dark");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void updateLocale_persistsLocale() {
+        User user = clientUser();
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(userRepository.save(user)).thenReturn(user);
+
+        service.updateLocale(new UpdateLocaleRequest("en"));
+
+        assertThat(user.getLocale()).isEqualTo("en");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void updateNotificationPrefs_persistsAllPrefs() {
+        User user = clientUser();
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(userRepository.save(user)).thenReturn(user);
+
+        service.updateNotificationPrefs(new UpdateNotificationPrefsRequest(false, false, false, false, false));
+
+        assertThat(user.isNotifAssigned()).isFalse();
+        assertThat(user.isNotifComment()).isFalse();
+        assertThat(user.isNotifStatusChanged()).isFalse();
+        assertThat(user.isNotifWatcherAdded()).isFalse();
+        assertThat(user.isNotifTicketCreated()).isFalse();
+    }
+
+    // --- addOrganization (branch manquant) ---
+
+    @Test
+    void addOrganization_inactiveOrg_throws() {
+        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
+        User target = clientUser();
+        Organization inactiveOrg = Organization.builder()
+                .id(UUID.randomUUID()).name("Inactive").active(false).build();
+        when(userRepository.findById(target.getId())).thenReturn(Optional.of(target));
+        when(organizationRepository.findById(inactiveOrg.getId())).thenReturn(Optional.of(inactiveOrg));
+
+        assertThatThrownBy(() -> service.addOrganization(target.getId(), inactiveOrg.getId()))
+                .isInstanceOf(NotFoundException.class);
     }
 
     @Test
