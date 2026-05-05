@@ -263,6 +263,7 @@ public class TicketService {
         Ticket ticket = findTicket(projectId, ticketId);
         requireEditable(ticket);
         requireCanModify(currentUserService.getCurrentUser(), ticket);
+        projectService.requireProjectAccess(targetProjectId);
         String oldProject = ticket.getProject().getKey();
         var targetProject = projectService.findActive(targetProjectId);
         String newReference = projectService.generateTicketReference(targetProjectId);

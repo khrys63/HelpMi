@@ -32,6 +32,7 @@ class CommentServiceTest {
     @Mock CommentRepository commentRepository;
     @Mock TicketRepository ticketRepository;
     @Mock CurrentUserService currentUserService;
+    @Mock ProjectService projectService;
 
     @InjectMocks CommentService service;
 
@@ -52,6 +53,7 @@ class CommentServiceTest {
         User author = clientUser();
         Ticket ticket = ticket(project(), author);
         Comment comment = buildComment(ticket, author);
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(commentRepository.findByTicketIdOrderByCreatedAtAsc(ticket.getId()))
                 .thenReturn(List.of(comment));
 

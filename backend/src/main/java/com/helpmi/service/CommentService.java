@@ -27,9 +27,12 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final TicketRepository ticketRepository;
     private final CurrentUserService currentUserService;
+    private final ProjectService projectService;
 
     @Transactional(readOnly = true)
     public List<CommentResponse> getComments(UUID ticketId) {
+        Ticket ticket = findTicket(ticketId);
+        projectService.requireProjectAccess(ticket.getProject().getId());
         return commentRepository.findByTicketIdOrderByCreatedAtAsc(ticketId)
                 .stream().map(this::toResponse).toList();
     }
