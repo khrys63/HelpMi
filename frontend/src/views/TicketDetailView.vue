@@ -224,8 +224,21 @@
                   <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ c.author?.firstName }} {{ c.author?.lastName }}</span>
                   <span class="text-xs text-gray-400 dark:text-gray-500">{{ formatDate(c.createdAt, locale.value) }}</span>
                   <span v-if="c.edited" class="text-xs text-gray-400 dark:text-gray-500">{{ $t('tickets.comment_edited') }}</span>
+                  <div v-if="canEditComment(c)" class="ml-auto flex gap-2">
+                    <button @click="startEditComment(c)" class="text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{{ $t('common.edit') }}</button>
+                    <button @click="deleteComment(c)" class="text-xs text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">{{ $t('common.delete') }}</button>
+                  </div>
                 </div>
-                <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ c.body }}</p>
+                <template v-if="editingCommentId === c.id">
+                  <textarea v-model="editingCommentBody" rows="3"
+                    class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100 mb-2" />
+                  <div class="flex gap-2">
+                    <button @click="saveComment(c)" :disabled="!editingCommentBody.trim()"
+                      class="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 disabled:opacity-50">{{ $t('common.save') }}</button>
+                    <button @click="cancelEditComment()" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1.5">{{ $t('common.cancel') }}</button>
+                  </div>
+                </template>
+                <p v-else class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ c.body }}</p>
               </div>
             </div>
           </div>
@@ -483,6 +496,8 @@ const eligibleWatchers = ref([])
 const assigneeId = ref('')
 const newComment = ref('')
 const commentSaving = ref(false)
+const editingCommentId = ref(null)
+const editingCommentBody = ref('')
 const uploading = ref(false)
 const saving = ref(false)
 const confirmingDelete = ref(false)
@@ -611,6 +626,32 @@ async function addComment() {
   ticket.value.comments.push(data)
   newComment.value = ''
   commentSaving.value = false
+}
+
+function canEditComment(c) {
+  return !isFrozen.value && (auth.user?.id === c.author?.id || isAdmin.value)
+}
+
+function startEditComment(c) {
+  editingCommentId.value = c.id
+  editingCommentBody.value = c.body
+}
+
+function cancelEditComment() {
+  editingCommentId.value = null
+  editingCommentBody.value = ''
+}
+
+async function saveComment(c) {
+  const { data } = await commentsApi.update(c.id, editingCommentBody.value)
+  const idx = ticket.value.comments.findIndex(x => x.id === c.id)
+  if (idx !== -1) ticket.value.comments[idx] = data
+  cancelEditComment()
+}
+
+async function deleteComment(c) {
+  await commentsApi.remove(c.id)
+  ticket.value.comments = ticket.value.comments.filter(x => x.id !== c.id)
 }
 
 // --- Pièces jointes ---
