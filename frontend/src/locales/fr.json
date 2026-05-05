@@ -1,5 +1,6 @@
 {
   "nav": {
+    "dashboard": "Tableau de bord",
     "projects": "Projets",
     "users": "Utilisateurs",
     "organizations": "Organisations",
@@ -7,6 +8,20 @@
     "logout": "Déconnexion",
     "theme_dark": "Passer en sombre",
     "theme_light": "Passer en clair"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "my_open": "Mes tickets ouverts",
+    "assigned": "Assignés à moi",
+    "watched": "En observation",
+    "due_soon": "Échéance proche (7 j)",
+    "empty": "Aucun ticket.",
+    "project_stats": "Tickets actifs par projet",
+    "no_active_tickets": "Aucun ticket actif en cours.",
+    "col_project": "Projet",
+    "col_open": "Ouvert",
+    "col_in_progress": "En cours",
+    "col_resolved": "Résolu"
   },
   "common": {
     "save": "Enregistrer",

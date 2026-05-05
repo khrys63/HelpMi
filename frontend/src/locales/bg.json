@@ -1,5 +1,6 @@
 {
   "nav": {
+    "dashboard": "Табло",
     "projects": "Проекти",
     "users": "Потребители",
     "organizations": "Организации",
@@ -7,6 +8,20 @@
     "logout": "Изход",
     "theme_dark": "Превключи към тъмна тема",
     "theme_light": "Превключи към светла тема"
+  },
+  "dashboard": {
+    "title": "Табло",
+    "my_open": "Моите отворени задачи",
+    "assigned": "Назначени на мен",
+    "watched": "Наблюдавани задачи",
+    "due_soon": "Близък краен срок (7 дни)",
+    "empty": "Няма задачи.",
+    "project_stats": "Активни задачи по проект",
+    "no_active_tickets": "Няма активни задачи.",
+    "col_project": "Проект",
+    "col_open": "Отворени",
+    "col_in_progress": "В процес",
+    "col_resolved": "Решени"
   },
   "common": {
     "save": "Запази",

@@ -1,5 +1,6 @@
 {
   "nav": {
+    "dashboard": "Dashboard",
     "projects": "Projects",
     "users": "Users",
     "organizations": "Organizations",
@@ -7,6 +8,20 @@
     "logout": "Logout",
     "theme_dark": "Switch to dark",
     "theme_light": "Switch to light"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "my_open": "My open tickets",
+    "assigned": "Assigned to me",
+    "watched": "Watched tickets",
+    "due_soon": "Due soon (7 days)",
+    "empty": "No tickets.",
+    "project_stats": "Active tickets by project",
+    "no_active_tickets": "No active tickets.",
+    "col_project": "Project",
+    "col_open": "Open",
+    "col_in_progress": "In progress",
+    "col_resolved": "Resolved"
   },
   "common": {
     "save": "Save",

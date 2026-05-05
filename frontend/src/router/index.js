@@ -4,7 +4,12 @@ import { useAuthStore } from '../stores/auth.js'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', redirect: '/projects' },
+    { path: '/', redirect: '/dashboard' },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('../views/DashboardView.vue')
+    },
     {
       path: '/pending-org',
       name: 'pending-org',

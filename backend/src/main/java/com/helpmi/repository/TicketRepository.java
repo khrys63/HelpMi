@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.Collection;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -43,4 +43,35 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
 
     @Query("SELECT t FROM Ticket t WHERE (UPPER(t.reference) LIKE :q OR UPPER(t.title) LIKE :q) AND t.project.id IN :projectIds ORDER BY t.reference")
     List<Ticket> searchByQueryInProjects(@Param("q") String q, @Param("projectIds") List<UUID> projectIds, Pageable pageable);
+
+    // --- Dashboard queries ---
+
+    @Query("SELECT t FROM Ticket t WHERE t.reporter.id = :userId AND t.status NOT IN :statuses ORDER BY t.updatedAt DESC")
+    List<Ticket> findReportedByUserAndStatusNotIn(@Param("userId") UUID userId, @Param("statuses") List<String> statuses);
+
+    @Query("SELECT t FROM Ticket t WHERE t.assignee.id = :userId AND t.status NOT IN :statuses ORDER BY t.updatedAt DESC")
+    List<Ticket> findAssignedToUserAndStatusNotIn(@Param("userId") UUID userId, @Param("statuses") List<String> statuses);
+
+    @Query("SELECT t FROM Ticket t JOIN t.watchers w WHERE w.id = :userId AND t.status NOT IN :statuses ORDER BY t.updatedAt DESC")
+    List<Ticket> findWatchedByUserIdAndStatusNotIn(@Param("userId") UUID userId, @Param("statuses") List<String> statuses);
+
+    @Query("""
+        SELECT t FROM Ticket t
+        WHERE t.project.id IN (SELECT up.project.id FROM UserProject up WHERE up.user.id = :userId)
+        AND t.dueDate BETWEEN :from AND :to
+        AND t.status NOT IN :statuses
+        ORDER BY t.dueDate ASC
+        """)
+    List<Ticket> findDueSoonForUser(@Param("userId") UUID userId, @Param("from") LocalDate from,
+                                    @Param("to") LocalDate to, @Param("statuses") List<String> statuses);
+
+    @Query("""
+        SELECT t.project.id, t.project.key, t.project.name, t.status, COUNT(t)
+        FROM Ticket t
+        WHERE t.project.id IN (SELECT up.project.id FROM UserProject up WHERE up.user.id = :userId)
+        AND t.status IN :statuses
+        GROUP BY t.project.id, t.project.key, t.project.name, t.status
+        ORDER BY t.project.name ASC
+        """)
+    List<Object[]> countTicketsByProjectAndStatus(@Param("userId") UUID userId, @Param("statuses") List<String> statuses);
 }

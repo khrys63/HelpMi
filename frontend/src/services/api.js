@@ -123,4 +123,9 @@ export const linksApi = {
   remove: linkId => api.delete(`/ticket-links/${linkId}`)
 }
 
+// Dashboard
+export const dashboardApi = {
+  get: () => api.get('/dashboard')
+}
+
 export default api
