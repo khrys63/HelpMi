@@ -764,6 +764,16 @@ class TicketServiceTest {
     // ── resolution type ─────────────────────────────────────────────────────
 
     @Test
+    void changeStatus_toResolved_nullResolutionType_throws() {
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+
+        assertThatThrownBy(() -> service.changeStatus(project.getId(), ticket.getId(),
+                new ChangeStatusRequest("RESOLVED", null, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("resolutionType");
+    }
+
+    @Test
     void changeStatus_toResolved_setsResolutionType() {
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
@@ -784,6 +794,38 @@ class TicketServiceTest {
         assertThat(ticket.getResolutionType()).isEqualTo(ResolutionType.WORKAROUND);
     }
 
+    @Test
+    void changeStatus_toResolved_withComment_recordsResolutionComment() {
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.changeStatus(project.getId(), ticket.getId(),
+                new ChangeStatusRequest("RESOLVED", ResolutionType.CORRECTED, "Patch déployé en prod"));
+
+        verify(ticketHistoryService).record(ticket, "resolution_comment", null, "Patch déployé en prod");
+    }
+
+    @Test
+    void changeStatus_toResolved_blankComment_doesNotRecordResolutionComment() {
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.changeStatus(project.getId(), ticket.getId(),
+                new ChangeStatusRequest("RESOLVED", ResolutionType.CORRECTED, "   "));
+
+        verify(ticketHistoryService, never()).record(eq(ticket), eq("resolution_comment"), any(), any());
+    }
+
+    @Test
+    void changeStatus_toResolved_nullComment_doesNotRecordResolutionComment() {
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.changeStatus(project.getId(), ticket.getId(), csr("RESOLVED", ResolutionType.CORRECTED));
+
+        verify(ticketHistoryService, never()).record(eq(ticket), eq("resolution_comment"), any(), any());
+    }
+
     // ── reopen comment ───────────────────────────────────────────────────────
 
     @Test
@@ -792,10 +834,45 @@ class TicketServiceTest {
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
-        ChangeStatusRequest reopen = new ChangeStatusRequest("OPEN", null, "Le bug n'est pas corrigé");
-        service.changeStatus(project.getId(), ticket.getId(), reopen);
+        service.changeStatus(project.getId(), ticket.getId(),
+                new ChangeStatusRequest("OPEN", null, "Le bug n'est pas corrigé"));
 
         verify(ticketHistoryService).record(ticket, "reopen", null, "Le bug n'est pas corrigé");
+    }
+
+    @Test
+    void changeStatus_reopen_fromClosed_recordsComment() {
+        ticket.setStatus("CLOSED");
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.changeStatus(project.getId(), ticket.getId(),
+                new ChangeStatusRequest("OPEN", null, "Réouverture après audit"));
+
+        verify(ticketHistoryService).record(ticket, "reopen", null, "Réouverture après audit");
+    }
+
+    @Test
+    void changeStatus_reopen_fromCancelled_recordsComment() {
+        ticket.setStatus("CANCELLED");
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.changeStatus(project.getId(), ticket.getId(),
+                new ChangeStatusRequest("OPEN", null, "Annulation par erreur"));
+
+        verify(ticketHistoryService).record(ticket, "reopen", null, "Annulation par erreur");
+    }
+
+    @Test
+    void changeStatus_reopen_nullComment_doesNotRecordReopen() {
+        ticket.setStatus("RESOLVED");
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.changeStatus(project.getId(), ticket.getId(), csr("OPEN"));
+
+        verify(ticketHistoryService, never()).record(eq(ticket), eq("reopen"), any(), any());
     }
 
     // ── H1 — isolation par organisation ──────────────────────────────────────
