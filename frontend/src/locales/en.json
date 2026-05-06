@@ -8,7 +8,8 @@
     "logout": "Logout",
     "theme_dark": "Switch to dark",
     "theme_light": "Switch to light",
-    "manager_tracking": "Tracking"
+    "manager_tracking": "Tracking",
+    "menu": "Menu"
   },
   "dashboard": {
     "title": "Dashboard",

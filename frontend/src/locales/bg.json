@@ -8,7 +8,8 @@
     "logout": "Изход",
     "theme_dark": "Превключи към тъмна тема",
     "theme_light": "Превключи към светла тема",
-    "manager_tracking": "Следене"
+    "manager_tracking": "Следене",
+    "menu": "Меню"
   },
   "dashboard": {
     "title": "Табло",

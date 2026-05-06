@@ -8,7 +8,8 @@
     "logout": "Déconnexion",
     "theme_dark": "Passer en sombre",
     "theme_light": "Passer en clair",
-    "manager_tracking": "Suivi"
+    "manager_tracking": "Suivi",
+    "menu": "Menu"
   },
   "dashboard": {
     "title": "Tableau de bord",
