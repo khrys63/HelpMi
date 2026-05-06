@@ -8,11 +8,15 @@
         <span class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
           {{ initials }}
         </span>
-        <div>
+        <div class="flex-1">
           <p class="font-semibold text-gray-900 dark:text-gray-100">{{ auth.user?.firstName }} {{ auth.user?.lastName }}</p>
           <p class="text-sm text-gray-500 dark:text-gray-400">{{ auth.user?.email }}</p>
           <span class="text-xs text-gray-400 dark:text-gray-500 uppercase">{{ auth.user?.role }}</span>
         </div>
+        <button @click="auth.logout()"
+          class="shrink-0 border border-gray-300 dark:border-gray-600 text-sm px-3 py-1.5 rounded-lg text-gray-600 dark:text-gray-300 hover:border-red-300 hover:text-red-600 dark:hover:border-red-600 dark:hover:text-red-400 transition-colors">
+          {{ $t('nav.logout') }}
+        </button>
       </div>
     </div>
 
