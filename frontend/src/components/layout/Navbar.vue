@@ -9,7 +9,7 @@
       <div class="flex items-center gap-4">
         <!-- Desktop nav links -->
         <div class="hidden md:flex items-center gap-1">
-          <router-link to="/project"
+          <router-link to="/projects"
             class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
             :class="currentRoute('/projects') ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'">
             {{ $t('nav.projects') }}
