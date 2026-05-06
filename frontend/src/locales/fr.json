@@ -142,7 +142,22 @@
     "history_field_organizations": "Organisations modifiées",
     "history_field_labels": "Étiquettes modifiées",
     "history_field_watchers": "Personnes taguées modifiées",
-    "history_field_project": "Projet modifié"
+    "history_field_project": "Projet modifié",
+    "resolution_title": "Résoudre le ticket",
+    "resolution_type": "Type de résolution",
+    "resolution_comment": "Commentaire de résolution (optionnel)",
+    "resolution_comment_placeholder": "Raison de la résolution…",
+    "resolution_comment_optional": "Facultatif",
+    "resolution_type_corrected": "Corrigé",
+    "resolution_type_workaround": "Contourné",
+    "resolution_type_abandoned": "Abandonné",
+    "resolution_type_duplicate": "Doublon",
+    "resolve": "Résoudre",
+    "reopen_title": "Réouvrir le ticket",
+    "reopen_comment": "Motif de réouverture (obligatoire)",
+    "reopen_comment_placeholder": "Justifiez la réouverture…",
+    "reopen_comment_required": "Le motif de réouverture est obligatoire",
+    "reopen": "Réouvrir"
   },
   "status": {
     "transitions": {

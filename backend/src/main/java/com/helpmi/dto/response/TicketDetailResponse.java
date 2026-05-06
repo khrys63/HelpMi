@@ -1,5 +1,6 @@
 package com.helpmi.dto.response;
 
+import com.helpmi.domain.enums.ResolutionType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +20,7 @@ public record TicketDetailResponse(
         String projectKey,
         UserSummary reporter,
         UserSummary assignee,
+        ResolutionType resolutionType,
         List<CommentResponse> comments,
         List<AttachmentResponse> attachments,
         List<TicketLinkResponse> links,

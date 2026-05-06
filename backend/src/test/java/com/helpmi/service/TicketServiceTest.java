@@ -7,6 +7,8 @@ import com.helpmi.domain.Organization;
 import com.helpmi.domain.Project;
 import com.helpmi.domain.Ticket;
 import com.helpmi.domain.User;
+import com.helpmi.domain.enums.ResolutionType;
+import com.helpmi.dto.request.ChangeStatusRequest;
 import com.helpmi.dto.request.CreateTicketRequest;
 import com.helpmi.dto.request.UpdateTicketRequest;
 import com.helpmi.dto.response.ChangeStatusResponse;
@@ -71,6 +73,14 @@ class TicketServiceTest {
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
+
+    private static ChangeStatusRequest csr(String status) {
+        return new ChangeStatusRequest(status, "RESOLVED".equals(status) ? ResolutionType.CORRECTED : null, null);
+    }
+
+    private static ChangeStatusRequest csr(String status, ResolutionType resolutionType) {
+        return new ChangeStatusRequest(status, resolutionType, null);
+    }
 
     private void stubGetTicket() {
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
@@ -233,7 +243,7 @@ class TicketServiceTest {
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
-        service.changeStatus(project.getId(), ticket.getId(), "OPEN");
+        service.changeStatus(project.getId(), ticket.getId(), csr("OPEN"));
 
         assertThat(ticket.getStatus()).isEqualTo("OPEN");
     }
@@ -244,7 +254,7 @@ class TicketServiceTest {
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
-        service.changeStatus(project.getId(), ticket.getId(), "OPEN");
+        service.changeStatus(project.getId(), ticket.getId(), csr("OPEN"));
 
         assertThat(ticket.getStatus()).isEqualTo("OPEN");
     }
@@ -254,7 +264,7 @@ class TicketServiceTest {
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
-        service.changeStatus(project.getId(), ticket.getId(), "CLOSED");
+        service.changeStatus(project.getId(), ticket.getId(), csr("CLOSED"));
 
         assertThat(ticket.getClosedAt()).isNotNull();
     }
@@ -264,7 +274,7 @@ class TicketServiceTest {
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
-        service.changeStatus(project.getId(), ticket.getId(), "RESOLVED");
+        service.changeStatus(project.getId(), ticket.getId(), csr("RESOLVED"));
 
         assertThat(ticket.getClosedAt()).isNotNull();
     }
@@ -274,7 +284,7 @@ class TicketServiceTest {
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
-        service.changeStatus(project.getId(), ticket.getId(), "CANCELLED");
+        service.changeStatus(project.getId(), ticket.getId(), csr("CANCELLED"));
 
         assertThat(ticket.getClosedAt()).isNotNull();
     }
@@ -358,7 +368,7 @@ class TicketServiceTest {
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-2");
 
-        service.changeStatus(project.getId(), ticket.getId(), "CLOSED");
+        service.changeStatus(project.getId(), ticket.getId(), csr("CLOSED"));
 
         verify(ticketRepository, times(2)).save(any());
         verify(ticketRepository).save(argThat(t ->
@@ -374,7 +384,7 @@ class TicketServiceTest {
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-2");
 
-        service.changeStatus(project.getId(), ticket.getId(), "CLOSED");
+        service.changeStatus(project.getId(), ticket.getId(), csr("CLOSED"));
 
         verify(ticketRepository).save(argThat(t ->
                 "TEST-2".equals(t.getReference()) && t.getDueDate() == null));
@@ -385,7 +395,7 @@ class TicketServiceTest {
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
 
-        service.changeStatus(project.getId(), ticket.getId(), "CLOSED");
+        service.changeStatus(project.getId(), ticket.getId(), csr("CLOSED"));
 
         verify(ticketRepository, times(1)).save(any());
         verify(projectService, never()).generateTicketReference(any());
@@ -397,7 +407,7 @@ class TicketServiceTest {
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
 
-        service.changeStatus(project.getId(), ticket.getId(), "RESOLVED");
+        service.changeStatus(project.getId(), ticket.getId(), csr("RESOLVED"));
 
         verify(ticketRepository, times(1)).save(any());
         verify(projectService, never()).generateTicketReference(any());
@@ -409,7 +419,7 @@ class TicketServiceTest {
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
 
-        service.changeStatus(project.getId(), ticket.getId(), "CANCELLED");
+        service.changeStatus(project.getId(), ticket.getId(), csr("CANCELLED"));
 
         verify(ticketRepository, times(1)).save(any());
         verify(projectService, never()).generateTicketReference(any());
@@ -426,7 +436,7 @@ class TicketServiceTest {
         });
         when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-2");
 
-        ChangeStatusResponse result = service.changeStatus(project.getId(), ticket.getId(), "CLOSED");
+        ChangeStatusResponse result = service.changeStatus(project.getId(), ticket.getId(), csr("CLOSED"));
 
         assertThat(result.nextTicketReference()).isEqualTo("TEST-2");
         assertThat(result.nextTicketId()).isNotNull();
@@ -437,7 +447,7 @@ class TicketServiceTest {
         when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
 
-        ChangeStatusResponse result = service.changeStatus(project.getId(), ticket.getId(), "CLOSED");
+        ChangeStatusResponse result = service.changeStatus(project.getId(), ticket.getId(), csr("CLOSED"));
 
         assertThat(result.nextTicketReference()).isNull();
         assertThat(result.nextTicketId()).isNull();
@@ -451,7 +461,7 @@ class TicketServiceTest {
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-2");
 
-        service.changeStatus(project.getId(), ticket.getId(), "CLOSED");
+        service.changeStatus(project.getId(), ticket.getId(), csr("CLOSED"));
 
         verify(ticketRepository).save(argThat(t ->
                 "TEST-2".equals(t.getReference()) &&
@@ -466,7 +476,7 @@ class TicketServiceTest {
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-2");
 
-        service.changeStatus(project.getId(), ticket.getId(), "CLOSED");
+        service.changeStatus(project.getId(), ticket.getId(), csr("CLOSED"));
 
         verify(ticketRepository).save(argThat(t ->
                 "TEST-2".equals(t.getReference()) &&
@@ -745,10 +755,47 @@ class TicketServiceTest {
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(projectService.generateTicketReference(project.getId())).thenReturn("TEST-2");
 
-        service.changeStatus(project.getId(), ticket.getId(), "CLOSED");
+        service.changeStatus(project.getId(), ticket.getId(), csr("CLOSED"));
 
         verify(ticketRepository).save(argThat(t ->
                 "TEST-2".equals(t.getReference()) && t.getDueDate() == null));
+    }
+
+    // ── resolution type ─────────────────────────────────────────────────────
+
+    @Test
+    void changeStatus_toResolved_setsResolutionType() {
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.changeStatus(project.getId(), ticket.getId(), csr("RESOLVED", ResolutionType.CORRECTED));
+
+        assertThat(ticket.getResolutionType()).isEqualTo(ResolutionType.CORRECTED);
+        verify(ticketHistoryService).record(ticket, "resolution", null, "CORRECTED");
+    }
+
+    @Test
+    void changeStatus_toResolved_setsResolutionType_workaround() {
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        service.changeStatus(project.getId(), ticket.getId(), csr("RESOLVED", ResolutionType.WORKAROUND));
+
+        assertThat(ticket.getResolutionType()).isEqualTo(ResolutionType.WORKAROUND);
+    }
+
+    // ── reopen comment ───────────────────────────────────────────────────────
+
+    @Test
+    void changeStatus_reopen_fromResolved_recordsComment() {
+        ticket.setStatus("RESOLVED");
+        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+
+        ChangeStatusRequest reopen = new ChangeStatusRequest("OPEN", null, "Le bug n'est pas corrigé");
+        service.changeStatus(project.getId(), ticket.getId(), reopen);
+
+        verify(ticketHistoryService).record(ticket, "reopen", null, "Le bug n'est pas corrigé");
     }
 
     // ── H1 — isolation par organisation ──────────────────────────────────────

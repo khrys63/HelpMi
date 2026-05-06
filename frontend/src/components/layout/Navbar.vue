@@ -9,6 +9,11 @@
       <div class="flex items-center gap-4">
         <!-- Desktop nav links -->
         <div class="hidden md:flex items-center gap-1">
+          <router-link to="/project"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            :class="currentRoute('/projects') ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'">
+            {{ $t('nav.projects') }}
+          </router-link>
           <router-link to="/dashboard"
             class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
             :class="currentRoute('/dashboard') ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'">
@@ -18,11 +23,6 @@
             class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
             :class="currentRoute('/dashboard/managers') ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'">
             {{ $t('nav.manager_tracking') }}
-          </router-link>
-          <router-link to="/projects"
-            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-            :class="currentRoute('/projects') ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'">
-            {{ $t('nav.projects') }}
           </router-link>
           <template v-if="isAdmin">
             <router-link to="/admin/organizations"
@@ -57,6 +57,10 @@
           <div v-if="menuOpen"
             @click.outside="menuOpen = false"
             class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+            <router-link @click="menuOpen = false" to="/projects"
+              class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+              {{ $t('nav.projects') }}
+            </router-link>
             <router-link @click="menuOpen = false" to="/dashboard"
               class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
               {{ $t('nav.dashboard') }}
@@ -64,10 +68,6 @@
             <router-link v-if="isManager" @click="menuOpen = false" to="/dashboard/managers"
               class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
               {{ $t('nav.manager_tracking') }}
-            </router-link>
-            <router-link @click="menuOpen = false" to="/projects"
-              class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-              {{ $t('nav.projects') }}
             </router-link>
             <template v-if="isAdmin">
               <hr class="my-1 border-gray-200 dark:border-gray-700" />

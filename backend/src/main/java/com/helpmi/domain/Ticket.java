@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.helpmi.domain.enums.ResolutionType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -35,6 +36,10 @@ public class Ticket {
     @Column(nullable = false, length = 50)
     @Builder.Default
     private String status = "OPEN";
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "resolution_type", length = 50)
+    private ResolutionType resolutionType;
 
     @Column(nullable = false, length = 50)
     @Builder.Default

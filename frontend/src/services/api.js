@@ -27,7 +27,9 @@ export const ticketsApi = {
   get: (projectId, ticketId) => api.get(`/projects/${projectId}/tickets/${ticketId}`),
   create: (projectId, data) => api.post(`/projects/${projectId}/tickets`, data),
   update: (projectId, ticketId, data) => api.put(`/projects/${projectId}/tickets/${ticketId}`, data),
-  changeStatus: (projectId, ticketId, status) => api.patch(`/projects/${projectId}/tickets/${ticketId}/status`, { status }),
+  changeStatus: (projectId, ticketId, status, resolutionType, comment) =>
+    api.patch(`/projects/${projectId}/tickets/${ticketId}/status`,
+      { status, resolutionType: resolutionType || null, comment: comment || null }),
   setAssignee: (projectId, ticketId, assigneeId) =>
     api.patch(`/projects/${projectId}/tickets/${ticketId}/assignee`, { assigneeId: assigneeId || null }),
   move: (projectId, ticketId, targetProjectId) =>

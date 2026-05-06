@@ -67,7 +67,7 @@ public class TicketController {
     @PatchMapping("/{ticketId}/status")
     public ChangeStatusResponse changeStatus(@PathVariable UUID projectId, @PathVariable UUID ticketId,
             @Valid @RequestBody ChangeStatusRequest req) {
-        return ticketService.changeStatus(projectId, ticketId, req.status());
+        return ticketService.changeStatus(projectId, ticketId, req);
     }
 
     @PatchMapping("/{ticketId}/assignee")

@@ -142,7 +142,22 @@
     "history_field_organizations": "Organizations changed",
     "history_field_labels": "Labels changed",
     "history_field_watchers": "Tagged people changed",
-    "history_field_project": "Project changed"
+    "history_field_project": "Project changed",
+    "resolution_title": "Resolve ticket",
+    "resolution_type": "Resolution type",
+    "resolution_comment": "Resolution comment (optional)",
+    "resolution_comment_placeholder": "Reason for resolution…",
+    "resolution_comment_optional": "Optional",
+    "resolution_type_corrected": "Corrected",
+    "resolution_type_workaround": "Workaround",
+    "resolution_type_abandoned": "Abandoned",
+    "resolution_type_duplicate": "Duplicate",
+    "resolve": "Resolve",
+    "reopen_title": "Reopen ticket",
+    "reopen_comment": "Reopen reason (mandatory)",
+    "reopen_comment_placeholder": "Justify the reopen…",
+    "reopen_comment_required": "Reopen reason is required",
+    "reopen": "Reopen"
   },
   "status": {
     "transitions": {

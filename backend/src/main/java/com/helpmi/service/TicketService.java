@@ -3,6 +3,7 @@ package com.helpmi.service;
 import com.helpmi.domain.Ticket;
 import com.helpmi.domain.User;
 import com.helpmi.domain.enums.UserRole;
+import com.helpmi.dto.request.ChangeStatusRequest;
 import com.helpmi.dto.request.CreateTicketRequest;
 import com.helpmi.dto.request.UpdateTicketRequest;
 import com.helpmi.dto.response.AttachmentResponse;
@@ -130,6 +131,7 @@ public class TicketService {
                 ticket.getDueDate(),
                 ticket.getProject().getId(), ticket.getProject().getName(), ticket.getProject().getKey(),
                 UserSummary.from(ticket.getReporter()), UserSummary.from(ticket.getAssignee()),
+                ticket.getResolutionType(),
                 comments, attachments, links, organizations, labels, watchers,
                 ticket.getCreatedAt(), ticket.getUpdatedAt(), ticket.getClosedAt(), canAssign, canClone);
     }
@@ -196,25 +198,45 @@ public class TicketService {
         return toResponse(saved);
     }
 
-    public ChangeStatusResponse changeStatus(UUID projectId, UUID ticketId, String newStatus) {
+    public ChangeStatusResponse changeStatus(UUID projectId, UUID ticketId, ChangeStatusRequest req) {
         Ticket ticket = findTicket(projectId, ticketId);
         User actor = currentUserService.getCurrentUser();
-        if (!"OPEN".equals(newStatus)) requireEditable(ticket);
+        if (!"OPEN".equals(req.status())) requireEditable(ticket);
+        if ("RESOLVED".equals(req.status()) && req.resolutionType() == null) {
+            throw new IllegalArgumentException("resolutionType must be set when status is RESOLVED");
+        }
         String oldStatus = ticket.getStatus();
-        ticket.setStatus(newStatus);
-        boolean closing = List.of("CLOSED", "RESOLVED", "CANCELLED").contains(newStatus);
+        ticket.setStatus(req.status());
+        boolean closing = List.of("CLOSED", "RESOLVED", "CANCELLED").contains(req.status());
         ticket.setClosedAt(closing ? LocalDateTime.now() : null);
+
+        // Resolution type + commentaire
+        if ("RESOLVED".equals(req.status()) && req.resolutionType() != null) {
+            ticket.setResolutionType(req.resolutionType());
+            ticketHistoryService.record(ticket, "resolution", null, req.resolutionType().name());
+        }
+        if ("RESOLVED".equals(req.status()) && req.comment() != null && !req.comment().isBlank()) {
+            ticketHistoryService.record(ticket, "resolution_comment", null, req.comment());
+        }
+
+        // Reopen comment (depuis RESOLVED, CLOSED ou CANCELLED)
+        if ("OPEN".equals(req.status())
+                && List.of("RESOLVED", "CLOSED", "CANCELLED").contains(oldStatus)
+                && req.comment() != null) {
+            ticketHistoryService.record(ticket, "reopen", null, req.comment());
+        }
+
         Ticket saved = ticketRepository.save(ticket);
-        ticketHistoryService.record(saved, "status", oldStatus, newStatus);
+        ticketHistoryService.record(saved, "status", oldStatus, req.status());
         if (saved.getReporter() != null) saved.getReporter().getId();
         if (saved.getAssignee() != null) saved.getAssignee().getId();
         saved.getWatchers().size();
         saved.getProject().getId();
-        notificationService.notifyStatusChanged(saved, oldStatus, newStatus, actor);
+        notificationService.notifyStatusChanged(saved, oldStatus, req.status(), actor);
         TicketResponse response = toResponse(saved);
         UUID nextTicketId = null;
         String nextTicketReference = null;
-        if ("CLOSED".equals(newStatus) && RECURRING_TYPES.contains(ticket.getType())) {
+        if ("CLOSED".equals(req.status()) && RECURRING_TYPES.contains(ticket.getType())) {
             Ticket clone = autoCloneRecurring(ticket);
             nextTicketId = clone.getId();
             nextTicketReference = clone.getReference();
@@ -489,6 +511,7 @@ public class TicketService {
         return new TicketResponse(t.getId(), t.getReference(), t.getTitle(), t.getStatus(), t.getPriority(),
                 t.getType(), t.getDueDate(), t.getProject().getId(), t.getProject().getKey(),
                 UserSummary.from(t.getReporter()), UserSummary.from(t.getAssignee()),
+                t.getResolutionType(),
                 t.getCreatedAt(), t.getUpdatedAt(), t.getClosedAt());
     }
 }

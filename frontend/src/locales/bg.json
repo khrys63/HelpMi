@@ -142,7 +142,22 @@
     "history_field_organizations": "Организации променени",
     "history_field_labels": "Етикети променени",
     "history_field_watchers": "Отбелязани хора променени",
-    "history_field_project": "Проект променен"
+    "history_field_project": "Проект променен",
+    "resolution_title": "Решаване на задача",
+    "resolution_type": "Тип решение",
+    "resolution_comment": "Коментар на решението (по избор)",
+    "resolution_comment_placeholder": "Причина за решението…",
+    "resolution_comment_optional": "По избор",
+    "resolution_type_corrected": "Поправен",
+    "resolution_type_workaround": "Обходен път",
+    "resolution_type_abandoned": "Отказан",
+    "resolution_type_duplicate": "Дубликат",
+    "resolve": "Реши",
+    "reopen_title": "Отвори отново",
+    "reopen_comment": "Причина за отноително отваряне (обязателна)",
+    "reopen_comment_placeholder": "Оправдайте отноителното отваряне…",
+    "reopen_comment_required": "Причината за отноителното отваряне е задължителна",
+    "reopen": "Отвори отново"
   },
   "status": {
     "transitions": {

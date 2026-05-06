@@ -222,7 +222,8 @@
               <div class="flex-1">
                 <div class="flex items-baseline gap-2 mb-1">
                   <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ c.author?.firstName }} {{ c.author?.lastName }}</span>
-                  <span class="text-xs text-gray-400 dark:text-gray-500">{{ formatDate(c.createdAt, locale.value) }}</span>
+                  <span class="text-xs text-gray-400 dark:text-gray-500 cursor-default"
+                    :title="formatDate(c.createdAt, locale.value)">{{ relativeTime(c.createdAt, locale.value) }}</span>
                   <span v-if="c.edited" class="text-xs text-gray-400 dark:text-gray-500">{{ $t('tickets.comment_edited') }}</span>
                   <div v-if="canEditComment(c)" class="ml-auto flex gap-2">
                     <button @click="startEditComment(c)" class="text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{{ $t('common.edit') }}</button>
@@ -261,6 +262,12 @@
           <div>
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.status_label') }}</p>
             <StatusBadge :status="ticket.status" />
+          </div>
+
+          <!-- Résolution -->
+          <div v-if="ticket.resolutionType">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">{{ $t('tickets.resolution_type') }}</p>
+            <p class="text-sm text-gray-700 dark:text-gray-300">{{ getResolutionLabel(ticket.resolutionType) }}</p>
           </div>
 
           <!-- Priorité -->
@@ -435,6 +442,65 @@
     :ticket-id="ticketId"
     @close="showHistory = false"
   />
+
+  <!-- Dialogue de résolution -->
+  <div v-if="showResolutionDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click="showResolutionDialog = false">
+    <div @click.stop class="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ $t('tickets.resolution_title') }}</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $t('tickets.resolution_type') }}</label>
+          <select v-model="resolutionType" class="w-full border dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:text-gray-100">
+            <option v-for="rt in RESOLUTION_TYPES" :key="rt.code" :value="rt.code">{{ rt.label }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $t('tickets.resolution_comment') }}</label>
+          <textarea v-model="resolutionComment" rows="3"
+            :placeholder="$t('tickets.resolution_comment_placeholder')"
+            class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100" />
+          <p class="text-xs text-gray-400 mt-1">{{ $t('tickets.resolution_comment_optional') }}</p>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-6">
+        <button @click="confirmResolution"
+          class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
+          {{ $t('tickets.resolve') }}
+        </button>
+        <button @click="showResolutionDialog = false"
+          class="flex-1 border dark:border-gray-600 px-4 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+          {{ $t('common.cancel') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialogue de réouverture -->
+  <div v-if="showReopenDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click="showReopenDialog = false">
+    <div @click.stop class="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{{ $t('tickets.reopen_title') }}</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $t('tickets.reopen_comment') }}</label>
+          <textarea v-model="reopenComment" rows="3"
+            :placeholder="$t('tickets.reopen_comment_placeholder')"
+            class="w-full border dark:border-gray-600 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100" />
+          <p class="text-xs text-red-500 mt-1" v-if="reopenComment && !reopenComment.trim()">{{ $t('tickets.reopen_comment_required') }}</p>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-6">
+        <button @click="confirmReopen"
+          class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          :disabled="!reopenComment.trim()">
+          {{ $t('tickets.reopen') }}
+        </button>
+        <button @click="showReopenDialog = false"
+          class="flex-1 border dark:border-gray-600 px-4 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+          {{ $t('common.cancel') }}
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -445,11 +511,18 @@ import { ticketsApi, usersApi, attachmentsApi, commentsApi, linksApi, labelsApi,
 import { useAuthStore } from '../stores/auth.js'
 import { useConfigStore, COLORS } from '../stores/config.js'
 import { useToastStore } from '../stores/toast.js'
-import { formatDate } from '../utils/dates.js'
+import { formatDate, relativeTime } from '../utils/dates.js'
 import StatusBadge from '../components/tickets/StatusBadge.vue'
 import TicketHistoryPanel from '../components/tickets/TicketHistoryPanel.vue'
 
 const { t, locale } = useI18n()
+
+const RESOLUTION_TYPES = [
+  { code: 'CORRECTED',     label: t('tickets.resolution_type_corrected') },
+  { code: 'WORKAROUND',    label: t('tickets.resolution_type_workaround') },
+  { code: 'ABANDONED',     label: t('tickets.resolution_type_abandoned') },
+  { code: 'DUPLICATE',     label: t('tickets.resolution_type_duplicate') },
+]
 
 const TRANSITIONS = computed(() => ({
   OPEN:        [{ status: 'IN_PROGRESS', label: t('status.transitions.OPEN_to_IN_PROGRESS') }, { status: 'STAND_BY', label: t('status.transitions.OPEN_to_STAND_BY') }, { status: 'CANCELLED', label: t('status.transitions.OPEN_to_CANCELLED') }],
@@ -508,6 +581,13 @@ const showMoveForm = ref(false)
 const moveTargetProjectId = ref('')
 const moveProjects = ref([])
 const moving = ref(false)
+
+// résolution / réouverture
+const showResolutionDialog = ref(false)
+const resolutionType = ref('CORRECTED')
+const resolutionComment = ref('')
+const showReopenDialog = ref(false)
+const reopenComment = ref('')
 
 // liens
 const showLinkForm = ref(false)
@@ -593,10 +673,21 @@ async function updateField(field, value) {
 
 async function applyTransition(newStatus) {
   showStatusMenu.value = false
+  // RESOLVED → ouvrir le dialogue de résolution
+  if (newStatus === 'RESOLVED') {
+    showResolutionDialog.value = true
+    return
+  }
+  // REOPEN depuis RESOLVED, CLOSED ou CANCELLED → ouvrir le dialogue de réouverture
+  if (newStatus === 'OPEN' && ['RESOLVED', 'CLOSED', 'CANCELLED'].includes(ticket.value.status)) {
+    showReopenDialog.value = true
+    return
+  }
   const { data } = await ticketsApi.changeStatus(projectId, ticketId, newStatus)
   ticket.value.status = data.ticket.status
   ticket.value.updatedAt = data.ticket.updatedAt
   ticket.value.closedAt = data.ticket.closedAt
+  ticket.value.resolutionType = data.ticket.resolutionType
   if (data.nextTicketReference) {
     const typeLabel = config.types.find(t => t.code === ticket.value.type)?.label ?? ticket.value.type
     toast.add(`Ticket ${typeLabel} fermé — ${data.nextTicketReference} recréé automatiquement`, 'success')
@@ -749,6 +840,33 @@ async function cloneTicket() {
   }
 }
 
+async function confirmResolution() {
+  showResolutionDialog.value = false
+  const { data } = await ticketsApi.changeStatus(projectId, ticketId, 'RESOLVED', resolutionType.value, null)
+  ticket.value.status = data.ticket.status
+  ticket.value.resolutionType = data.ticket.resolutionType
+  ticket.value.updatedAt = data.ticket.updatedAt
+  ticket.value.closedAt = data.ticket.closedAt
+  if (resolutionComment.value.trim()) {
+    const { data: comment } = await commentsApi.add(ticketId, resolutionComment.value.trim())
+    ticket.value.comments.push(comment)
+  }
+  resolutionType.value = 'CORRECTED'
+  resolutionComment.value = ''
+}
+
+async function confirmReopen() {
+  if (!reopenComment.value.trim()) return
+  showReopenDialog.value = false
+  const { data } = await ticketsApi.changeStatus(projectId, ticketId, 'OPEN', null, null)
+  ticket.value.status = data.ticket.status
+  ticket.value.updatedAt = data.ticket.updatedAt
+  ticket.value.closedAt = data.ticket.closedAt
+  const { data: comment } = await commentsApi.add(ticketId, reopenComment.value.trim())
+  ticket.value.comments.push(comment)
+  reopenComment.value = ''
+}
+
 async function deleteTicket() {
   deleting.value = true
   await ticketsApi.remove(projectId, ticketId)
@@ -856,5 +974,10 @@ function formatSize(bytes) {
   if (bytes < 1024) return bytes + ' o'
   if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' Ko'
   return (bytes / 1024 / 1024).toFixed(1) + ' Mo'
+}
+
+function getResolutionLabel(code) {
+  const rt = RESOLUTION_TYPES.find(r => r.code === code)
+  return rt ? rt.label : code
 }
 </script>
