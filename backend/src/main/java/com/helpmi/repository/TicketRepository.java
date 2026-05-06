@@ -74,4 +74,41 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
         ORDER BY t.project.name ASC
         """)
     List<Object[]> countTicketsByProjectAndStatus(@Param("userId") UUID userId, @Param("statuses") List<String> statuses);
+
+    // --- Manager tracking ---
+
+    @Query("""
+        SELECT t.project.id, t.project.key, t.project.name,
+               t.assignee.id, t.assignee.firstName, t.assignee.lastName, t.assignee.email,
+               t.status, COUNT(t)
+        FROM Ticket t
+        WHERE t.project.id IN (
+            SELECT up.project.id FROM UserProject up
+            WHERE up.user.id = :userId AND up.role = 'MANAGER'
+        )
+        AND t.status NOT IN ('CLOSED', 'CANCELLED')
+        GROUP BY t.project.id, t.project.key, t.project.name,
+                 t.assignee.id, t.assignee.firstName, t.assignee.lastName, t.assignee.email, t.status
+        ORDER BY t.project.name ASC, t.assignee.lastName ASC
+        """)
+    List<Object[]> countTicketsByProjectAndAssignee(@Param("userId") UUID userId);
+
+    @Query("""
+        SELECT t FROM Ticket t
+        WHERE t.project.id = :projectId
+        AND t.assignee.id = :assigneeId
+        AND t.status NOT IN ('CLOSED', 'CANCELLED')
+        ORDER BY t.status, t.dueDate ASC, t.reference ASC
+        """)
+    List<Ticket> findByProjectManagerAndAssigneeId(
+            @Param("projectId") UUID projectId, @Param("assigneeId") UUID assigneeId);
+
+    @Query("""
+        SELECT t FROM Ticket t
+        WHERE t.project.id = :projectId
+        AND t.assignee IS NULL
+        AND t.status NOT IN ('CLOSED', 'CANCELLED')
+        ORDER BY t.dueDate ASC, t.reference ASC
+        """)
+    List<Ticket> findUnassignedTicketsForProject(@Param("projectId") UUID projectId);
 }

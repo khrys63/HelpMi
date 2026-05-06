@@ -7,6 +7,7 @@
       </router-link>
       <div class="flex items-center gap-4">
         <router-link to="/dashboard" class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.dashboard') }}</router-link>
+        <router-link v-if="isManager" to="/dashboard/managers" class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.manager_tracking') }}</router-link>
         <router-link to="/projects" class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.projects') }}</router-link>
         <router-link v-if="auth.user?.role === 'ADMIN'" to="/admin/organizations"
           class="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">{{ $t('nav.organizations') }}</router-link>
@@ -36,6 +37,8 @@ import logo from '../../assets/HelpMi_50.png'
 
 const auth = useAuthStore()
 const theme = useThemeStore()
+
+const isManager = computed(() => auth.user?.projectRoles?.some(pr => pr.role === 'MANAGER') ?? false)
 const initials = computed(() => {
   if (!auth.user) return '?'
   return ((auth.user.firstName?.[0] || '') + (auth.user.lastName?.[0] || '')).toUpperCase()

@@ -11,6 +11,11 @@ const router = createRouter({
       component: () => import('../views/DashboardView.vue')
     },
     {
+      path: '/dashboard/managers',
+      name: 'manager-tracking',
+      component: () => import('../views/ManagerTrackingView.vue')
+    },
+    {
       path: '/pending-org',
       name: 'pending-org',
       component: () => import('../views/PendingOrgView.vue')

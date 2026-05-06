@@ -128,4 +128,9 @@ export const dashboardApi = {
   get: () => api.get('/dashboard')
 }
 
+// Manager tracking
+export const managerTrackingApi = {
+  get: () => api.get('/dashboard/managers')
+}
+
 export default api

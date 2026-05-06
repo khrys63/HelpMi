@@ -7,7 +7,8 @@
     "config": "Configuration",
     "logout": "Logout",
     "theme_dark": "Switch to dark",
-    "theme_light": "Switch to light"
+    "theme_light": "Switch to light",
+    "manager_tracking": "Tracking"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -289,5 +290,17 @@
       "delete_title": "Delete?",
       "delete_body": "Delete {name}? This action is irreversible and will be refused if tickets still use this value."
     }
+  },
+  "manager_tracking": {
+    "title": "Manager Tracking",
+    "unassigned": "Unassigned",
+    "no_projects": "You are not a manager of any project",
+    "total": "Total",
+    "open": "Open",
+    "in_progress": "In Progress",
+    "stand_by": "Stand By",
+    "resolved": "Resolved",
+    "assignee": "Assignee",
+    "tickets": "Tickets"
   }
 }

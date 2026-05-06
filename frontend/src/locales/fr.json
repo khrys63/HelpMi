@@ -7,7 +7,8 @@
     "config": "Configuration",
     "logout": "Déconnexion",
     "theme_dark": "Passer en sombre",
-    "theme_light": "Passer en clair"
+    "theme_light": "Passer en clair",
+    "manager_tracking": "Suivi"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -289,5 +290,17 @@
       "delete_title": "Supprimer ?",
       "delete_body": "Supprimer {name} ? Cette action est irréversible et sera refusée si des tickets utilisent encore cette valeur."
     }
+  },
+  "manager_tracking": {
+    "title": "Suivi gestionnaire",
+    "unassigned": "Non assignés",
+    "no_projects": "Vous n'êtes gestionnaire d'aucun projet",
+    "total": "Total",
+    "open": "Ouverts",
+    "in_progress": "En cours",
+    "stand_by": "En attente",
+    "resolved": "Résolus",
+    "assignee": "Assigné à",
+    "tickets": "Tickets"
   }
 }
