@@ -4,5 +4,5 @@ import jakarta.validation.constraints.Size;
 
 public record UpdateProjectRequest(
         @Size(max = 255) String name,
-        String description
+        @Size(max = 10_000) String description
 ) {}

@@ -65,9 +65,9 @@ public class TicketService {
     public Page<TicketResponse> getTickets(UUID projectId, String status,
             String priority, String type, UUID assigneeId, Pageable pageable) {
         projectService.requireProjectAccess(projectId);
-        List<String> statuses   = parseFilter(status);
-        List<String> priorities = parseFilter(priority);
-        List<String> types      = parseFilter(type);
+        List<String> statuses   = parseFilter(status,   VALID_STATUSES);
+        List<String> priorities = parseFilter(priority, VALID_PRIORITIES);
+        List<String> types      = parseFilter(type,     VALID_TYPES);
         return ticketRepository.findByProjectIdWithFilters(
                 projectId,
                 statuses,   statuses.size(),
@@ -78,12 +78,20 @@ public class TicketService {
     }
 
     private static final int MAX_FILTER_VALUES = 20;
+    // A2-F3: allowlists for filter parameters
+    private static final Set<String> VALID_STATUSES   = Set.of("OPEN", "IN_PROGRESS", "STAND_BY", "RESOLVED", "CLOSED", "CANCELLED");
+    private static final Set<String> VALID_PRIORITIES  = Set.of("LOW", "MEDIUM", "HIGH", "CRITICAL");
+    private static final Set<String> VALID_TYPES       = Set.of("BUG", "FEATURE", "TASK");
 
-    private List<String> parseFilter(String param) {
+    private List<String> parseFilter(String param, Set<String> allowed) {
         if (param == null || param.isBlank()) return List.of();
         String[] parts = param.split(",");
         if (parts.length > MAX_FILTER_VALUES)
             throw new IllegalArgumentException("Trop de valeurs de filtre (max " + MAX_FILTER_VALUES + ")");
+        for (String v : parts) {
+            if (!allowed.contains(v))
+                throw new IllegalArgumentException("Valeur de filtre invalide : " + v);
+        }
         return Arrays.asList(parts);
     }
 

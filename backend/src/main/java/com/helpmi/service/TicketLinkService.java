@@ -81,7 +81,7 @@ public class TicketLinkService {
 
     @Transactional(readOnly = true)
     public List<TicketSummary> search(String q, UUID excludeId) {
-        if (q == null || q.isBlank() || q.length() < 2) return List.of();
+        if (q == null || q.isBlank() || q.length() < 2 || q.length() > 100) return List.of(); // A3-F3
         String pattern = "%" + q.toUpperCase() + "%";
         User user = currentUserService.getCurrentUser();
 

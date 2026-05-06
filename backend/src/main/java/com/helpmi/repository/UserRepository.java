@@ -46,4 +46,17 @@ public interface UserRepository extends JpaRepository<User, UUID> {
         ORDER BY u.firstName ASC, u.lastName ASC
     """)
     List<User> findByOrganizationIds(@Param("orgIds") Collection<UUID> orgIds);
+
+    // A3-M3: users sharing at least one project with the given user
+    @Query("""
+        SELECT DISTINCT u FROM User u
+        WHERE u.active = true
+          AND EXISTS (
+              SELECT 1 FROM UserProject up WHERE up.user = u AND up.project.id IN (
+                  SELECT up2.project.id FROM UserProject up2 WHERE up2.user.id = :userId
+              )
+          )
+        ORDER BY u.firstName ASC, u.lastName ASC
+    """)
+    List<User> findActiveUsersInSameProjects(@Param("userId") UUID userId);
 }

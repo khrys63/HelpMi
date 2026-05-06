@@ -36,8 +36,13 @@ public class UserService {
     private final CurrentUserService currentUserService;
 
     public List<UserResponse> getActiveUsers() {
-        currentUserService.getCurrentUser();
-        return userRepository.findByActiveTrueOrderByFirstNameAscLastNameAsc()
+        User currentUser = currentUserService.getCurrentUser();
+        // A3-M3: admins see all active users; others see only users sharing a project
+        if (currentUser.getRole() == UserRole.ADMIN) {
+            return userRepository.findByActiveTrueOrderByFirstNameAscLastNameAsc()
+                    .stream().map(UserResponse::from).toList();
+        }
+        return userRepository.findActiveUsersInSameProjects(currentUser.getId())
                 .stream().map(UserResponse::from).toList();
     }
 

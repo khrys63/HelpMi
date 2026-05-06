@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public record UpdateTicketRequest(
         @Size(max = 500) String title,
-        String description,
+        @Size(max = 10_000) String description,
         String priority,
         String type,
         UUID assigneeId

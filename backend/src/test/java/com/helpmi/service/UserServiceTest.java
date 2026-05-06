@@ -57,11 +57,16 @@ class UserServiceTest {
     }
 
     @Test
-    void getActiveUsers_user_doesNotThrow() {
-        when(currentUserService.getCurrentUser()).thenReturn(agentUser());
-        when(userRepository.findByActiveTrueOrderByFirstNameAscLastNameAsc()).thenReturn(List.of(agentUser()));
+    void getActiveUsers_user_returnsOnlySharedProjectUsers() {
+        User user = agentUser();
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(userRepository.findActiveUsersInSameProjects(user.getId())).thenReturn(List.of(user));
 
-        assertThatCode(() -> service.getActiveUsers()).doesNotThrowAnyException();
+        List<UserResponse> result = service.getActiveUsers();
+
+        assertThat(result).hasSize(1);
+        verify(userRepository).findActiveUsersInSameProjects(user.getId());
+        verify(userRepository, never()).findByActiveTrueOrderByFirstNameAscLastNameAsc();
     }
 
     // --- getCurrentUser ---

@@ -4,6 +4,7 @@ import com.helpmi.dto.request.UpdateUserProjectsRequest;
 import com.helpmi.dto.request.UpdateUserRequest;
 import com.helpmi.dto.response.UserResponse;
 import com.helpmi.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +24,7 @@ public class AdminUserController {
     }
 
     @PatchMapping("/{id}")
-    public UserResponse update(@PathVariable UUID id, @RequestBody UpdateUserRequest req) {
+    public UserResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateUserRequest req) { // A5-M3
         return userService.updateUser(id, req);
     }
 
@@ -39,7 +40,7 @@ public class AdminUserController {
 
     @PutMapping("/{id}/projects")
     public UserResponse updateProjects(@PathVariable UUID id,
-                                       @RequestBody UpdateUserProjectsRequest req) {
+                                       @Valid @RequestBody UpdateUserProjectsRequest req) { // A5-M3
         return userService.updateUserProjects(id, req);
     }
 }

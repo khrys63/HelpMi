@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public record CreateTicketRequest(
         @NotBlank @Size(max = 500) String title,
-        String description,
+        @Size(max = 10_000) String description,
         String priority,
         String type,
         UUID assigneeId,
