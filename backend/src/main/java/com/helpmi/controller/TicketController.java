@@ -72,7 +72,7 @@ public class TicketController {
 
     @PatchMapping("/{ticketId}/assignee")
     public TicketResponse setAssignee(@PathVariable UUID projectId, @PathVariable UUID ticketId,
-            @RequestBody SetAssigneeRequest req) {
+            @Valid @RequestBody SetAssigneeRequest req) { // SEC-04
         return ticketService.setAssignee(projectId, ticketId, req.assigneeId());
     }
 
