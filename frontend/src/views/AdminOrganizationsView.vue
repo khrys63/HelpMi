@@ -105,28 +105,29 @@
           </div>
         </div>
 
-        <!-- Users -->
+        <!-- Users (read-only, split by project role within this org) -->
         <div>
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{{ $t('admin.orgs.users_section') }}</h3>
-          <div class="flex flex-wrap gap-2 mb-2">
-            <span v-for="u in managing.users" :key="u.id"
-              class="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-2 py-1 rounded">
-              {{ u.firstName }} {{ u.lastName }}
-              <span class="text-gray-400 dark:text-gray-500">({{ u.role }})</span>
-              <button @click="removeUser(u.id)" class="hover:text-red-500 ml-1">×</button>
-            </span>
-            <span v-if="managing.users.length === 0" class="text-xs text-gray-400 dark:text-gray-500">{{ $t('admin.orgs.no_users') }}</span>
-          </div>
-          <div class="flex gap-2">
-            <select v-model="selectedUserId"
-              class="flex-1 border dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-gray-100">
-              <option value="">{{ $t('admin.orgs.add_user') }}</option>
-              <option v-for="u in availableUsers" :key="u.id" :value="u.id">
-                {{ u.firstName }} {{ u.lastName }} ({{ u.role }})
-              </option>
-            </select>
-            <button @click="addUser" :disabled="!selectedUserId"
-              class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm disabled:opacity-40">{{ $t('common.add') }}</button>
+          <div v-if="managing.users.length === 0" class="text-xs text-gray-400 dark:text-gray-500">{{ $t('admin.orgs.no_users') }}</div>
+          <div v-else class="space-y-3">
+            <div v-if="orgManagers.length > 0">
+              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">{{ $t('admin.orgs.users_managers') }}</p>
+              <div class="flex flex-wrap gap-2">
+                <span v-for="u in orgManagers" :key="u.id"
+                  class="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded">
+                  {{ u.firstName }} {{ u.lastName }}
+                </span>
+              </div>
+            </div>
+            <div v-if="orgMembers.length > 0">
+              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">{{ $t('admin.orgs.users_members') }}</p>
+              <div class="flex flex-wrap gap-2">
+                <span v-for="u in orgMembers" :key="u.id"
+                  class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-2 py-1 rounded">
+                  {{ u.firstName }} {{ u.lastName }}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -161,21 +162,16 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import { organizationsApi, projectsApi, usersApi } from '../services/api.js'
+import { organizationsApi, projectsApi } from '../services/api.js'
 
 const orgs = ref([])
 const loading = ref(true)
 const allProjects = ref([])
-const allUsers = ref([])
 
 onMounted(async () => {
   await reload()
-  const [{ data: projects }, { data: users }] = await Promise.all([
-    projectsApi.list(),
-    usersApi.list()
-  ])
+  const { data: projects } = await projectsApi.list()
   allProjects.value = projects
-  allUsers.value = users
   loading.value = false
 })
 
@@ -228,7 +224,6 @@ async function saveOrg() {
 // --- Manage access ---
 const managing = ref(null)
 const selectedProjectId = ref('')
-const selectedUserId = ref('')
 const manageError = ref('')
 
 const availableProjects = computed(() => {
@@ -236,16 +231,18 @@ const availableProjects = computed(() => {
   const assignedIds = new Set(managing.value.projects.map(p => p.id))
   return allProjects.value.filter(p => !assignedIds.has(p.id))
 })
-const availableUsers = computed(() => {
-  if (!managing.value) return []
-  const assignedIds = new Set(managing.value.users.map(u => u.id))
-  return allUsers.value.filter(u => !assignedIds.has(u.id))
-})
+
+const orgProjectIds = computed(() => new Set(managing.value?.projects.map(p => p.id) ?? []))
+const orgManagers = computed(() => managing.value?.users.filter(u =>
+  u.projectRoles.some(pr => orgProjectIds.value.has(pr.projectId) && pr.role === 'MANAGER')
+) ?? [])
+const orgMembers = computed(() => managing.value?.users.filter(u =>
+  !u.projectRoles.some(pr => orgProjectIds.value.has(pr.projectId) && pr.role === 'MANAGER')
+) ?? [])
 
 function openManage(org) {
   managing.value = { ...org, projects: [...org.projects], users: [...org.users] }
   selectedProjectId.value = ''
-  selectedUserId.value = ''
   manageError.value = ''
 }
 async function addProject() {
@@ -260,22 +257,6 @@ async function addProject() {
 async function removeProject(projectId) {
   try {
     const { data } = await organizationsApi.removeProject(managing.value.id, projectId)
-    managing.value = data
-    replaceOrg(data)
-  } catch (e) { manageError.value = e.response?.data?.detail || 'Erreur' }
-}
-async function addUser() {
-  if (!selectedUserId.value) return
-  try {
-    const { data } = await organizationsApi.addUser(managing.value.id, selectedUserId.value)
-    managing.value = data
-    replaceOrg(data)
-    selectedUserId.value = ''
-  } catch (e) { manageError.value = e.response?.data?.detail || 'Erreur' }
-}
-async function removeUser(userId) {
-  try {
-    const { data } = await organizationsApi.removeUser(managing.value.id, userId)
     managing.value = data
     replaceOrg(data)
   } catch (e) { manageError.value = e.response?.data?.detail || 'Erreur' }
