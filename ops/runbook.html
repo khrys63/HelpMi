@@ -125,6 +125,8 @@
     <li><a class="indent" href="#backup">Sauvegarde / Restore</a></li>
     <li><a class="indent" href="#reset">Reset environnement</a></li>
     <li><a class="indent" href="#deploy">Redéploiement</a></li>
+    <li><a class="indent" href="#audit">Journal d'audit</a></li>
+    <li><a class="indent" href="#archivage">Archivage projets</a></li>
     <li><a class="section">Référence</a></li>
     <li><a class="indent" href="#env">Variables d'environnement</a></li>
     <li><a class="indent" href="#quickref">Quick reference card</a></li>
@@ -365,7 +367,7 @@ truncate -s 0 $(docker inspect --format='{{.LogPath}}' helpmi_mariadb)</code></p
     </div></div>
     <div class="step"><div><strong>Cas checksum mismatch — repair</strong>
       <pre><code># Se connecter à la base
-docker exec -it helpmi_mariadb mysql -u helpmi -p helpmi
+docker exec -it helpmi_mariadb mariadb -u helpmi -p helpmi
 
 -- Voir l'état des migrations
 SELECT version, description, success, checksum FROM flyway_schema_history ORDER BY installed_rank DESC LIMIT 10;
@@ -447,7 +449,7 @@ docker run --rm --network host \
       <pre><code>docker exec helpmi_minio sh -c \
   "mc alias set local http://localhost:9000 \$MINIO_ROOT_USER \$MINIO_ROOT_PASSWORD && \
    mc mb local/helpmi || true"</code></pre>
-      <div class="alert alert-yellow">Le bucket <strong>n'est pas créé automatiquement</strong> au premier démarrage. Le backend le crée lui-même au démarrage via le SDK S3 — vérifier les logs backend si le bucket est manquant.</div>
+      <div class="alert alert-blue">Le bucket <strong>est créé automatiquement</strong> par le backend au démarrage via le SDK S3. Si le bucket est manquant, vérifier les logs backend — une erreur de connexion MinIO l'empêche de créer le bucket.</div>
     </div></div>
   </div>
 </div>
@@ -490,15 +492,15 @@ curl -s http://app.localhost:8080/actuator/health</code></pre>
       <pre><code>docker stats --no-stream helpmi_backend helpmi_mariadb</code></pre>
     </div></div>
     <div class="step"><div><strong>Chercher des requêtes SQL lentes</strong>
-      <pre><code>docker exec -it helpmi_mariadb mysql -u root -p helpmi -e \
+      <pre><code>docker exec -it helpmi_mariadb mariadb -u root -p helpmi -e \
   "SHOW PROCESSLIST;"
 
 # Voir les slow queries (si activé)
-docker exec helpmi_mariadb mysql -u root -p helpmi -e \
+docker exec helpmi_mariadb mariadb -u root -p helpmi -e \
   "SHOW VARIABLES LIKE 'slow_query%';"</code></pre>
     </div></div>
     <div class="step"><div><strong>Vérifier les connexions actives</strong>
-      <pre><code>docker exec helpmi_mariadb mysql -u root -p helpmi -e \
+      <pre><code>docker exec helpmi_mariadb mariadb -u root -p helpmi -e \
   "SELECT count(*) as connexions FROM information_schema.PROCESSLIST;"</code></pre>
     </div></div>
     <div class="step"><div><strong>Redémarrer le backend pour libérer le pool</strong>
@@ -569,7 +571,7 @@ curl -s http://auth.localhost/realms/helpmi/.well-known/openid-configuration | \
       <pre><code># Users → l'utilisateur → Credentials → Reset password</code></pre>
     </div></div>
     <div class="step"><div><strong>Vérifier le rôle dans la base applicative</strong>
-      <pre><code>docker exec -it helpmi_mariadb mysql -u helpmi -p helpmi -e \
+      <pre><code>docker exec -it helpmi_mariadb mariadb -u helpmi -p helpmi -e \
   "SELECT id, email, role, active, organization_id FROM users WHERE email='user@example.com';"</code></pre>
     </div></div>
   </div>
@@ -586,8 +588,12 @@ curl -s http://auth.localhost/realms/helpmi/.well-known/openid-configuration | \
   <pre><code>-- Trouver l'ID de l'organisation cible
 SELECT id, name FROM organizations WHERE active = 1;
 
--- Affecter l'utilisateur
-UPDATE users SET organization_id = 'UUID-DE-LORG' WHERE email = 'user@example.com';</code></pre>
+-- Trouver l'ID de l'utilisateur
+SELECT id FROM users WHERE email = 'user@example.com';
+
+-- Affecter l'utilisateur à l'organisation (table de jointure many-to-many)
+INSERT INTO user_organizations (user_id, organization_id)
+VALUES ('UUID-USER', 'UUID-LORG');</code></pre>
 </div>
 
 <!-- ===== ROUTINIÈRES ===== -->
@@ -618,14 +624,14 @@ docker logs helpmi_backend 2>&1 | grep -i error | tail -50</code></pre>
   <div>
     <h3>Base de données</h3>
     <pre><code># Connexion interactive
-docker exec -it helpmi_mariadb mysql -u helpmi -p helpmi
+docker exec -it helpmi_mariadb mariadb -u helpmi -p helpmi
 
 # Compter les tickets
-docker exec helpmi_mariadb mysql -u helpmi -p helpmi -e \
+docker exec helpmi_mariadb mariadb -u helpmi -p helpmi -e \
   "SELECT status, COUNT(*) FROM tickets GROUP BY status;"
 
 # Migrations appliquées
-docker exec helpmi_mariadb mysql -u helpmi -p helpmi -e \
+docker exec helpmi_mariadb mariadb -u helpmi -p helpmi -e \
   "SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;"</code></pre>
   </div>
   <div>
@@ -655,7 +661,7 @@ head -20 backup_helpmi_*.sql   # doit commencer par un commentaire mysqldump</co
 <div class="alert alert-red"><strong>Destructif.</strong> Cette opération écrase la base existante. Faire un dump avant.</div>
 <pre><code># Restaurer depuis un fichier de dump
 docker exec -i helpmi_mariadb sh -c \
-  'mysql -u root -p$MYSQL_ROOT_PASSWORD helpmi' \
+  'mariadb -u root -p$MYSQL_ROOT_PASSWORD helpmi' \
   < backup_helpmi_20260101_120000.sql</code></pre>
 
 <h3>Sauvegarde MinIO (pièces jointes)</h3>
@@ -719,6 +725,7 @@ curl -I http://localhost:3000</code></pre>
 <table>
   <thead><tr><th>Variable</th><th>Service(s)</th><th>Description</th><th>Valeur dev</th></tr></thead>
   <tbody>
+    <tr><td><code>TRAEFIK_DOMAIN</code></td><td>Traefik, Frontend (build)</td><td>Domaine de base pour tous les sous-domaines Traefik</td><td>localhost</td></tr>
     <tr><td><code>DB_USER</code></td><td>MariaDB, Backend</td><td>Utilisateur applicatif MariaDB</td><td>helpmi</td></tr>
     <tr><td><code>DB_PASSWORD</code></td><td>MariaDB, Backend</td><td>Mot de passe applicatif</td><td><em>secret</em></td></tr>
     <tr><td><code>DB_ROOT_PASSWORD</code></td><td>MariaDB</td><td>Mot de passe root MariaDB</td><td><em>secret</em></td></tr>
@@ -731,9 +738,101 @@ curl -I http://localhost:3000</code></pre>
     <tr><td><code>VITE_KEYCLOAK_URL</code></td><td>Frontend (build)</td><td>URL Keycloak vue par le navigateur</td><td>http://auth.localhost</td></tr>
     <tr><td><code>VITE_KEYCLOAK_REALM</code></td><td>Frontend (build)</td><td>Nom du realm Keycloak</td><td>helpmi</td></tr>
     <tr><td><code>VITE_KEYCLOAK_CLIENT_ID</code></td><td>Frontend (build)</td><td>Client ID Keycloak pour le frontend</td><td>helpmi-frontend</td></tr>
+    <tr><td colspan="4" style="background:#f8fafc;font-weight:600;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Notifications email (SMTP) — décommenter dans docker-compose.yml</td></tr>
+    <tr><td><code>APP_MAIL_HOST</code></td><td>Backend</td><td>Hôte SMTP</td><td>localhost (MailHog en dev)</td></tr>
+    <tr><td><code>APP_MAIL_PORT</code></td><td>Backend</td><td>Port SMTP</td><td>1025</td></tr>
+    <tr><td><code>APP_MAIL_USERNAME</code></td><td>Backend</td><td>Identifiant SMTP</td><td>—</td></tr>
+    <tr><td><code>APP_MAIL_PASSWORD</code></td><td>Backend</td><td>Mot de passe SMTP</td><td>—</td></tr>
+    <tr><td><code>APP_MAIL_SMTP_AUTH</code></td><td>Backend</td><td>Activer l'authentification SMTP</td><td>false</td></tr>
+    <tr><td><code>APP_MAIL_STARTTLS</code></td><td>Backend</td><td>Activer STARTTLS</td><td>false</td></tr>
+    <tr><td><code>APP_MAIL_FROM</code></td><td>Backend</td><td>Adresse expéditeur des emails</td><td>noreply@helpmi.local</td></tr>
+    <tr><td><code>APP_BASE_URL</code></td><td>Backend</td><td>URL publique du frontend (dans les liens emails)</td><td>http://localhost:5173</td></tr>
+    <tr><td colspan="4" style="background:#f8fafc;font-weight:600;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Stockage S3 externe (si MinIO remplacé)</td></tr>
+    <tr><td><code>APP_S3_ENDPOINT</code></td><td>Backend</td><td>URL endpoint S3</td><td>http://minio:9000</td></tr>
+    <tr><td><code>APP_S3_REGION</code></td><td>Backend</td><td>Région S3</td><td>us-east-1</td></tr>
+    <tr><td><code>APP_S3_BUCKET</code></td><td>Backend</td><td>Nom du bucket</td><td>helpmi</td></tr>
+    <tr><td><code>APP_S3_ACCESS_KEY</code></td><td>Backend</td><td>Access key S3</td><td>= MINIO_ROOT_USER</td></tr>
+    <tr><td><code>APP_S3_SECRET_KEY</code></td><td>Backend</td><td>Secret key S3</td><td>= MINIO_ROOT_PASSWORD</td></tr>
   </tbody>
 </table>
 <div class="alert alert-yellow">Les variables <code>VITE_*</code> sont baked dans l'image frontend au moment du build (<code>docker compose build</code>). Modifier ces variables nécessite un rebuild de l'image frontend.</div>
+
+<!-- ===== AUDIT ===== -->
+<h2 id="audit">Journal d'audit</h2>
+<p>La table <code>audit_log</code> enregistre les actions sensibles. Elle est consultable depuis <strong>Administration → Journal</strong> (interface filtrée, 50 entrées par page) ou directement en SQL.</p>
+
+<h3>Actions auditées</h3>
+<table>
+  <thead><tr><th>Action</th><th>Déclencheur</th></tr></thead>
+  <tbody>
+    <tr><td><code>PAT_CREATED</code> / <code>PAT_REVOKED</code></td><td>Gestion des tokens d'accès personnels</td></tr>
+    <tr><td><code>PAT_AUTH_SUCCESS</code> / <code>PAT_AUTH_FAILURE</code></td><td>Authentification via PAT (succès ou échec)</td></tr>
+    <tr><td><code>USER_ROLE_CHANGED</code></td><td>Changement de rôle d'un utilisateur par un admin</td></tr>
+    <tr><td><code>USER_ACTIVATED</code> / <code>USER_DEACTIVATED</code></td><td>Activation ou désactivation d'un compte</td></tr>
+    <tr><td><code>USER_ORG_ADDED</code> / <code>USER_ORG_REMOVED</code></td><td>Modification des organisations d'un utilisateur</td></tr>
+    <tr><td><code>USER_PROJECTS_UPDATED</code></td><td>Modification des projets/rôles d'un utilisateur (détail: <code>PROJ:MANAGER, SUPPORT:MEMBER</code>)</td></tr>
+    <tr><td><code>PROJECT_CREATED</code></td><td>Création d'un nouveau projet</td></tr>
+    <tr><td><code>PROJECT_ARCHIVED</code> / <code>PROJECT_UNARCHIVED</code></td><td>Archivage ou désarchivage d'un projet</td></tr>
+    <tr><td><code>ORGANIZATION_CREATED</code> / <code>ORGANIZATION_DELETED</code></td><td>Création ou suppression d'une organisation</td></tr>
+    <tr><td><code>TICKET_DELETED</code></td><td>Suppression d'un ticket (admin seulement)</td></tr>
+    <tr><td><code>ATTACHMENT_DELETED</code></td><td>Suppression d'une pièce jointe</td></tr>
+    <tr><td><code>ACCESS_DENIED</code></td><td>Tentative d'accès refusée par Spring Security</td></tr>
+  </tbody>
+</table>
+
+<h3>Requêtes SQL utiles</h3>
+<pre><code>-- Dernières 100 entrées
+SELECT created_at, action, actor_email, target_type, target_id, details, ip_address
+FROM audit_log ORDER BY created_at DESC LIMIT 100;
+
+-- Actions sensibles des dernières 24h
+SELECT * FROM audit_log
+WHERE action IN ('PAT_AUTH_FAILURE','ACCESS_DENIED','USER_DEACTIVATED')
+  AND created_at > NOW() - INTERVAL 1 DAY
+ORDER BY created_at DESC;
+
+-- Activité d'un utilisateur
+SELECT * FROM audit_log WHERE actor_email = 'user@example.com'
+ORDER BY created_at DESC LIMIT 50;</code></pre>
+
+<h3>Rétention</h3>
+<p>Pas de purge automatique. Pour archiver les entrées anciennes :</p>
+<pre><code>-- Supprimer les entrées de plus de 6 mois
+DELETE FROM audit_log WHERE created_at &lt; NOW() - INTERVAL 6 MONTH;
+
+-- Vider entièrement (irréversible)
+TRUNCATE TABLE audit_log;</code></pre>
+
+<!-- ===== ARCHIVAGE PROJETS ===== -->
+<h2 id="archivage">Archivage des projets</h2>
+<p>Un projet archivé est <strong>invisible pour les non-admins</strong>, exclu de tous les tableaux de bord, et ne peut plus recevoir de tickets. L'archivage est <strong>réversible</strong> : les rattachements utilisateurs et organisations sont conservés.</p>
+
+<table>
+  <thead><tr><th>Comportement</th><th>Projet actif</th><th>Projet archivé</th></tr></thead>
+  <tbody>
+    <tr><td>Visible dans la liste (non-admin)</td><td>✅</td><td>❌</td></tr>
+    <tr><td>Visible dans la liste (admin)</td><td>✅</td><td>✅ (badge Archivé)</td></tr>
+    <tr><td>Tickets apparaissent dans les dashboards</td><td>✅</td><td>❌</td></tr>
+    <tr><td>Ticket déplaçable vers ce projet</td><td>✅</td><td>❌</td></tr>
+    <tr><td>Création de tickets</td><td>✅</td><td>❌</td></tr>
+    <tr><td>Archivage/désarchivage</td><td>Admin uniquement</td><td>Admin uniquement</td></tr>
+  </tbody>
+</table>
+
+<h3>Archiver / désarchiver via l'interface</h3>
+<p>Administration → Projets → bouton ⋯ sur la ligne du projet → <em>Archiver</em> ou <em>Désarchiver</em>.</p>
+
+<h3>Archiver / désarchiver en SQL (urgence)</h3>
+<pre><code>-- Lister les projets et leur état
+SELECT key, name, archived, active FROM projects ORDER BY name;
+
+-- Archiver un projet
+UPDATE projects SET archived = TRUE WHERE key = 'PROJ';
+
+-- Désarchiver un projet
+UPDATE projects SET archived = FALSE WHERE key = 'PROJ';</code></pre>
+
+<div class="alert alert-blue">L'archivage est distinct de la désactivation (<code>active = false</code>). Un projet désactivé est supprimé logiquement et non récupérable via l'interface. Ne pas confondre les deux colonnes.</div>
 
 <!-- ===== TRAEFIK ===== -->
 <h2 id="traefik-ops">Traefik — Opérations</h2>
@@ -840,8 +939,8 @@ curl -sv https://app.helpmi.example.com 2>&1 | grep -i "SSL\|certificate\|issuer
     <tr><td>Health backend</td><td><code>curl -s http://app.localhost:8080/actuator/health</code></td></tr>
     <tr><td>Health MinIO</td><td><code>curl -sf http://localhost:9000/minio/health/live</code></td></tr>
     <tr><td>Token Keycloak (smoke test)</td><td><code>curl -s -X POST http://auth.localhost/realms/helpmi/protocol/openid-connect/token -d "client_id=helpmi-frontend&grant_type=password&username=admin&password=admin123"</code></td></tr>
-    <tr><td>Console MySQL interactive</td><td><code>docker exec -it helpmi_mariadb mysql -u helpmi -p helpmi</code></td></tr>
-    <tr><td>Migrations appliquées</td><td><code>docker exec helpmi_mariadb mysql -u helpmi -p helpmi -e "SELECT version,success FROM flyway_schema_history;"</code></td></tr>
+    <tr><td>Console MySQL interactive</td><td><code>docker exec -it helpmi_mariadb mariadb -u helpmi -p helpmi</code></td></tr>
+    <tr><td>Migrations appliquées</td><td><code>docker exec helpmi_mariadb mariadb -u helpmi -p helpmi -e "SELECT version,success FROM flyway_schema_history;"</code></td></tr>
     <tr><td>Dump base</td><td><code>docker exec helpmi_mariadb sh -c 'mysqldump -u root -p$MYSQL_ROOT_PASSWORD helpmi' > backup.sql</code></td></tr>
     <tr><td>Consommation ressources</td><td><code>docker stats --no-stream</code></td></tr>
     <tr><td>Espace disque Docker</td><td><code>docker system df</code></td></tr>
@@ -857,7 +956,7 @@ curl -sv https://app.helpmi.example.com 2>&1 | grep -i "SSL\|certificate\|issuer
 
 <br>
 <p style="text-align:center; color:#94a3b8; font-size:12px; margin-top:40px; padding-top:20px; border-top:1px solid var(--border);">
-  HelpMi — Runbook v1.0 — Généré le 2026-04-28
+  HelpMi — Runbook v1.2 — Mis à jour le 2026-05-07
 </p>
 
 </main>
