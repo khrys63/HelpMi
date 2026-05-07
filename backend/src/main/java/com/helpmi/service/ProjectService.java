@@ -3,6 +3,7 @@ package com.helpmi.service;
 import com.helpmi.domain.Project;
 import com.helpmi.domain.User;
 import com.helpmi.domain.UserProject;
+import com.helpmi.domain.enums.AuditAction;
 import com.helpmi.domain.enums.UserRole;
 import com.helpmi.dto.request.CreateProjectRequest;
 import com.helpmi.dto.request.UpdateProjectRequest;
@@ -29,10 +30,15 @@ public class ProjectService {
     private final TicketRepository ticketRepository;
     private final UserProjectRepository userProjectRepository;
     private final CurrentUserService currentUserService;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<ProjectResponse> getAllProjects() {
         User user = currentUserService.getCurrentUser();
+        if (user.getRole() == UserRole.ADMIN) {
+            return projectRepository.findByActiveTrueOrderByCreatedAtDesc()
+                    .stream().map(p -> toResponse(p, user)).toList();
+        }
         return projectRepository.findActiveByUserId(user.getId())
                 .stream().map(p -> toResponse(p, user)).toList();
     }
@@ -63,6 +69,7 @@ public class ProjectService {
                 .project(saved)
                 .role("MEMBER")
                 .build());
+        auditService.log(AuditAction.PROJECT_CREATED, "PROJECT", saved.getKey(), "name=" + saved.getName());
         return toResponse(saved, admin);
     }
 
@@ -80,6 +87,28 @@ public class ProjectService {
         Project project = findActive(id);
         project.setActive(false);
         projectRepository.save(project);
+    }
+
+    public ProjectResponse archiveProject(UUID id) {
+        requireAdmin();
+        Project project = projectRepository.findById(id)
+                .filter(Project::isActive)
+                .orElseThrow(() -> new NotFoundException("Projet introuvable"));
+        project.setArchived(true);
+        ProjectResponse resp = toResponse(projectRepository.save(project), currentUserService.getCurrentUser());
+        auditService.log(AuditAction.PROJECT_ARCHIVED, "PROJECT", project.getKey(), "name=" + project.getName());
+        return resp;
+    }
+
+    public ProjectResponse unarchiveProject(UUID id) {
+        requireAdmin();
+        Project project = projectRepository.findById(id)
+                .filter(Project::isActive)
+                .orElseThrow(() -> new NotFoundException("Projet introuvable"));
+        project.setArchived(false);
+        ProjectResponse resp = toResponse(projectRepository.save(project), currentUserService.getCurrentUser());
+        auditService.log(AuditAction.PROJECT_UNARCHIVED, "PROJECT", project.getKey(), "name=" + project.getName());
+        return resp;
     }
 
     public String generateTicketReference(UUID projectId) {
@@ -130,6 +159,6 @@ public class ProjectService {
                 .map(up -> up.getRole())
                 .orElse(null);
         return new ProjectResponse(p.getId(), p.getName(), p.getKey(), p.getDescription(),
-                p.getTicketSequence(), ticketCount, p.getCreatedAt(), canAssign, orgs, userRole);
+                p.getTicketSequence(), ticketCount, p.getCreatedAt(), canAssign, orgs, userRole, p.isArchived());
     }
 }

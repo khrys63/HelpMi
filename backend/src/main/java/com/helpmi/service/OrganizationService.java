@@ -3,6 +3,7 @@ package com.helpmi.service;
 import com.helpmi.domain.Organization;
 import com.helpmi.domain.Project;
 import com.helpmi.domain.User;
+import com.helpmi.domain.enums.AuditAction;
 import com.helpmi.domain.enums.UserRole;
 import com.helpmi.dto.request.CreateOrganizationRequest;
 import com.helpmi.dto.request.UpdateOrganizationRequest;
@@ -31,6 +32,7 @@ public class OrganizationService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<OrganizationResponse> listAll() {
@@ -49,7 +51,9 @@ public class OrganizationService {
     public OrganizationResponse create(CreateOrganizationRequest req) {
         requireAdmin();
         Organization org = Organization.builder().name(req.name().trim()).build();
-        return toResponse(organizationRepository.save(org));
+        OrganizationResponse saved = toResponse(organizationRepository.save(org));
+        auditService.log(AuditAction.ORGANIZATION_CREATED, "ORGANIZATION", org.getName(), null);
+        return saved;
     }
 
     public OrganizationResponse update(UUID id, UpdateOrganizationRequest req) {
@@ -68,8 +72,10 @@ public class OrganizationService {
             throw new IllegalStateException(
                     "Impossible de supprimer : " + userCount + " utilisateur(s) sont rattachés à cette organisation");
         }
+        String orgName = org.getName();
         org.setActive(false);
         organizationRepository.save(org);
+        auditService.log(AuditAction.ORGANIZATION_DELETED, "ORGANIZATION", orgName, null);
     }
 
     public OrganizationResponse addProject(UUID orgId, UUID projectId) {

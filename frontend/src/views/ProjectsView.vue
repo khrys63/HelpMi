@@ -12,12 +12,19 @@
     <div v-else-if="projects.length === 0" class="text-center py-12 text-gray-400">{{ $t('projects.no_projects') }}</div>
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div v-for="p in projects" :key="p.id" class="relative group">
-        <router-link :to="`/projects/${p.id}`"
-          class="block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+        <router-link :to="p.archived ? '#' : `/projects/${p.id}`"
+          :class="['block rounded-xl border p-5 transition-shadow',
+                   p.archived
+                     ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 opacity-60 cursor-default pointer-events-none'
+                     : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-md']">
           <div class="flex items-start gap-2 mb-1.5">
             <span class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-bold px-2 py-0.5 rounded shrink-0">{{ p.key }}</span>
             <span class="font-semibold text-gray-900 dark:text-gray-100 truncate flex-1">{{ p.name }}</span>
-            <span v-if="p.userRole"
+            <span v-if="p.archived"
+              class="text-xs font-medium px-2 py-0.5 rounded-full shrink-0 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+              {{ $t('projects.archived_badge') }}
+            </span>
+            <span v-else-if="p.userRole"
               :class="['text-xs font-medium px-2 py-0.5 rounded-full shrink-0',
                        p.userRole === 'MANAGER'
                          ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300'
@@ -36,10 +43,22 @@
             <p class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ $t('projects.ticket_count', { count: p.ticketCount }) }}</p>
           </div>
         </router-link>
-        <button v-if="isAdmin" @click.prevent="openEdit(p)"
-          class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-blue-600 text-xs font-medium bg-white dark:bg-gray-700 rounded px-2 py-1 shadow-sm border border-gray-200 dark:border-gray-600">
-          {{ $t('common.edit') }}
-        </button>
+
+        <!-- Boutons admin au survol -->
+        <div v-if="isAdmin"
+          class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+          <button v-if="!p.archived" @click.prevent="openEdit(p)"
+            class="text-gray-400 hover:text-blue-600 text-xs font-medium bg-white dark:bg-gray-700 rounded px-2 py-1 shadow-sm border border-gray-200 dark:border-gray-600">
+            {{ $t('common.edit') }}
+          </button>
+          <button @click.prevent="toggleArchive(p)"
+            :class="['text-xs font-medium rounded px-2 py-1 shadow-sm border',
+                     p.archived
+                       ? 'text-green-600 hover:text-green-700 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+                       : 'text-amber-600 hover:text-amber-700 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600']">
+            {{ p.archived ? $t('projects.unarchive') : $t('projects.archive') }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -159,6 +178,18 @@ async function saveEdit() {
     error.value = e.response?.data?.detail || e.message
   } finally {
     saving.value = false
+  }
+}
+
+async function toggleArchive(p) {
+  try {
+    const { data } = p.archived
+      ? await projectsApi.unarchive(p.id)
+      : await projectsApi.archive(p.id)
+    const idx = projects.value.findIndex(x => x.id === p.id)
+    if (idx !== -1) projects.value.splice(idx, 1, data)
+  } catch (e) {
+    error.value = e.response?.data?.detail || e.message
   }
 }
 </script>

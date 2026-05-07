@@ -36,6 +36,7 @@ class OrganizationServiceTest {
     @Mock ProjectRepository projectRepository;
     @Mock UserRepository userRepository;
     @Mock CurrentUserService currentUserService;
+    @Mock AuditService auditService;
 
     @InjectMocks OrganizationService service;
 

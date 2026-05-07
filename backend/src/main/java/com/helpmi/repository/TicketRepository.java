@@ -46,18 +46,19 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
 
     // --- Dashboard queries ---
 
-    @Query("SELECT t FROM Ticket t WHERE t.reporter.id = :userId AND t.status NOT IN :statuses ORDER BY t.updatedAt DESC")
+    @Query("SELECT t FROM Ticket t WHERE t.reporter.id = :userId AND t.project.archived = false AND t.status NOT IN :statuses ORDER BY t.updatedAt DESC")
     List<Ticket> findReportedByUserAndStatusNotIn(@Param("userId") UUID userId, @Param("statuses") List<String> statuses);
 
-    @Query("SELECT t FROM Ticket t WHERE t.assignee.id = :userId AND t.status NOT IN :statuses ORDER BY t.updatedAt DESC")
+    @Query("SELECT t FROM Ticket t WHERE t.assignee.id = :userId AND t.project.archived = false AND t.status NOT IN :statuses ORDER BY t.updatedAt DESC")
     List<Ticket> findAssignedToUserAndStatusNotIn(@Param("userId") UUID userId, @Param("statuses") List<String> statuses);
 
-    @Query("SELECT t FROM Ticket t JOIN t.watchers w WHERE w.id = :userId AND t.status NOT IN :statuses ORDER BY t.updatedAt DESC")
+    @Query("SELECT t FROM Ticket t JOIN t.watchers w WHERE w.id = :userId AND t.project.archived = false AND t.status NOT IN :statuses ORDER BY t.updatedAt DESC")
     List<Ticket> findWatchedByUserIdAndStatusNotIn(@Param("userId") UUID userId, @Param("statuses") List<String> statuses);
 
     @Query("""
         SELECT t FROM Ticket t
         WHERE t.project.id IN (SELECT up.project.id FROM UserProject up WHERE up.user.id = :userId)
+        AND t.project.archived = false
         AND t.dueDate BETWEEN :from AND :to
         AND t.status NOT IN :statuses
         ORDER BY t.dueDate ASC
@@ -69,6 +70,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
         SELECT t.project.id, t.project.key, t.project.name, t.status, COUNT(t)
         FROM Ticket t
         WHERE t.project.id IN (SELECT up.project.id FROM UserProject up WHERE up.user.id = :userId)
+        AND t.project.archived = false
         AND t.status IN :statuses
         GROUP BY t.project.id, t.project.key, t.project.name, t.status
         ORDER BY t.project.name ASC
@@ -86,6 +88,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             SELECT up.project.id FROM UserProject up
             WHERE up.user.id = :userId AND up.role = 'MANAGER'
         )
+        AND t.project.archived = false
         AND t.status NOT IN ('CLOSED', 'CANCELLED')
         GROUP BY t.project.id, t.project.key, t.project.name,
                  t.assignee.id, t.assignee.firstName, t.assignee.lastName, t.assignee.email, t.status

@@ -49,6 +49,16 @@ public class ProjectController {
         projectService.deleteProject(id);
     }
 
+    @PatchMapping("/{id}/archive")
+    public ProjectResponse archive(@PathVariable UUID id) {
+        return projectService.archiveProject(id);
+    }
+
+    @PatchMapping("/{id}/unarchive")
+    public ProjectResponse unarchive(@PathVariable UUID id) {
+        return projectService.unarchiveProject(id);
+    }
+
     @GetMapping("/{id}/assignable-users")
     public List<UserResponse> getAssignableUsers(@PathVariable UUID id) {
         return userService.getAssignableUsers(id);

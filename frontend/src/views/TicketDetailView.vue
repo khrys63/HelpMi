@@ -844,7 +844,7 @@ async function clearDueDate() {
 
 async function openMoveForm() {
   const { data } = await projectsApi.list()
-  moveProjects.value = data.filter(p => p.id !== ticket.value.projectId)
+  moveProjects.value = data.filter(p => p.id !== ticket.value.projectId && !p.archived)
   moveTargetProjectId.value = moveProjects.value[0]?.id ?? ''
   showMoveForm.value = true
 }

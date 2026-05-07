@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ProjectRepository extends JpaRepository<Project, UUID> {
+    // Admin : tous les projets actifs (archivés inclus)
     List<Project> findByActiveTrueOrderByCreatedAtDesc();
     boolean existsByKey(String key);
 
@@ -28,12 +29,13 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
     @Query("SELECT p FROM Project p WHERE p.id = :id")
     Optional<Project> findByIdForUpdate(@Param("id") UUID id);
 
-    @Query("SELECT up.project FROM UserProject up WHERE up.user.id = :userId AND up.project.active = true ORDER BY up.project.createdAt DESC")
+    // Non-admin : projets actifs et non archivés
+    @Query("SELECT up.project FROM UserProject up WHERE up.user.id = :userId AND up.project.active = true AND up.project.archived = false ORDER BY up.project.createdAt DESC")
     List<Project> findActiveByUserId(@Param("userId") UUID userId);
 
-    @Query("SELECT up.project.id FROM UserProject up WHERE up.user.id = :userId AND up.project.active = true")
+    @Query("SELECT up.project.id FROM UserProject up WHERE up.user.id = :userId AND up.project.active = true AND up.project.archived = false")
     List<UUID> findIdsByUserId(@Param("userId") UUID userId);
 
-    @Query("SELECT COUNT(up) > 0 FROM UserProject up WHERE up.user.id = :userId AND up.project.id = :projectId AND up.project.active = true")
+    @Query("SELECT COUNT(up) > 0 FROM UserProject up WHERE up.user.id = :userId AND up.project.id = :projectId AND up.project.active = true AND up.project.archived = false")
     boolean isProjectAccessibleToUser(@Param("projectId") UUID projectId, @Param("userId") UUID userId);
 }

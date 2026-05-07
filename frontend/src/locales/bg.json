@@ -62,7 +62,11 @@
     "field_description_label": "Описание",
     "creating": "Създаване…",
     "role_manager": "Мениджър",
-    "role_member": "Член"
+    "role_member": "Член",
+    "archive": "Архивиране",
+    "unarchive": "Разархивиране",
+    "archived_badge": "Архивиран",
+    "archived_notice": "Този проект е архивиран и е само за четене."
   },
   "tickets": {
     "new": "+ Нова задача",
@@ -259,8 +263,9 @@
       "no_projects": "Няма проекти.",
       "add_project": "— Добави проект —",
       "users_section": "Потребители",
+      "users_managers": "Мениджъри",
+      "users_members": "Членове",
       "no_users": "Няма потребители.",
-      "add_user": "— Добави потребител —",
       "delete_title": "Изтриване?",
       "delete_body": "Изтриване на {name}? Невъзможно ако има свързани потребители."
     },
@@ -331,6 +336,11 @@
       "USER_ORG_ADDED": "Организация добавена",
       "USER_ORG_REMOVED": "Организация премахната",
       "USER_PROJECTS_UPDATED": "Проекти актуализирани",
+      "PROJECT_CREATED": "Проект създаден",
+      "PROJECT_ARCHIVED": "Проект архивиран",
+      "PROJECT_UNARCHIVED": "Проект разархивиран",
+      "ORGANIZATION_CREATED": "Организация създадена",
+      "ORGANIZATION_DELETED": "Организация изтрита",
       "TICKET_DELETED": "Задача изтрита",
       "ATTACHMENT_DELETED": "Прикачен файл изтрит",
       "ACCESS_DENIED": "Достъп отказан"

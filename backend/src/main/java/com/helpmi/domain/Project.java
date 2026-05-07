@@ -42,6 +42,10 @@ public class Project {
     @Builder.Default
     private boolean active = true;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean archived = false;
+
     @ManyToMany(mappedBy = "projects", fetch = FetchType.LAZY)
     @Builder.Default
     @ToString.Exclude

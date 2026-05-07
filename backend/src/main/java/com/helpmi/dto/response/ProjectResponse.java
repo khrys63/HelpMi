@@ -14,5 +14,6 @@ public record ProjectResponse(
         LocalDateTime createdAt,
         boolean canAssign,
         List<String> organizations,
-        String userRole
+        String userRole,
+        boolean archived
 ) {}

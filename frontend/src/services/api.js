@@ -18,7 +18,9 @@ export const projectsApi = {
   get: id => api.get(`/projects/${id}`),
   create: data => api.post('/projects', data),
   update: (id, data) => api.put(`/projects/${id}`, data),
-  remove: id => api.delete(`/projects/${id}`)
+  remove: id => api.delete(`/projects/${id}`),
+  archive: id => api.patch(`/projects/${id}/archive`),
+  unarchive: id => api.patch(`/projects/${id}/unarchive`)
 }
 
 // Tickets

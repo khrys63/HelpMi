@@ -62,7 +62,11 @@
     "field_description_label": "Description",
     "creating": "Création…",
     "role_manager": "Gestionnaire",
-    "role_member": "Membre"
+    "role_member": "Membre",
+    "archive": "Archiver",
+    "unarchive": "Désarchiver",
+    "archived_badge": "Archivé",
+    "archived_notice": "Ce projet est archivé et en lecture seule."
   },
   "tickets": {
     "new": "+ Nouveau ticket",
@@ -259,8 +263,9 @@
       "no_projects": "Aucun projet.",
       "add_project": "— Ajouter un projet —",
       "users_section": "Utilisateurs",
+      "users_managers": "Gestionnaires",
+      "users_members": "Membres",
       "no_users": "Aucun utilisateur.",
-      "add_user": "— Ajouter un utilisateur —",
       "delete_title": "Supprimer ?",
       "delete_body": "Supprimer {name} ? Impossible si des utilisateurs y sont encore rattachés."
     },
@@ -331,6 +336,11 @@
       "USER_ORG_ADDED": "Organisation ajoutée",
       "USER_ORG_REMOVED": "Organisation retirée",
       "USER_PROJECTS_UPDATED": "Projets mis à jour",
+      "PROJECT_CREATED": "Projet créé",
+      "PROJECT_ARCHIVED": "Projet archivé",
+      "PROJECT_UNARCHIVED": "Projet désarchivé",
+      "ORGANIZATION_CREATED": "Organisation créée",
+      "ORGANIZATION_DELETED": "Organisation supprimée",
       "TICKET_DELETED": "Ticket supprimé",
       "ATTACHMENT_DELETED": "Pièce jointe supprimée",
       "ACCESS_DENIED": "Accès refusé"

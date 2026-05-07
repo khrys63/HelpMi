@@ -62,7 +62,11 @@
     "field_description_label": "Description",
     "creating": "Creating…",
     "role_manager": "Manager",
-    "role_member": "Member"
+    "role_member": "Member",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "archived_badge": "Archived",
+    "archived_notice": "This project is archived and read-only."
   },
   "tickets": {
     "new": "+ New ticket",
@@ -259,8 +263,9 @@
       "no_projects": "No projects.",
       "add_project": "— Add a project —",
       "users_section": "Users",
+      "users_managers": "Managers",
+      "users_members": "Members",
       "no_users": "No users.",
-      "add_user": "— Add a user —",
       "delete_title": "Delete?",
       "delete_body": "Delete {name}? Cannot delete if users are still attached."
     },
@@ -331,6 +336,11 @@
       "USER_ORG_ADDED": "Organization added",
       "USER_ORG_REMOVED": "Organization removed",
       "USER_PROJECTS_UPDATED": "Projects updated",
+      "PROJECT_CREATED": "Project created",
+      "PROJECT_ARCHIVED": "Project archived",
+      "PROJECT_UNARCHIVED": "Project unarchived",
+      "ORGANIZATION_CREATED": "Organization created",
+      "ORGANIZATION_DELETED": "Organization deleted",
       "TICKET_DELETED": "Ticket deleted",
       "ATTACHMENT_DELETED": "Attachment deleted",
       "ACCESS_DENIED": "Access denied"

@@ -35,35 +35,38 @@ class ProjectServiceTest {
     @Mock TicketRepository ticketRepository;
     @Mock UserProjectRepository userProjectRepository;
     @Mock CurrentUserService currentUserService;
+    @Mock AuditService auditService;
 
     @InjectMocks ProjectService service;
 
     // --- getAllProjects ---
 
     @Test
-    void getAllProjects_admin_withOrg_returnsOnlyMemberProjects() {
+    void getAllProjects_admin_returnsAllActiveProjects() {
         User admin = adminUser();
-        admin.getOrganizations().add(organization());
         when(currentUserService.getCurrentUser()).thenReturn(admin);
         Project p = project();
-        when(projectRepository.findActiveByUserId(admin.getId())).thenReturn(List.of(p));
+        when(projectRepository.findByActiveTrueOrderByCreatedAtDesc()).thenReturn(List.of(p));
 
         List<ProjectResponse> result = service.getAllProjects();
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).name()).isEqualTo("Test Project");
-        verify(projectRepository, never()).findByActiveTrueOrderByCreatedAtDesc();
+        verify(projectRepository, never()).findActiveByUserId(any());
     }
 
     @Test
-    void getAllProjects_admin_withoutOrg_returnsEmpty() {
+    void getAllProjects_admin_includesArchivedProjects() {
         User admin = adminUser();
         when(currentUserService.getCurrentUser()).thenReturn(admin);
-        when(projectRepository.findActiveByUserId(admin.getId())).thenReturn(List.of());
+        Project archived = project();
+        archived.setArchived(true);
+        when(projectRepository.findByActiveTrueOrderByCreatedAtDesc()).thenReturn(List.of(archived));
 
         List<ProjectResponse> result = service.getAllProjects();
 
-        assertThat(result).isEmpty();
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).archived()).isTrue();
     }
 
     @Test
