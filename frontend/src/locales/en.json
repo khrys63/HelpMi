@@ -227,6 +227,7 @@
     "users": {
       "title": "Users",
       "pending_badge": "{count} awaiting assignment",
+      "search_placeholder": "Search a user…",
       "col_name": "Name",
       "col_email": "Email",
       "col_role": "Role",

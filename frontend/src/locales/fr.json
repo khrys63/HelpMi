@@ -227,6 +227,7 @@
     "users": {
       "title": "Utilisateurs",
       "pending_badge": "{count} en attente d'affectation",
+      "search_placeholder": "Rechercher un utilisateur…",
       "col_name": "Nom",
       "col_email": "Email",
       "col_role": "Rôle",

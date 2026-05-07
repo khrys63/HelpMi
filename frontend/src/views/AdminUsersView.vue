@@ -9,7 +9,13 @@
     </div>
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Chargement…</div>
-    <div v-else class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div v-else>
+      <div class="mb-4">
+        <input v-model="search" type="search"
+          :placeholder="$t('admin.users.search_placeholder')"
+          class="w-full max-w-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <table class="w-full text-sm">
         <thead>
           <tr class="text-left text-xs text-gray-500 dark:text-gray-400 uppercase border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
@@ -22,7 +28,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-          <tr v-for="u in users" :key="u.id"
+          <tr v-for="u in filteredUsers" :key="u.id"
             :class="['hover:bg-gray-50 dark:hover:bg-gray-700/50', isPending(u) ? 'bg-amber-50 dark:bg-amber-900/20' : '']">
             <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
               {{ u.firstName }} {{ u.lastName }}
@@ -48,11 +54,12 @@
                 class="text-blue-500 hover:text-blue-700 text-xs font-medium">{{ $t('common.edit') }}</button>
             </td>
           </tr>
-          <tr v-if="users.length === 0">
+          <tr v-if="filteredUsers.length === 0">
             <td colspan="6" class="px-4 py-8 text-center text-gray-400">{{ $t('admin.orgs.no_users') }}</td>
           </tr>
         </tbody>
       </table>
+    </div>
     </div>
 
     <!-- Edit modal -->
@@ -157,10 +164,22 @@ const projectRoles = computed(() => config.projectRoles)
 const users = ref([])
 const orgs = ref([])
 const loading = ref(true)
+const search = ref('')
 
 const pendingCount = computed(() =>
   users.value.filter(u => isPending(u)).length
 )
+
+const filteredUsers = computed(() => {
+  const q = search.value.trim().toLowerCase()
+  if (!q) return users.value
+  return users.value.filter(u => {
+    const name = `${u.firstName} ${u.lastName}`.toLowerCase()
+    const email = u.email.toLowerCase()
+    const orgNames = (u.organizations || []).map(o => o.name.toLowerCase()).join(' ')
+    return name.includes(q) || email.includes(q) || orgNames.includes(q)
+  })
+})
 
 onMounted(async () => {
   const [{ data: u }, { data: o }] = await Promise.all([

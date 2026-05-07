@@ -227,6 +227,7 @@
     "users": {
       "title": "Потребители",
       "pending_badge": "{count} чакат назначение",
+      "search_placeholder": "Търсене на потребител…",
       "col_name": "Име",
       "col_email": "Имейл",
       "col_role": "Роля",
