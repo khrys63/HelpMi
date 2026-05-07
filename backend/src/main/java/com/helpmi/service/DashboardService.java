@@ -22,8 +22,8 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class DashboardService {
 
-    private static final List<String> CLOSED_STATUSES = List.of("CLOSED", "CANCELLED");
-    private static final List<String> ACTIVE_STATUSES = List.of("OPEN", "IN_PROGRESS", "STAND_BY", "RESOLVED");
+    private static final List<String> EXCLUDED_STATUSES = List.of("CLOSED", "CANCELLED", "RESOLVED");
+    private static final List<String> ACTIVE_STATUSES = List.of("OPEN", "IN_PROGRESS", "STAND_BY");
 
     private final TicketRepository ticketRepository;
     private final CurrentUserService currentUserService;
@@ -34,13 +34,13 @@ public class DashboardService {
         LocalDate today = LocalDate.now();
 
         return new DashboardResponse(
-                ticketRepository.findReportedByUserAndStatusNotIn(userId, CLOSED_STATUSES)
+                ticketRepository.findReportedByUserAndStatusNotIn(userId, EXCLUDED_STATUSES)
                         .stream().map(TicketSummaryResponse::from).toList(),
-                ticketRepository.findAssignedToUserAndStatusNotIn(userId, CLOSED_STATUSES)
+                ticketRepository.findAssignedToUserAndStatusNotIn(userId, EXCLUDED_STATUSES)
                         .stream().map(TicketSummaryResponse::from).toList(),
-                ticketRepository.findWatchedByUserIdAndStatusNotIn(userId, CLOSED_STATUSES)
+                ticketRepository.findWatchedByUserIdAndStatusNotIn(userId, EXCLUDED_STATUSES)
                         .stream().map(TicketSummaryResponse::from).toList(),
-                ticketRepository.findDueSoonForUser(userId, today, today.plusDays(7), CLOSED_STATUSES)
+                ticketRepository.findDueSoonForUser(userId, today, today.plusDays(7), EXCLUDED_STATUSES)
                         .stream().map(TicketSummaryResponse::from).toList(),
                 buildProjectStats(userId)
         );
@@ -60,18 +60,17 @@ public class DashboardService {
             int n = ((Long) row[4]).intValue();
 
             meta.putIfAbsent(id, new String[]{key, name});
-            int[] c = counts.computeIfAbsent(id, x -> new int[3]);
+            int[] c = counts.computeIfAbsent(id, x -> new int[2]);
             switch (status) {
-                case "OPEN"                   -> c[0] += n;
+                case "OPEN"                    -> c[0] += n;
                 case "IN_PROGRESS", "STAND_BY" -> c[1] += n;
-                case "RESOLVED"               -> c[2] += n;
             }
         }
 
         List<ProjectTicketStatsResponse> result = new ArrayList<>();
         for (Map.Entry<UUID, String[]> e : meta.entrySet()) {
             int[] c = counts.get(e.getKey());
-            result.add(new ProjectTicketStatsResponse(e.getKey(), e.getValue()[0], e.getValue()[1], c[0], c[1], c[2]));
+            result.add(new ProjectTicketStatsResponse(e.getKey(), e.getValue()[0], e.getValue()[1], c[0], c[1]));
         }
         return result;
     }

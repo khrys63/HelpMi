@@ -7,6 +7,5 @@ public record ProjectTicketStatsResponse(
         String projectKey,
         String projectName,
         int open,
-        int inProgress,
-        int resolved
+        int inProgress
 ) {}

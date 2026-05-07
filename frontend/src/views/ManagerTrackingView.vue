@@ -105,25 +105,17 @@
                           <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
                             {{ $t('manager_tracking.stand_by') }}: {{ assignee.counts.standBy }}
                           </span>
-                          <span class="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">
-                            {{ $t('manager_tracking.resolved') }}: {{ assignee.counts.resolved }}
-                          </span>
                         </div>
 
                         <div v-if="assignee.tickets.length > 0" class="space-y-1">
                           <button v-for="ticket in assignee.tickets" :key="ticket.id"
                             @click="openTicket(ticket)"
-                            class="w-full text-left px-2 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors flex items-start justify-between gap-2">
-                            <div class="flex-1 min-w-0 flex items-center gap-2">
-                              <span class="text-xs font-mono text-blue-600 dark:text-blue-400 flex-shrink-0">{{ ticket.reference }}</span>
-                              <span :class="statusChip(ticket.status)" class="text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0">
-                                {{ formatStatus(ticket.status) }}
-                              </span>
-                              <p class="text-xs text-gray-700 dark:text-gray-200 truncate">{{ ticket.title }}</p>
-                            </div>
-                            <span v-if="ticket.dueDate" :class="dueDateClass(ticket.dueDate)" class="text-xs flex-shrink-0 ml-1">
-                              {{ formatDate(ticket.dueDate) }}
+                            class="w-full text-left px-2 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors flex items-center gap-2">
+                            <span class="text-xs font-mono text-blue-600 dark:text-blue-400 flex-shrink-0">{{ ticket.reference }}</span>
+                            <span :class="statusChip(ticket.status)" class="text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0">
+                              {{ formatStatus(ticket.status) }}
                             </span>
+                            <p class="text-xs text-gray-700 dark:text-gray-200 truncate">{{ ticket.title }}</p>
                           </button>
                         </div>
                         <p v-else class="text-xs text-gray-400 dark:text-gray-500 italic">
@@ -158,17 +150,12 @@
                 <div class="space-y-1">
                   <button v-for="ticket in project.unassignedTickets" :key="ticket.id"
                     @click="openTicket(ticket)"
-                    class="w-full text-left px-2 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-start justify-between gap-2">
-                    <div class="flex-1 min-w-0 flex items-center gap-2">
-                      <span class="text-xs font-mono text-blue-600 dark:text-blue-400 flex-shrink-0">{{ ticket.reference }}</span>
-                      <span :class="statusChip(ticket.status)" class="text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0">
-                        {{ formatStatus(ticket.status) }}
-                      </span>
-                      <p class="text-xs text-gray-700 dark:text-gray-200 truncate">{{ ticket.title }}</p>
-                    </div>
-                    <span v-if="ticket.dueDate" :class="dueDateClass(ticket.dueDate)" class="text-xs flex-shrink-0 ml-1">
-                      {{ formatDate(ticket.dueDate) }}
+                    class="w-full text-left px-2 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center gap-2">
+                    <span class="text-xs font-mono text-blue-600 dark:text-blue-400 flex-shrink-0">{{ ticket.reference }}</span>
+                    <span :class="statusChip(ticket.status)" class="text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0">
+                      {{ formatStatus(ticket.status) }}
                     </span>
+                    <p class="text-xs text-gray-700 dark:text-gray-200 truncate">{{ ticket.title }}</p>
                   </button>
                 </div>
               </div>
@@ -213,10 +200,9 @@ function projectStatusCount(p, status) {
 }
 
 const introSeries = computed(() => [
-  { name: t('manager_tracking.open'),       data: projects.value.map(p => projectStatusCount(p, 'open')) },
+  { name: t('manager_tracking.open'),        data: projects.value.map(p => projectStatusCount(p, 'open')) },
   { name: t('manager_tracking.in_progress'), data: projects.value.map(p => projectStatusCount(p, 'inProgress')) },
   { name: t('manager_tracking.stand_by'),    data: projects.value.map(p => projectStatusCount(p, 'standBy')) },
-  { name: t('manager_tracking.resolved'),    data: projects.value.map(p => projectStatusCount(p, 'resolved')) },
 ])
 
 const hasActiveTickets = computed(() =>
@@ -241,7 +227,7 @@ const introChartOptions = computed(() => ({
   },
   yaxis: { show: false },
   grid: { show: false },
-  colors: ['#3B82F6', '#F59E0B', '#6B7280', '#10B981'],
+  colors: ['#3B82F6', '#F59E0B', '#6B7280'],
   legend: {
     show: true,
     position: 'top',
@@ -273,9 +259,8 @@ const donutChartOptions = computed(() => ({
     t('manager_tracking.open'),
     t('manager_tracking.in_progress'),
     t('manager_tracking.stand_by'),
-    t('manager_tracking.resolved')
   ],
-  colors: ['#3B82F6', '#F59E0B', '#6B7280', '#10B981'],
+  colors: ['#3B82F6', '#F59E0B', '#6B7280'],
   dataLabels: { enabled: false },
   legend: { show: false },
   tooltip: { y: { formatter: v => v } },
@@ -288,7 +273,6 @@ function donutSeries(assignee) {
     assignee.counts.open ?? 0,
     assignee.counts.inProgress ?? 0,
     assignee.counts.standBy ?? 0,
-    assignee.counts.resolved ?? 0
   ]
 }
 
@@ -317,15 +301,6 @@ const STATUS_LABELS = {
 }
 
 function formatStatus(s) { return t(STATUS_LABELS[s] ?? 'manager_tracking.open') }
-
-function formatDate(d) {
-  return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
-
-function dueDateClass(d) {
-  const today = new Date(); today.setHours(0, 0, 0, 0)
-  return new Date(d) < today ? 'text-red-500 font-medium' : 'text-gray-400 dark:text-gray-500'
-}
 
 function initials(assignee) {
   return ((assignee.firstName?.[0] ?? '') + (assignee.lastName?.[0] ?? '')).toUpperCase() || '?'

@@ -34,6 +34,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             Pageable pageable);
 
     long countByProjectId(UUID projectId);
+    long countByProjectIdAndStatusNotIn(UUID projectId, Collection<String> excludedStatuses);
     long countByStatus(String status);
     long countByPriority(String priority);
     long countByType(String type);
@@ -89,7 +90,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             WHERE up.user.id = :userId AND up.role = 'MANAGER'
         )
         AND t.project.archived = false
-        AND t.status NOT IN ('CLOSED', 'CANCELLED')
+        AND t.status NOT IN ('CLOSED', 'CANCELLED', 'RESOLVED')
         GROUP BY t.project.id, t.project.key, t.project.name,
                  t.assignee.id, t.assignee.firstName, t.assignee.lastName, t.assignee.email, t.status
         ORDER BY t.project.name ASC, t.assignee.lastName ASC
@@ -100,7 +101,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
         SELECT t FROM Ticket t
         WHERE t.project.id = :projectId
         AND t.assignee.id = :assigneeId
-        AND t.status NOT IN ('CLOSED', 'CANCELLED')
+        AND t.status NOT IN ('CLOSED', 'CANCELLED', 'RESOLVED')
         ORDER BY t.status, t.dueDate ASC, t.reference ASC
         """)
     List<Ticket> findByProjectManagerAndAssigneeId(
@@ -110,7 +111,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
         SELECT t FROM Ticket t
         WHERE t.project.id = :projectId
         AND t.assignee IS NULL
-        AND t.status NOT IN ('CLOSED', 'CANCELLED')
+        AND t.status NOT IN ('CLOSED', 'CANCELLED', 'RESOLVED')
         ORDER BY t.dueDate ASC, t.reference ASC
         """)
     List<Ticket> findUnassignedTicketsForProject(@Param("projectId") UUID projectId);

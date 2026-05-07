@@ -149,7 +149,7 @@ public class ProjectService {
     }
 
     private ProjectResponse toResponse(Project p, User currentUser) {
-        long ticketCount = ticketRepository.countByProjectId(p.getId());
+        long ticketCount = ticketRepository.countByProjectIdAndStatusNotIn(p.getId(), List.of("CLOSED", "CANCELLED", "RESOLVED"));
         boolean canAssign = isGestionnaire(currentUser.getId(), p.getId());
         List<String> orgs = p.getOrganizations().stream()
                 .map(o -> o.getName())

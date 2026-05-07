@@ -61,15 +61,14 @@ public class ManagerTrackingService {
             assigneeMap.computeIfAbsent(assigneeId, k ->
                 AssigneeTicketResponse.builder().id(assigneeId).email(email).firstName(firstName).lastName(lastName));
 
-            // Counts accumulator: [total, open, inProgress, standBy, resolved]
+            // Counts accumulator: [total, open, inProgress, standBy]
             int[] c = counts.computeIfAbsent(projectKey, k -> new HashMap<>())
-                            .computeIfAbsent(assigneeId, k -> new int[5]);
+                            .computeIfAbsent(assigneeId, k -> new int[4]);
             c[0] += count;
             switch (status) {
-                case "OPEN"            -> c[1] += count;
-                case "IN_PROGRESS"     -> c[2] += count;
-                case "STAND_BY"        -> c[3] += count;
-                case "RESOLVED"        -> c[4] += count;
+                case "OPEN"        -> c[1] += count;
+                case "IN_PROGRESS" -> c[2] += count;
+                case "STAND_BY"    -> c[3] += count;
             }
         }
 
@@ -91,23 +90,22 @@ public class ManagerTrackingService {
                 List<TicketSummaryResponse> ticketSummaries = tickets.stream()
                         .map(TicketSummaryResponse::from).toList();
 
-                assigneeBuilder.counts(new TicketCountResponse(c[0], c[1], c[2], c[3], c[4]));
+                assigneeBuilder.counts(new TicketCountResponse(c[0], c[1], c[2], c[3]));
                 assigneeList.add(assigneeBuilder.tickets(ticketSummaries).build());
             }
 
             // Unassigned
             List<Ticket> projectUnassigned = ticketRepository.findUnassignedTicketsForProject(projectId);
-            int[] uc = new int[5];
+            int[] uc = new int[4];
             for (Ticket t : projectUnassigned) {
                 uc[0]++;
                 switch (t.getStatus()) {
-                    case "OPEN"            -> uc[1]++;
-                    case "IN_PROGRESS"     -> uc[2]++;
-                    case "STAND_BY"        -> uc[3]++;
-                    case "RESOLVED"        -> uc[4]++;
+                    case "OPEN"        -> uc[1]++;
+                    case "IN_PROGRESS" -> uc[2]++;
+                    case "STAND_BY"    -> uc[3]++;
                 }
             }
-            projectBuilder.unassignedCounts(new TicketCountResponse(uc[0], uc[1], uc[2], uc[3], uc[4]));
+            projectBuilder.unassignedCounts(new TicketCountResponse(uc[0], uc[1], uc[2], uc[3]));
             projectBuilder.unassignedTickets(projectUnassigned.stream()
                     .map(TicketSummaryResponse::from)
                     .toList());

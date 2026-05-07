@@ -172,17 +172,14 @@ class ManagerTrackingServiceTest {
                     .status("OPEN").priority("MEDIUM").type("TASK").project(p).reporter(user).build();
             Ticket inProgress = com.helpmi.domain.Ticket.builder().id(UUID.randomUUID()).reference("T2").title("T")
                     .status("IN_PROGRESS").priority("MEDIUM").type("TASK").project(p).reporter(user).build();
-            Ticket resolved = com.helpmi.domain.Ticket.builder().id(UUID.randomUUID()).reference("T3").title("T")
-                    .status("RESOLVED").priority("MEDIUM").type("TASK").project(p).reporter(user).build();
-            when(ticketRepository.findUnassignedTicketsForProject(eq(projId))).thenReturn(List.of(open, inProgress, resolved));
+            when(ticketRepository.findUnassignedTicketsForProject(eq(projId))).thenReturn(List.of(open, inProgress));
             when(ticketRepository.findByProjectManagerAndAssigneeId(eq(projId), eq(user.getId()))).thenReturn(List.of());
 
             ManagerTrackingResponse result = service.getManagerTracking();
 
-            assertThat(result.projects().get(0).unassignedCounts().total()).isEqualTo(3);
+            assertThat(result.projects().get(0).unassignedCounts().total()).isEqualTo(2);
             assertThat(result.projects().get(0).unassignedCounts().open()).isEqualTo(1);
             assertThat(result.projects().get(0).unassignedCounts().inProgress()).isEqualTo(1);
-            assertThat(result.projects().get(0).unassignedCounts().resolved()).isEqualTo(1);
         }
     }
 

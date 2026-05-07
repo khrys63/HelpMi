@@ -21,27 +21,14 @@
               {{ $t('dashboard.empty') }}
             </p>
             <button v-for="t in section.tickets" :key="t.id"
-              class="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              class="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center gap-2"
               @click="openTicket(t)">
-              <div class="flex items-start justify-between gap-2 mb-1">
-                <span class="text-xs font-mono text-blue-600 dark:text-blue-400 flex-shrink-0">{{ t.reference }}</span>
-                <span :class="statusChip(t.status)"
-                  class="text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0">
-                  {{ formatStatus(t.status) }}
-                </span>
-              </div>
-              <p class="text-sm text-gray-800 dark:text-gray-100 truncate mb-1.5">{{ t.title }}</p>
-              <div class="flex items-center justify-between gap-2">
-                <span class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ t.projectName }}</span>
-                <div class="flex items-center gap-2 flex-shrink-0">
-                  <span v-if="t.assignee" class="text-xs text-gray-400">
-                    {{ t.assignee.firstName }} {{ t.assignee.lastName }}
-                  </span>
-                  <span v-if="t.dueDate" :class="dueDateClass(t.dueDate)" class="text-xs">
-                    {{ formatDate(t.dueDate) }}
-                  </span>
-                </div>
-              </div>
+              <span class="text-xs font-mono text-blue-600 dark:text-blue-400 flex-shrink-0">{{ t.reference }}</span>
+              <span :class="statusChip(t.status)"
+                class="text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0">
+                {{ formatStatus(t.status) }}
+              </span>
+              <p class="text-sm text-gray-800 dark:text-gray-100 truncate">{{ t.title }}</p>
             </button>
           </div>
         </section>
@@ -63,7 +50,6 @@
                 <th class="text-left px-4 py-2.5">{{ $t('dashboard.col_project') }}</th>
                 <th class="text-center px-4 py-2.5 text-blue-600 dark:text-blue-400">{{ $t('dashboard.col_open') }}</th>
                 <th class="text-center px-4 py-2.5 text-yellow-600 dark:text-yellow-400">{{ $t('dashboard.col_in_progress') }}</th>
-                <th class="text-center px-4 py-2.5 text-green-600 dark:text-green-400">{{ $t('dashboard.col_resolved') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
@@ -85,13 +71,6 @@
                   <span v-if="p.inProgress > 0"
                     class="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300 text-xs px-2 py-0.5 rounded-full font-medium">
                     {{ p.inProgress }}
-                  </span>
-                  <span v-else class="text-gray-300 dark:text-gray-600">—</span>
-                </td>
-                <td class="text-center px-4 py-3">
-                  <span v-if="p.resolved > 0"
-                    class="bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 text-xs px-2 py-0.5 rounded-full font-medium">
-                    {{ p.resolved }}
                   </span>
                   <span v-else class="text-gray-300 dark:text-gray-600">—</span>
                 </td>
@@ -138,18 +117,6 @@ function statusChip(status) {
 
 function formatStatus(s) {
   return s.replace(/_/g, ' ')
-}
-
-function formatDate(d) {
-  return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
-
-function dueDateClass(d) {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return new Date(d) < today
-    ? 'text-red-500 font-medium'
-    : 'text-gray-400 dark:text-gray-500'
 }
 
 function openTicket(t) {

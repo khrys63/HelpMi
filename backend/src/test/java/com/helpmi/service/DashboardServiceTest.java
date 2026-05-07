@@ -108,15 +108,13 @@ class DashboardServiceTest {
             stubAllEmpty();
             when(ticketRepository.countTicketsByProjectAndStatus(any(), any())).thenReturn(List.of(
                     row(projId, "PROJ", "Project A", "OPEN", 3L),
-                    row(projId, "PROJ", "Project A", "IN_PROGRESS", 2L),
-                    row(projId, "PROJ", "Project A", "RESOLVED", 5L)
+                    row(projId, "PROJ", "Project A", "IN_PROGRESS", 2L)
             ));
 
             ProjectTicketStatsResponse stats = service.getDashboard().projectStats().get(0);
 
             assertThat(stats.open()).isEqualTo(3);
             assertThat(stats.inProgress()).isEqualTo(2);
-            assertThat(stats.resolved()).isEqualTo(5);
             assertThat(stats.projectKey()).isEqualTo("PROJ");
             assertThat(stats.projectName()).isEqualTo("Project A");
         }
@@ -157,15 +155,13 @@ class DashboardServiceTest {
             when(ticketRepository.countTicketsByProjectAndStatus(any(), any())).thenReturn(List.of(
                     row(projId, "PROJ", "Project A", "OPEN", 4L),
                     row(projId, "PROJ", "Project A", "STAND_BY", 1L),
-                    row(projId, "PROJ", "Project A", "IN_PROGRESS", 3L),
-                    row(projId, "PROJ", "Project A", "RESOLVED", 2L)
+                    row(projId, "PROJ", "Project A", "IN_PROGRESS", 3L)
             ));
 
             ProjectTicketStatsResponse stats = service.getDashboard().projectStats().get(0);
 
             assertThat(stats.open()).isEqualTo(4);
             assertThat(stats.inProgress()).isEqualTo(4); // 3 + 1 STAND_BY
-            assertThat(stats.resolved()).isEqualTo(2);
         }
 
         @Test
@@ -185,7 +181,7 @@ class DashboardServiceTest {
             verify(ticketRepository).countTicketsByProjectAndStatus(
                     any(),
                     argThat(s -> s.contains("OPEN") && s.contains("IN_PROGRESS")
-                            && s.contains("STAND_BY") && s.contains("RESOLVED")));
+                            && s.contains("STAND_BY") && !s.contains("RESOLVED")));
         }
     }
 
