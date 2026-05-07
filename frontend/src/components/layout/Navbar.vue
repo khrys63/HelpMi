@@ -121,7 +121,7 @@ const auth = useAuthStore()
 const theme = useThemeStore()
 const menuOpen = ref(false)
 
-const isManager = computed(() => auth.user?.projectRoles?.some(pr => pr.role === 'MANAGER') ?? false)
+const isManager = computed(() => auth.user?.projectRoles?.some(pr => pr.role === 'MANAGER' && !pr.archived) ?? false)
 const isAdmin = computed(() => auth.user?.role === 'ADMIN')
 
 const currentRoute = (path) => route.path === path || (path !== '/dashboard' && route.path.startsWith(path))

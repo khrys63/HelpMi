@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import Keycloak from 'keycloak-js'
 import { useThemeStore } from './theme.js'
 import { useLocaleStore } from './locale.js'
+import { usersApi } from '../services/api.js'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -39,6 +40,11 @@ export const useAuthStore = defineStore('auth', () => {
     useLocaleStore().apply(user.value.locale ?? 'fr')
   }
 
+  async function refreshUser() {
+    const { data } = await usersApi.me()
+    user.value = data
+  }
+
   function logout() {
     if (keycloak.value) {
       keycloak.value.logout()
@@ -49,5 +55,5 @@ export const useAuthStore = defineStore('auth', () => {
     return keycloak.value ? keycloak.value.token : null
   }
 
-  return { user, token, init, logout, getToken }
+  return { user, token, init, logout, getToken, refreshUser }
 })

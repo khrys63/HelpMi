@@ -188,6 +188,7 @@ async function toggleArchive(p) {
       : await projectsApi.archive(p.id)
     const idx = projects.value.findIndex(x => x.id === p.id)
     if (idx !== -1) projects.value.splice(idx, 1, data)
+    await auth.refreshUser()
   } catch (e) {
     error.value = e.response?.data?.detail || e.message
   }
