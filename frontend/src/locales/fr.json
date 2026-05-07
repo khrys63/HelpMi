@@ -332,6 +332,7 @@
       "USER_ORG_REMOVED": "Organisation retirée",
       "USER_PROJECTS_UPDATED": "Projets mis à jour",
       "TICKET_DELETED": "Ticket supprimé",
+      "ATTACHMENT_DELETED": "Pièce jointe supprimée",
       "ACCESS_DENIED": "Accès refusé"
     }
   },

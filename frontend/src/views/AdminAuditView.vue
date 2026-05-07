@@ -87,7 +87,7 @@ const actions = [
   'PAT_CREATED', 'PAT_REVOKED', 'PAT_AUTH_SUCCESS', 'PAT_AUTH_FAILURE',
   'USER_ROLE_CHANGED', 'USER_DEACTIVATED', 'USER_ACTIVATED',
   'USER_ORG_ADDED', 'USER_ORG_REMOVED', 'USER_PROJECTS_UPDATED',
-  'TICKET_DELETED', 'ACCESS_DENIED'
+  'TICKET_DELETED', 'ATTACHMENT_DELETED', 'ACCESS_DENIED'
 ]
 
 async function load(p = 0) {
@@ -116,7 +116,8 @@ const badgeClasses = {
   PAT_AUTH_FAILURE: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
   ACCESS_DENIED:    'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
   USER_DEACTIVATED: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
-  TICKET_DELETED:   'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
+  TICKET_DELETED:      'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
+  ATTACHMENT_DELETED:  'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
   PAT_AUTH_SUCCESS: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
   USER_ACTIVATED:   'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
 }

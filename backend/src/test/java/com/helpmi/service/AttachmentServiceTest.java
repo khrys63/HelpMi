@@ -38,6 +38,7 @@ class AttachmentServiceTest {
     @Mock CurrentUserService currentUserService;
     @Mock StorageService storageService;
     @Mock ProjectService projectService;
+    @Mock AuditService auditService;
     @Mock Tika tika;
 
     @InjectMocks AttachmentService service;

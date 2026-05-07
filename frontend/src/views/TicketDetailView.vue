@@ -134,9 +134,16 @@
           <h2 class="font-semibold text-gray-800 dark:text-gray-200 mb-3">{{ $t('tickets.attachments', { count: ticket.attachments?.length || 0 }) }}</h2>
           <ul v-if="ticket.attachments?.length" class="space-y-2 mb-4">
             <li v-for="a in ticket.attachments" :key="a.id"
-              class="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2">
-              <a :href="a.downloadUrl" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline truncate">{{ a.fileName }}</a>
-              <span class="text-gray-400 dark:text-gray-500 text-xs shrink-0 ml-2">{{ formatSize(a.size) }}</span>
+              class="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2 gap-2">
+              <button @click="downloadAttachment(a)" class="text-blue-600 dark:text-blue-400 hover:underline truncate text-left flex-1">{{ a.fileName }}</button>
+              <span class="text-gray-400 dark:text-gray-500 text-xs shrink-0">{{ formatSize(a.size) }}</span>
+              <button v-if="!isFrozen" @click="removeAttachment(a)"
+                class="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 shrink-0 transition-colors"
+                :title="$t('common.delete')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
             </li>
           </ul>
           <label v-if="!isFrozen" class="cursor-pointer inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
@@ -759,6 +766,32 @@ async function uploadFile(e) {
   } finally {
     uploading.value = false
     e.target.value = ''
+  }
+}
+
+async function removeAttachment(attachment) {
+  try {
+    await attachmentsApi.remove(attachment.id)
+    ticket.value.attachments = ticket.value.attachments.filter(a => a.id !== attachment.id)
+  } catch (err) {
+    const msg = err?.response?.status === 403
+      ? 'Vous ne pouvez supprimer que vos propres pièces jointes'
+      : 'Erreur lors de la suppression'
+    toast.add(msg, 'error')
+  }
+}
+
+async function downloadAttachment(attachment) {
+  try {
+    const { data } = await attachmentsApi.download(attachment.id)
+    const url = URL.createObjectURL(data)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = attachment.fileName
+    link.click()
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    toast.add('Erreur lors du téléchargement', 'error')
   }
 }
 

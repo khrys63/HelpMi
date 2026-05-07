@@ -130,19 +130,22 @@ public class UserService {
         }
         user.getUserProjects().clear();
         userRepository.flush(); // DELETE orphans before INSERT to avoid unique constraint violation
+        List<String> projectDetails = new java.util.ArrayList<>();
         for (var entry : entries) {
             var project = projectRepository.findById(entry.projectId())
                     .filter(p -> p.isActive())
                     .orElseThrow(() -> new NotFoundException("Projet introuvable"));
+            String role = entry.role() != null ? entry.role() : "MEMBER";
             user.getUserProjects().add(UserProject.builder()
                     .user(user)
                     .project(project)
-                    .role(entry.role() != null ? entry.role() : "MEMBER")
+                    .role(role)
                     .build());
+            projectDetails.add(project.getKey() + ":" + role);
         }
         UserResponse saved = UserResponse.from(userRepository.save(user));
-        auditService.log(AuditAction.USER_PROJECTS_UPDATED, "USER", user.getEmail(),
-                "count=" + entries.size());
+        String details = projectDetails.isEmpty() ? "projects=none" : "projects=" + String.join(", ", projectDetails);
+        auditService.log(AuditAction.USER_PROJECTS_UPDATED, "USER", user.getEmail(), details);
         return saved;
     }
 

@@ -332,6 +332,7 @@
       "USER_ORG_REMOVED": "Организация премахната",
       "USER_PROJECTS_UPDATED": "Проекти актуализирани",
       "TICKET_DELETED": "Задача изтрита",
+      "ATTACHMENT_DELETED": "Прикачен файл изтрит",
       "ACCESS_DENIED": "Достъп отказан"
     }
   },

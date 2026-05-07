@@ -64,7 +64,7 @@ export const attachmentsApi = {
     form.append('file', file)
     return api.post(`/tickets/${ticketId}/attachments`, form)
   },
-  download: attachmentId => `/api/attachments/${attachmentId}`,
+  download: attachmentId => api.get(`/attachments/${attachmentId}`, { responseType: 'blob' }),
   remove: attachmentId => api.delete(`/attachments/${attachmentId}`)
 }
 

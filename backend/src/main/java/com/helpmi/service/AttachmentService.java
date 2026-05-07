@@ -3,6 +3,7 @@ package com.helpmi.service;
 import com.helpmi.domain.Attachment;
 import com.helpmi.domain.Ticket;
 import com.helpmi.domain.User;
+import com.helpmi.domain.enums.AuditAction;
 import com.helpmi.domain.enums.UserRole;
 import com.helpmi.dto.response.AttachmentResponse;
 import com.helpmi.dto.response.UserSummary;
@@ -47,6 +48,7 @@ public class AttachmentService {
     private final CurrentUserService currentUserService;
     private final StorageService storageService;
     private final ProjectService projectService;
+    private final AuditService auditService;
     private final Tika tika;
 
     public AttachmentResponse upload(UUID ticketId, MultipartFile file) throws IOException {
@@ -104,8 +106,12 @@ public class AttachmentService {
         if (!attachment.getUploadedBy().getId().equals(currentUser.getId()) && currentUser.getRole() != UserRole.ADMIN) {
             throw new ForbiddenException("Vous ne pouvez supprimer que vos propres pièces jointes");
         }
+        String fileName = attachment.getFileName();
+        String ticketRef = attachment.getTicket().getReference();
         storageService.delete(attachment.getStoredName());
         attachmentRepository.delete(attachment);
+        auditService.log(AuditAction.ATTACHMENT_DELETED, "ATTACHMENT", fileName,
+                "ticket=" + ticketRef);
     }
 
     private static void requireEditable(Ticket ticket) {
