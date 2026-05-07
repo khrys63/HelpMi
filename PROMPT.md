@@ -196,3 +196,34 @@ sur l'écran des projets, peut on avoir la ou les organisations pour chaque proj
 
 l'utilisateur peut il avoir dans son profil un recap des organismes auxquels il est rattaché et des projets (avec don rôle). tout ceci n'est pas modifiable a cet endroit
 
+Nouvelle feature : disposer de dashboard permettant de voir des tickets rapidement, et cross organisation ou projet : mes tickets ouverts (non fermé ou annulé), les tickets qui me sont affectés (idem non fermé ou annulé), les tickets ouvert (tojours pareil) de mes organisations .... et toutes idées que tu pourras avoir
+
+enleve  myOrgsTickets  du dashboard, ce n'est pas interessant. par contre le nombre de tickets des projets, de mes organisations, peut etre interessant par statut (ouvert, en cour ou résolut)
+
+peux tu ajouter un bouton deconnexion dans l'ecran de profil, dans le premier cadre. a droite, centré verticalement
+
+je veux que sur le dashboard, pour mes projets où je suis gestionnaire, je veux voir les tickets "ouvert" avec le statut pour chaque utisateur et autre gestionnaire qui ont des tickets affectés. bref un suivi des tickets et des volumes restant  
+
+bug : dans la liste des tickets d'un projet d'un utilisateur, je vois tous ses tickets de tous ses projets. il faut filtrer par organisation dans la vue
+
+ajoute le lien vers ce tableau de bord sans la navbar si l utilisateur est un gestionnaire d'un de ses projet.
+
+la navbar devient riche en liens, passe la en menu. garde les regles de visu (admin et gestionnaire) évidement
+
+2 nouvelles feature sur les changement de statut.                                                                                                           
+  - quand on resout un ticket il faut pouvoir saisir le type de résolution entre Corrigé, Contourné, Abandonné ou Doublon. Ce type est obligatoire et sa valeur par défaut est corrigé. Et il faut pouvoir saisir un commentaire (factultatif)                                                                       
+  - quand on réouvre un ticket, il faut saisir un commentaire (justifiant la révouerture) et il est obligatoire
+
+je vois que le comemntaire dans l'interface ne sont pas horodatés, ca serait un plus
+
+reprend tous les audits de securité AUDIT_SECURITY_xx et liste moi ce qui n'a pas été corrigé
+
+comment traiterais tu A5-L2 Journalisation des actions sensibles absente ? 
+
+met en place ce systeme d'audit avec une table d'audit, consultable par les admin. Mais sans les transitions de ticket vers RESOLVED/CLOSED/CANCELLED ni les telechargment. Par contre ajoute les suppressions de ticket 
+
+sur l'ecran de suivi des tickets en tant que gestionnaire, est il possible de mettre un petit graph cammember par collaborateur pour voir la repartition par projet des statuts (sur la droite du panel de l'utilisateur). Peut etre changer de couleu le fond de chaquez utilisateur avec un teinte  legere en alternance pour que l'écran soit plus visible (atention au darkmode). Et plus globalement un graph en intro pour le nombre de ticket "ouvert" par projet qu'il gère. ne pas utiliser de JS no nmaitrisé ou abandonné pour ce dessin de graph, un petit framework très documenté, supporté et actif et qui fait du svg me semble une meilleurs piste.
+
+my bad sur le Graphique intro, c'est tous les tickets "ouvert" donc les 4 types repris plus bas.  
+
+sur la liste des tickets met le statut dans la lnague utiliseteur et non le code en base "En cours" en Francais et non "IN PROGRESS"

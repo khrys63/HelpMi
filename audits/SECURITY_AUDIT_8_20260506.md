@@ -1,4 +1,4 @@
-# Rapport d'audit de sécurité — JiraLike
+# Rapport d'audit de sécurité — HelpMi
 
 **Date :** 6 mai 2026
 **Périmètre :** Backend Spring Boot 3.5 / Frontend Vue 3

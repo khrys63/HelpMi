@@ -1,4 +1,4 @@
-# Synthèse sécurité — JiraLike
+# Synthèse sécurité — HelpMi
 
 **Dernière mise à jour :** 6 mai 2026
 **Périmètre :** Audits A1 (26/04/2026) → A8 (06/05/2026)
