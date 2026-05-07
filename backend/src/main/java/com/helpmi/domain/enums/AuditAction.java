@@ -1,0 +1,16 @@
+package com.helpmi.domain.enums;
+
+public enum AuditAction {
+    PAT_CREATED,
+    PAT_REVOKED,
+    PAT_AUTH_SUCCESS,
+    PAT_AUTH_FAILURE,
+    USER_ROLE_CHANGED,
+    USER_DEACTIVATED,
+    USER_ACTIVATED,
+    USER_ORG_ADDED,
+    USER_ORG_REMOVED,
+    USER_PROJECTS_UPDATED,
+    TICKET_DELETED,
+    ACCESS_DENIED
+}

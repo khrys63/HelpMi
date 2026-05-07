@@ -40,6 +40,11 @@
               :class="currentRoute('/admin/config') ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'">
               {{ $t('nav.config') }}
             </router-link>
+            <router-link to="/admin/audit"
+              class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              :class="currentRoute('/admin/audit') ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'">
+              {{ $t('nav.audit') }}
+            </router-link>
           </template>
         </div>
 
@@ -82,6 +87,10 @@
               <router-link @click="menuOpen = false" to="/admin/config"
                 class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                 {{ $t('nav.config') }}
+              </router-link>
+              <router-link @click="menuOpen = false" to="/admin/audit"
+                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                {{ $t('nav.audit') }}
               </router-link>
             </template>
           </div>

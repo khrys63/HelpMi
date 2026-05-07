@@ -2,6 +2,7 @@ package com.helpmi.service;
 
 import com.helpmi.domain.Ticket;
 import com.helpmi.domain.User;
+import com.helpmi.domain.enums.AuditAction;
 import com.helpmi.domain.enums.UserRole;
 import com.helpmi.dto.request.ChangeStatusRequest;
 import com.helpmi.dto.request.CreateTicketRequest;
@@ -60,6 +61,7 @@ public class TicketService {
     private final CurrentUserService currentUserService;
     private final TicketHistoryService ticketHistoryService;
     private final NotificationService notificationService;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public Page<TicketResponse> getTickets(UUID projectId, String status,
@@ -335,7 +337,12 @@ public class TicketService {
         if (currentUserService.getCurrentUser().getRole() != UserRole.ADMIN) {
             throw new ForbiddenException("Seuls les administrateurs peuvent supprimer des tickets");
         }
-        ticketRepository.delete(findTicket(projectId, ticketId));
+        Ticket ticket = findTicket(projectId, ticketId);
+        String ref = ticket.getReference();
+        String title = ticket.getTitle();
+        ticketRepository.delete(ticket);
+        auditService.log(AuditAction.TICKET_DELETED, "TICKET", ref,
+                "title=" + title + " project=" + ticket.getProject().getKey());
     }
 
     public List<OrganizationSummary> setOrganizations(UUID projectId, UUID ticketId, List<UUID> orgIds) {

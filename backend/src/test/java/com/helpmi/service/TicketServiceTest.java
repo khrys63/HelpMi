@@ -57,6 +57,7 @@ class TicketServiceTest {
     @Mock CurrentUserService currentUserService;
     @Mock TicketHistoryService ticketHistoryService;
     @Mock NotificationService notificationService;
+    @Mock AuditService auditService;
 
     @InjectMocks TicketService service;
 

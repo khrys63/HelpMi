@@ -2,6 +2,7 @@ package com.helpmi.service;
 
 import com.helpmi.domain.PersonalToken;
 import com.helpmi.domain.User;
+import com.helpmi.domain.enums.AuditAction;
 import com.helpmi.dto.request.CreatePersonalTokenRequest;
 import com.helpmi.dto.response.PersonalTokenCreated;
 import com.helpmi.dto.response.PersonalTokenResponse;
@@ -34,6 +35,7 @@ public class PersonalTokenService {
     private final PersonalTokenRepository personalTokenRepository;
     private final CurrentUserService currentUserService;
     private final RateLimiterService rateLimiterService;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<PersonalTokenResponse> listTokens() {
@@ -56,6 +58,7 @@ public class PersonalTokenService {
                 .expiresAt(req.expiresAt())
                 .build();
         personalTokenRepository.save(token);
+        auditService.log(AuditAction.PAT_CREATED, "PAT", token.getName(), null);
         return new PersonalTokenCreated(token.getId(), token.getName(), plain, token.getCreatedAt(), token.getExpiresAt());
     }
 
@@ -66,19 +69,28 @@ public class PersonalTokenService {
         if (!token.getUser().getId().equals(user.getId()))
             throw new ForbiddenException("Ce token ne vous appartient pas");
         personalTokenRepository.delete(token);
+        auditService.log(AuditAction.PAT_REVOKED, "PAT", tokenId.toString(),
+                "name=" + token.getName());
     }
 
     @Transactional
     public Optional<Authentication> validateToken(String plainToken) {
-        return personalTokenRepository.findByTokenHash(sha256(plainToken))
-                .filter(t -> !t.isExpired())
-                .map(t -> {
-                    t.setLastUsedAt(LocalDateTime.now());
-                    User user = t.getUser();
-                    return (Authentication) new UsernamePasswordAuthenticationToken(
-                            user.getEmail(), null,
-                            List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
-                });
+        Optional<PersonalToken> found = personalTokenRepository.findByTokenHash(sha256(plainToken));
+        if (found.isEmpty()) return Optional.empty();
+
+        PersonalToken token = found.get();
+        User user = token.getUser();
+        if (token.isExpired()) {
+            auditService.log(AuditAction.PAT_AUTH_FAILURE, user.getId(), user.getEmail(),
+                    "PAT", token.getName(), "reason=expired");
+            return Optional.empty();
+        }
+        token.setLastUsedAt(LocalDateTime.now());
+        auditService.log(AuditAction.PAT_AUTH_SUCCESS, user.getId(), user.getEmail(),
+                "PAT", token.getName(), null);
+        return Optional.of(new UsernamePasswordAuthenticationToken(
+                user.getEmail(), null,
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))));
     }
 
     private String generateToken() {

@@ -36,6 +36,7 @@ class PersonalTokenServiceTest {
     @Mock PersonalTokenRepository personalTokenRepository;
     @Mock CurrentUserService currentUserService;
     @Mock RateLimiterService rateLimiterService;
+    @Mock AuditService auditService;
 
     @InjectMocks PersonalTokenService service;
 

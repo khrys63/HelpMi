@@ -94,6 +94,11 @@ export const adminUsersApi = {
   updateProjects: (id, data) => api.put(`/admin/users/${id}/projects`, data)
 }
 
+// Audit log (admin)
+export const auditApi = {
+  list: (params) => api.get('/admin/audit', { params })
+}
+
 // Organisations (admin)
 export const organizationsApi = {
   list: () => api.get('/admin/organizations'),

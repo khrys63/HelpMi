@@ -1,5 +1,6 @@
 package com.helpmi.config;
 
+import com.helpmi.security.AuditingAccessDeniedHandler;
 import com.helpmi.security.PersonalTokenFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,9 @@ public class SecurityConfig {
     @Autowired(required = false)
     private PersonalTokenFilter personalTokenFilter;
 
+    @Autowired
+    private AuditingAccessDeniedHandler accessDeniedHandler;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
@@ -54,7 +58,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .bearerTokenResolver(new JwtOnlyBearerTokenResolver())
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+                .exceptionHandling(ex -> ex.accessDeniedHandler(accessDeniedHandler));
 
         return http.build();
     }

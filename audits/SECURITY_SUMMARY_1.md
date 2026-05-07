@@ -2,8 +2,8 @@
 
 **Dernière mise à jour :** 6 mai 2026
 **Périmètre :** Audits A1 (26/04/2026) → A8 (06/05/2026)
-**Findings ouverts :** 5
-**Findings corrigés :** 31
+**Findings ouverts :** 4
+**Findings corrigés :** 32
 **Risques acceptés :** 3
 
 ---
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 1 | PAT tokens : SHA-256 sans sel dédié par token | A8 SEC-06 | |
 | 2 | `Map<String, List<UUID>>` sans DTO ni validation (organizations, labels, watchers) | A8 SEC-05 | |
-| 3 | Journalisation des actions sensibles absente | A5-L2 | |
+| 3 | Journalisation des actions sensibles absente | A5-L2 | **Corrigé (06/05/2026)** — table `audit_log`, `AuditService`, hooks PAT/User/Ticket, `ACCESS_DENIED`, UI admin `/admin/audit` |
 | 4 | `PersonalToken.lastUsedAt` potentiellement non persisté | A5-L3 | |
 | 5 | Pas d'alerte sur expiration imminente des PAT | A1-F3 | |
 
@@ -68,4 +68,8 @@
 
 ---
 
-*5 findings ouverts restants, tous de sévérité faible. Prochaine révision recommandée avant mise en production.*
+| A5-L2 — Journalisation des actions sensibles | **06/05/2026** | ✅ Table `audit_log` + `AuditService` + UI admin |
+
+---
+
+*4 findings ouverts restants, tous de sévérité faible. Prochaine révision recommandée avant mise en production.*

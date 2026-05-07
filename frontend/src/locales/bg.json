@@ -9,7 +9,8 @@
     "theme_dark": "Превключи към тъмна тема",
     "theme_light": "Превключи към светла тема",
     "manager_tracking": "Следене",
-    "menu": "Меню"
+    "menu": "Меню",
+    "audit": "Одит"
   },
   "dashboard": {
     "title": "Табло",
@@ -305,6 +306,33 @@
       "link_labels_section": "Двойка етикети",
       "delete_title": "Изтриване?",
       "delete_body": "Изтриване на {name}? Действието е необратимо и ще бъде отказано, ако има свързани задачи."
+    }
+  },
+  "audit": {
+    "title": "Одит журнал",
+    "filter_all": "Всички действия",
+    "col_date": "Дата",
+    "col_action": "Действие",
+    "col_actor": "Актьор",
+    "col_target": "Цел",
+    "col_details": "Детайли",
+    "col_ip": "IP",
+    "no_entries": "Няма записи.",
+    "prev": "← Предишна",
+    "next": "Следваща →",
+    "actions": {
+      "PAT_CREATED": "Създаден PAT",
+      "PAT_REVOKED": "Отнет PAT",
+      "PAT_AUTH_SUCCESS": "Успешна PAT auth",
+      "PAT_AUTH_FAILURE": "Неуспешна PAT auth",
+      "USER_ROLE_CHANGED": "Роля променена",
+      "USER_DEACTIVATED": "Потребител деактивиран",
+      "USER_ACTIVATED": "Потребител активиран",
+      "USER_ORG_ADDED": "Организация добавена",
+      "USER_ORG_REMOVED": "Организация премахната",
+      "USER_PROJECTS_UPDATED": "Проекти актуализирани",
+      "TICKET_DELETED": "Задача изтрита",
+      "ACCESS_DENIED": "Достъп отказан"
     }
   },
   "manager_tracking": {

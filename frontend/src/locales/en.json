@@ -9,7 +9,8 @@
     "theme_dark": "Switch to dark",
     "theme_light": "Switch to light",
     "manager_tracking": "Tracking",
-    "menu": "Menu"
+    "menu": "Menu",
+    "audit": "Audit log"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -305,6 +306,33 @@
       "link_labels_section": "Label pair",
       "delete_title": "Delete?",
       "delete_body": "Delete {name}? This action is irreversible and will be refused if tickets still use this value."
+    }
+  },
+  "audit": {
+    "title": "Audit log",
+    "filter_all": "All actions",
+    "col_date": "Date",
+    "col_action": "Action",
+    "col_actor": "Actor",
+    "col_target": "Target",
+    "col_details": "Details",
+    "col_ip": "IP",
+    "no_entries": "No entries.",
+    "prev": "← Previous",
+    "next": "Next →",
+    "actions": {
+      "PAT_CREATED": "PAT created",
+      "PAT_REVOKED": "PAT revoked",
+      "PAT_AUTH_SUCCESS": "PAT auth success",
+      "PAT_AUTH_FAILURE": "PAT auth failure",
+      "USER_ROLE_CHANGED": "Role changed",
+      "USER_DEACTIVATED": "User deactivated",
+      "USER_ACTIVATED": "User activated",
+      "USER_ORG_ADDED": "Organization added",
+      "USER_ORG_REMOVED": "Organization removed",
+      "USER_PROJECTS_UPDATED": "Projects updated",
+      "TICKET_DELETED": "Ticket deleted",
+      "ACCESS_DENIED": "Access denied"
     }
   },
   "manager_tracking": {

@@ -9,7 +9,8 @@
     "theme_dark": "Passer en sombre",
     "theme_light": "Passer en clair",
     "manager_tracking": "Suivi",
-    "menu": "Menu"
+    "menu": "Menu",
+    "audit": "Journal"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -305,6 +306,33 @@
       "link_labels_section": "Paire de libellés",
       "delete_title": "Supprimer ?",
       "delete_body": "Supprimer {name} ? Cette action est irréversible et sera refusée si des tickets utilisent encore cette valeur."
+    }
+  },
+  "audit": {
+    "title": "Journal d'audit",
+    "filter_all": "Toutes les actions",
+    "col_date": "Date",
+    "col_action": "Action",
+    "col_actor": "Acteur",
+    "col_target": "Cible",
+    "col_details": "Détails",
+    "col_ip": "IP",
+    "no_entries": "Aucune entrée.",
+    "prev": "← Précédent",
+    "next": "Suivant →",
+    "actions": {
+      "PAT_CREATED": "PAT créé",
+      "PAT_REVOKED": "PAT révoqué",
+      "PAT_AUTH_SUCCESS": "Auth PAT réussie",
+      "PAT_AUTH_FAILURE": "Auth PAT échouée",
+      "USER_ROLE_CHANGED": "Rôle modifié",
+      "USER_DEACTIVATED": "Utilisateur désactivé",
+      "USER_ACTIVATED": "Utilisateur activé",
+      "USER_ORG_ADDED": "Organisation ajoutée",
+      "USER_ORG_REMOVED": "Organisation retirée",
+      "USER_PROJECTS_UPDATED": "Projets mis à jour",
+      "TICKET_DELETED": "Ticket supprimé",
+      "ACCESS_DENIED": "Accès refusé"
     }
   },
   "manager_tracking": {

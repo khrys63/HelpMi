@@ -17,6 +17,7 @@ import com.helpmi.repository.OrganizationRepository;
 import com.helpmi.repository.ProjectRepository;
 import com.helpmi.repository.UserRepository;
 import com.helpmi.security.CurrentUserService;
+import com.helpmi.service.AuditService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -39,6 +40,7 @@ class UserServiceTest {
     @Mock OrganizationRepository organizationRepository;
     @Mock ProjectRepository projectRepository;
     @Mock CurrentUserService currentUserService;
+    @Mock AuditService auditService;
 
     @InjectMocks UserService service;
 

@@ -3,6 +3,7 @@ package com.helpmi.service;
 import com.helpmi.domain.Organization;
 import com.helpmi.domain.User;
 import com.helpmi.domain.UserProject;
+import com.helpmi.domain.enums.AuditAction;
 import com.helpmi.domain.enums.UserRole;
 import com.helpmi.dto.request.UpdateLocaleRequest;
 import com.helpmi.dto.request.UpdateNotificationPrefsRequest;
@@ -34,6 +35,7 @@ public class UserService {
     private final OrganizationRepository organizationRepository;
     private final ProjectRepository projectRepository;
     private final CurrentUserService currentUserService;
+    private final AuditService auditService;
 
     public List<UserResponse> getActiveUsers() {
         User currentUser = currentUserService.getCurrentUser();
@@ -60,9 +62,20 @@ public class UserService {
             throw new ForbiddenException("Vous ne pouvez pas modifier votre propre compte");
         }
         User user = findUser(id);
+        UserRole oldRole = user.getRole();
+        boolean wasActive = user.isActive();
         if (req.role() != null) user.setRole(req.role());
         if (req.active() != null) user.setActive(req.active());
-        return UserResponse.from(userRepository.save(user));
+        UserResponse saved = UserResponse.from(userRepository.save(user));
+        if (req.role() != null && req.role() != oldRole) {
+            auditService.log(AuditAction.USER_ROLE_CHANGED, "USER", user.getEmail(),
+                    "oldRole=" + oldRole + " newRole=" + req.role());
+        }
+        if (req.active() != null && req.active() != wasActive) {
+            auditService.log(req.active() ? AuditAction.USER_ACTIVATED : AuditAction.USER_DEACTIVATED,
+                    "USER", user.getEmail(), null);
+        }
+        return saved;
     }
 
     @Transactional
@@ -73,20 +86,27 @@ public class UserService {
                 .filter(Organization::isActive)
                 .orElseThrow(() -> new NotFoundException("Organisation introuvable"));
         user.getOrganizations().add(org);
-        return UserResponse.from(userRepository.save(user));
+        UserResponse saved = UserResponse.from(userRepository.save(user));
+        auditService.log(AuditAction.USER_ORG_ADDED, "USER", user.getEmail(),
+                "org=" + org.getName());
+        return saved;
     }
 
     @Transactional
     public UserResponse removeOrganization(UUID id, UUID orgId) {
         requireAdmin();
         User user = findUser(id);
+        String orgName = user.getOrganizations().stream()
+                .filter(o -> o.getId().equals(orgId)).map(Organization::getName).findFirst().orElse(orgId.toString());
         boolean removed = user.getOrganizations().removeIf(o -> o.getId().equals(orgId));
         if (!removed) {
             throw new IllegalArgumentException("Cet utilisateur n'appartient pas à cette organisation");
         }
         Set<UUID> orgProjectIds = new java.util.HashSet<>(projectRepository.findIdsByOrganizationId(orgId));
         user.getUserProjects().removeIf(up -> orgProjectIds.contains(up.getProject().getId()));
-        return UserResponse.from(userRepository.save(user));
+        UserResponse saved = UserResponse.from(userRepository.save(user));
+        auditService.log(AuditAction.USER_ORG_REMOVED, "USER", user.getEmail(), "org=" + orgName);
+        return saved;
     }
 
     @Transactional
@@ -120,7 +140,10 @@ public class UserService {
                     .role(entry.role() != null ? entry.role() : "MEMBER")
                     .build());
         }
-        return UserResponse.from(userRepository.save(user));
+        UserResponse saved = UserResponse.from(userRepository.save(user));
+        auditService.log(AuditAction.USER_PROJECTS_UPDATED, "USER", user.getEmail(),
+                "count=" + entries.size());
+        return saved;
     }
 
     public List<UserResponse> getAssignableUsers(UUID projectId) {
