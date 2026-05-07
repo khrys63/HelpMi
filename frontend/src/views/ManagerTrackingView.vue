@@ -1,6 +1,6 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 py-6">
-    <h1 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">{{ $t('manager_tracking.title') }}</h1>
+  <div class="">
+    <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">{{ $t('manager_tracking.title') }}</h1>
 
     <div v-if="loading" class="text-center py-20 text-gray-400">{{ $t('common.loading') }}</div>
 
