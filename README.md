@@ -494,3 +494,43 @@ Le rapport HTML de couverture est généré dans `backend/target/site/jacoco/ind
 | `GlobalExceptionHandler`, `RateLimiterService` | 9, 5 |
 
 Les controllers ne sont pas couverts (pas de tests d'intégration `@SpringBootTest`).
+
+---
+
+## Protection des données personnelles / RGPD
+
+### Données collectées et finalités
+
+HelpMi collecte et traite les données personnelles suivantes dans le cadre strict de la gestion des tickets et de l'accès à la plateforme :
+
+| Donnée | Finalité | Base légale |
+|---|---|---|
+| Adresse email | Identification, authentification, notifications | Exécution du contrat |
+| Prénom, nom | Identification dans l'interface | Exécution du contrat |
+| Adresse IP | Journal d'audit de sécurité | Intérêt légitime (sécurité du système) |
+| Préférences utilisateur (thème, langue, notifications) | Personnalisation de l'interface | Intérêt légitime |
+| Actions effectuées (journal d'audit) | Traçabilité et sécurité | Intérêt légitime (sécurité du système) |
+
+### Durée de conservation
+
+| Donnée | Durée de conservation |
+|---|---|
+| Compte utilisateur actif | Durée de la relation contractuelle |
+| Compte utilisateur désactivé | 3 ans après désactivation |
+| Journal d'audit (logs) | 1 an glissant |
+| Pièces jointes | Durée de vie du ticket associé |
+| Données de connexion (IP) | 1 an glissant |
+
+### Mesures de sécurité techniques
+
+Les mesures suivantes sont mises en œuvre pour protéger les données :
+
+- Authentification centralisée via Keycloak (OAuth2/OIDC, flux PKCE S256)
+- Chiffrement des communications en transit par TLS (production)
+- Hachage SHA-256 des secrets applicatifs (Personal Access Tokens)
+- Contrôle d'accès par projet et par rôle — isolation stricte des données entre projets
+- Journal d'audit horodaté de toutes les actions sensibles (avec adresse IP)
+- Vérification du type MIME des pièces jointes par analyse binaire (Apache Tika)
+- Stockage des fichiers avec identifiants non prédictibles (UUID aléatoires)
+- Secrets d'infrastructure externalisés dans des variables d'environnement (non commités)
+
