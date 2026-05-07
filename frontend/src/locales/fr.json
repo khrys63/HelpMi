@@ -344,7 +344,10 @@
     "in_progress": "En cours",
     "stand_by": "En attente",
     "resolved": "Résolus",
-    "assignee": "Assigné à",
-    "tickets": "Tickets"
+    "assignee": "Collaborateurs",
+    "tickets": "tickets",
+    "closed": "Fermé",
+    "cancelled": "Annulé",
+    "tickets_by_project": "Tickets actifs par projet"
   }
 }

@@ -344,7 +344,10 @@
     "in_progress": "In Progress",
     "stand_by": "Stand By",
     "resolved": "Resolved",
-    "assignee": "Assignee",
-    "tickets": "Tickets"
+    "assignee": "Team members",
+    "tickets": "tickets",
+    "closed": "Closed",
+    "cancelled": "Cancelled",
+    "tickets_by_project": "Active tickets by project"
   }
 }

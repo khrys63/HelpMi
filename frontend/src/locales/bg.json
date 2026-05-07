@@ -344,7 +344,10 @@
     "in_progress": "В процес",
     "stand_by": "На изчакване",
     "resolved": "Решени",
-    "assignee": "Изпълнител",
-    "tickets": "Задачи"
+    "assignee": "Сътрудници",
+    "tickets": "задачи",
+    "closed": "Затворена",
+    "cancelled": "Отменена",
+    "tickets_by_project": "Активни задачи по проект"
   }
 }
